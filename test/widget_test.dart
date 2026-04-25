@@ -10,8 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dulang/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('App boots smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(MyApp());
+    // MyApp schedules a 1s delayed task to hide the splash image.
+    await tester.pump(const Duration(milliseconds: 1100));
   });
 }
