@@ -1,0 +1,37 @@
+# Flutter/Dart build artifacts
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Android build
+android/build/
+android/.gradle/
+android/app/.cxx/
+android/local.properties
+android/key.properties
+
+# iOS build
+ios/Flutter/ephemeral/
+ios/Pods/
+ios/.symlinks/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Misc
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# Generated files (keep pubspec.lock)
+doc/api/
