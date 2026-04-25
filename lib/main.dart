@@ -1,9 +1,13 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import '/backend/sqlite/sqlite_manager.dart';
+import '/features/parental/parental_service.dart';
+import '/features/parental/pin_dialog.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
@@ -17,11 +21,19 @@ void main() async {
   final environmentValues = FFDevEnvironmentValues();
   await environmentValues.initialize();
 
+  await Supabase.initialize(
+    url: environmentValues.supabaseUrl,
+    anonKey: environmentValues.supabaseAnonKey,
+  );
+
   await SQLiteManager.initialize();
   await FlutterFlowTheme.initialize();
 
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
+
+  final onboardingDone = await ParentalService.isOnboardingDone();
+  AppStateNotifier.instance.onboardingDone = onboardingDone;
 
   runApp(ChangeNotifierProvider(
     create: (context) => appState,
@@ -131,12 +143,46 @@ class NavBarPage extends StatefulWidget {
 class _NavBarPageState extends State<NavBarPage> {
   String _currentPageName = 'Dulang';
   late Widget? _currentPage;
-
   @override
   void initState() {
     super.initState();
     _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
+  }
+
+  Future<void> _onBackPressed() async {
+    if (!mounted) return;
+    final scaffoldKey = ScaffoldMessenger.of(context);
+    final result = await scaffoldKey
+        .showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.lock_outline, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Flexible(child: Text('Área protegida pelos pais')),
+              ],
+            ),
+            action: SnackBarAction(
+              label: 'DIGITAR PIN',
+              textColor: Colors.amber,
+              onPressed: () {},
+            ),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(bottom: 72, left: 16, right: 16),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        )
+        .closed;
+
+    if (result == SnackBarClosedReason.action && mounted) {
+      final ok = await showPinDialog(context);
+      if (ok && mounted) {
+        SystemNavigator.pop();
+      }
+    }
   }
 
   @override
@@ -149,15 +195,57 @@ class _NavBarPageState extends State<NavBarPage> {
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop();
+          return;
+        }
+        await _onBackPressed();
+      },
+      child: Scaffold(
       resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
       body: _currentPage ?? tabs[_currentPageName],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
-        onTap: (i) => safeSetState(() {
-          _currentPage = null;
-          _currentPageName = tabs.keys.toList()[i];
-        }),
+        onTap: (i) async {
+          if (i != 0) {
+            final result = await ScaffoldMessenger.of(context)
+                .showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.lock_outline, color: Colors.white, size: 18),
+                        SizedBox(width: 8),
+                        Flexible(child: Text('Área restrita')),
+                      ],
+                    ),
+                    action: SnackBarAction(
+                      label: 'DIGITAR PIN',
+                      textColor: Colors.amber,
+                      onPressed: () {},
+                    ),
+                    duration: const Duration(seconds: 3),
+                    behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.only(
+                        bottom: 72, left: 16, right: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                )
+                .closed;
+            if (result != SnackBarClosedReason.action || !mounted) return;
+            final ok = await showPinDialog(context);
+            if (!ok || !mounted) return;
+          }
+          safeSetState(() {
+            _currentPage = null;
+            _currentPageName = tabs.keys.toList()[i];
+          });
+        },
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         selectedItemColor: FlutterFlowTheme.of(context).primary,
         unselectedItemColor: FlutterFlowTheme.of(context).secondaryText,
@@ -212,6 +300,7 @@ class _NavBarPageState extends State<NavBarPage> {
           )
         ],
       ),
+    ),
     );
   }
 }

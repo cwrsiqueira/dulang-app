@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '/backend/schema/structs/index.dart';
 
-
+import '/features/parental/onboarding_widget.dart';
 import '/main.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
@@ -25,9 +25,15 @@ class AppStateNotifier extends ChangeNotifier {
   static AppStateNotifier get instance => _instance ??= AppStateNotifier._();
 
   bool showSplashImage = true;
+  bool onboardingDone = false;
 
   void stopShowingSplashImage() {
     showSplashImage = false;
+    notifyListeners();
+  }
+
+  void setOnboardingDone() {
+    onboardingDone = true;
     notifyListeners();
   }
 }
@@ -47,7 +53,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                 ),
               ),
             )
-          : NavBarPage(),
+          : appStateNotifier.onboardingDone
+              ? NavBarPage()
+              : const OnboardingWidget(),
       routes: [
         FFRoute(
           name: '_initialize',
@@ -62,7 +70,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
                     ),
                   ),
                 )
-              : NavBarPage(),
+              : appStateNotifier.onboardingDone
+                  ? NavBarPage()
+                  : const OnboardingWidget(),
         ),
         FFRoute(
           name: TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,

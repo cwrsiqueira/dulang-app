@@ -1,4 +1,4 @@
-package com.carlosdev.dulangfree
+package com.mycompany.dulang
 
 import io.flutter.embedding.android.FlutterActivity
 
