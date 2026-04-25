@@ -1,0 +1,19 @@
+---
+description: Use canonical Dulang context documents
+globs:
+alwaysApply: true
+---
+
+Read and follow the canonical context in `docs/ai-context/`.
+
+Priority reading order:
+1) `docs/ai-context/README.md`
+2) `docs/ai-context/project-overview.md`
+3) `docs/ai-context/current-status.md`
+4) `docs/ai-context/roadmap-priorities.md`
+5) `docs/ai-context/engineering-rules.md`
+6) `docs/ai-context/developer-profile.md`
+7) `docs/ai-context/decisions-log.md`
+
+Do not create a parallel source of truth in tool-specific files.
+Tool-specific guidance should remain minimal and point back to `docs/ai-context/`.
