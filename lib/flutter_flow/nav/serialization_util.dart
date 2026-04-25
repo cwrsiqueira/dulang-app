@@ -83,9 +83,6 @@ String? serializeParam(
 
       case ParamType.SqliteRow:
         return json.encode((param as SqliteRow).data);
-
-      default:
-        data = null;
     }
     return data;
   } catch (e) {
@@ -262,11 +259,7 @@ dynamic deserializeParam<T>(
             return GetFavoritosRow(data);
           case QtVideosRow:
             return QtVideosRow(data);
-          default:
-            return null;
         }
-
-      default:
         return null;
     }
   } catch (e) {
