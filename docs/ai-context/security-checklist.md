@@ -10,7 +10,7 @@ Last updated: 2026-04-25
 
 ## Critical risks currently observed
 
-- [pending] Rotate and restrict exposed `YOUTUBE_API_KEY`.
+- [in_progress] Rotate and restrict exposed `YOUTUBE_API_KEY` (removed from versioned asset, pending provider-side rotation/restrictions).
 - [pending] Migrate parental PIN storage from plain `SharedPreferences` to secure storage + hash.
 - [pending] Enable Android release hardening (`minifyEnabled`, `shrinkResources`, obfuscation).
 - [pending] Add explicit CI least-privilege permissions and pin actions by SHA.

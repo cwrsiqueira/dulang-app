@@ -41,9 +41,9 @@ Status:
 - Area: secrets
 - Summary: `YOUTUBE_API_KEY` found in versioned client asset file.
 - Root cause: key management relied on local asset configuration without restrictive controls documented in repo.
-- Fix applied: pending (rotation and provider restrictions required).
-- Prevention actions: enforce key governance in `SEC-CHECKLIST` and `SEC-STRATEGY`, run periodic secret exposure review.
-- Status: open
+- Fix applied: key removed from versioned asset; app now supports `--dart-define=YOUTUBE_API_KEY=...`.
+- Prevention actions: enforce key governance in `SEC-CHECKLIST` and `SEC-STRATEGY`, run periodic secret exposure review, apply Google Cloud key restrictions (currently temporary `none`).
+- Status: in_progress
 
 ### 2026-04-25
 

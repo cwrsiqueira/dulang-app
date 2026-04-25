@@ -29,6 +29,12 @@ class FFDevEnvironmentValues {
 
   String get supabaseUrl => _values['SUPABASE_URL'] ?? '';
   String get supabaseAnonKey => _values['SUPABASE_ANON_KEY'] ?? '';
-  String get youtubeApiKey => _values['YOUTUBE_API_KEY'] ?? '';
+  String get youtubeApiKey {
+    const fromDefine = String.fromEnvironment('YOUTUBE_API_KEY');
+    if (fromDefine.isNotEmpty) {
+      return fromDefine;
+    }
+    return _values['YOUTUBE_API_KEY'] ?? '';
+  }
   String get revenueCatAndroidKey => _values['REVENUECAT_ANDROID_KEY'] ?? '';
 }

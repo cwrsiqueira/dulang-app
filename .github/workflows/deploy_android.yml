@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -46,7 +48,7 @@ jobs:
           EOF
 
       - name: Build App Bundle
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --dart-define=YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}
 
       - name: Upload to Play Store Internal Test
         uses: r0adkll/upload-google-play@v1
