@@ -97,12 +97,16 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: DulangVideoWidget.routeName,
           path: DulangVideoWidget.routePath,
-          builder: (context, params) => DulangVideoWidget(
-            url: params.getParam(
+          builder: (context, params) {
+            final url = params.getParam(
               'url',
               ParamType.String,
-            ),
-          ),
+            );
+            return DulangVideoWidget(
+              key: ValueKey(url ?? 'none'),
+              url: url,
+            );
+          },
         ),
         FFRoute(
           name: ContatoWidget.routeName,

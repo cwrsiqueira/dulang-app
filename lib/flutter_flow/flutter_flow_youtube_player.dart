@@ -83,14 +83,23 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   }
 
   @override
+  void didUpdateWidget(covariant FlutterFlowYoutubePlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _tearDownPlayer();
+      initializePlayer();
+    }
+  }
+
+  @override
   void dispose() {
     if (!handleFullScreen || _youtubeWrapper?._controller == null) {
+      _tearDownPlayer();
+    } else {
       if (_subscribedRoute) {
         routeObserver.unsubscribe(this);
+        _subscribedRoute = false;
       }
-      _controller?.close();
-      _youtubeFullScreenControllerMap[_videoId]?.close();
-      _youtubeFullScreenControllerMap.remove(_videoId);
     }
     super.dispose();
   }
@@ -98,10 +107,37 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (widget.pauseOnNavigate && ModalRoute.of(context) is PageRoute) {
-      _subscribedRoute = true;
-      routeObserver.subscribe(this, ModalRoute.of(context)!);
+    _subscribeRouteIfNeeded();
+  }
+
+  void _subscribeRouteIfNeeded() {
+    if (!widget.pauseOnNavigate) {
+      return;
     }
+    final route = ModalRoute.of(context);
+    if (route is! PageRoute) {
+      return;
+    }
+    if (_subscribedRoute) {
+      routeObserver.unsubscribe(this);
+      _subscribedRoute = false;
+    }
+    routeObserver.subscribe(this, route);
+    _subscribedRoute = true;
+  }
+
+  void _tearDownPlayer() {
+    if (_subscribedRoute) {
+      routeObserver.unsubscribe(this);
+      _subscribedRoute = false;
+    }
+    _controller?.close();
+    if (_videoId != null) {
+      _youtubeFullScreenControllerMap[_videoId]?.close();
+      _youtubeFullScreenControllerMap.remove(_videoId);
+    }
+    _controller = null;
+    _videoId = null;
   }
 
   @override

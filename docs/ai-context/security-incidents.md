@@ -52,6 +52,6 @@ Status:
 - Area: mobile
 - Summary: parental PIN stored in plain `SharedPreferences`.
 - Root cause: convenience local persistence with no secure storage policy enforced.
-- Fix applied: pending.
-- Prevention actions: migrate to secure storage + hash/salt baseline rule.
-- Status: open
+- Fix applied: migrated to `flutter_secure_storage` with salted SHA-256 hash and legacy plaintext migration cleanup.
+- Prevention actions: keep secure storage + hash as baseline, block plaintext storage in PR checklist.
+- Status: mitigated

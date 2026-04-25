@@ -11,9 +11,9 @@ Last updated: 2026-04-25
 ## Critical risks currently observed
 
 - [in_progress] Rotate and restrict exposed `YOUTUBE_API_KEY` (removed from versioned asset, pending provider-side rotation/restrictions).
-- [pending] Migrate parental PIN storage from plain `SharedPreferences` to secure storage + hash.
-- [pending] Enable Android release hardening (`minifyEnabled`, `shrinkResources`, obfuscation).
-- [pending] Add explicit CI least-privilege permissions and pin actions by SHA.
+- [done] Migrate parental PIN storage from plain `SharedPreferences` to secure storage + hash (with legacy migration path).
+- [done] Enable Android release hardening (`minifyEnabled`, `shrinkResources`, obfuscation in CI build).
+- [in_progress] Add explicit CI least-privilege permissions and pin actions by SHA (least-privilege set, SHA pinning still pending).
 - [pending] Confirm and version RLS/policies for Supabase tables.
 
 ## Development phase (Dev)

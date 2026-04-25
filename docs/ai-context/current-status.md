@@ -10,11 +10,12 @@ Last updated: 2026-04-25
 | SQLite legacy removal | Pending | Legacy modules still present |
 | Parental PIN + onboarding | Implemented (basic) | Works, but advanced controls are pending |
 | Player hardening | Partial | Important restrictions exist; keep validating policy details |
+| Video navigation from list | Fixed (needs device QA) | Second tap on same route now recreates player state; list fetch memoized per screen |
 | RevenueCat monetization | Pending | Dependency present, end-to-end flow missing |
 | Channel sync automation | Pending | Needs backend/app operational closure |
 | Parent value features | Pending | Time control, schedule, history, profiles |
 | Tests and reliability | Low coverage | Expand before high-risk releases |
-| Security posture | Needs hardening | Secrets governance, RLS versioning, mobile hardening, CI least privilege |
+| Security posture | Improving | Key handling improved, PIN storage hardened, release hardening enabled; RLS and SHA-pinned actions still pending |
 
 ## EN
 
@@ -24,6 +25,7 @@ Last updated: 2026-04-25
 - Basic parental flow exists: first-run onboarding and 4-digit PIN.
 - Institutional pages exist (about/contact/terms).
 - YouTube player has key restrictions (controls minimized and related behavior constrained).
+- Video screen navigation hardened: route rebuilds player state per selected video id and player reacts to url changes.
 
 ### Priority gaps
 
@@ -44,11 +46,11 @@ Last updated: 2026-04-25
 
 ### Security posture
 
-- `YOUTUBE_API_KEY` currently exposed in versioned client asset and needs rotation/restrictions.
+- `YOUTUBE_API_KEY` was removed from versioned client asset and is now injected by `dart-define`; provider-side restrictions are still pending.
 - Supabase RLS/policy definitions are not clearly versioned in repository migrations.
-- Parental PIN is stored in plain local storage and should move to secure storage + hash model.
-- Android release hardening flags are not fully enabled.
-- CI workflow still needs explicit least-privilege permissions and stronger supply-chain hardening.
+- Parental PIN storage migrated to secure storage with hashed verification (legacy plaintext migration included).
+- Android release hardening is enabled (`minify`, `shrink`, CI obfuscation).
+- CI workflow still needs stronger supply-chain hardening (actions pinned by SHA).
 
 ### Suggested next execution steps
 
@@ -66,6 +68,7 @@ Last updated: 2026-04-25
 - Fluxo parental basico existe: onboarding de primeira abertura e PIN de 4 digitos.
 - Telas institucionais existem (sobre/contato/termos).
 - Player do YouTube com restricoes importantes (controles reduzidos e relacionados limitados).
+- Navegacao na tela de video endurecida: a rota recria o estado do player por id do video e o player reage a mudancas de `url`.
 
 ### Gaps prioritarios
 
@@ -86,8 +89,8 @@ Last updated: 2026-04-25
 
 ### Postura de seguranca
 
-- `YOUTUBE_API_KEY` esta exposta em asset versionado do cliente e precisa de rotacao/restricoes.
+- `YOUTUBE_API_KEY` foi removida do asset versionado e agora entra via `dart-define`; ainda faltam restricoes no provedor.
 - Definicoes de RLS/policies do Supabase nao estao claramente versionadas no repositorio.
-- PIN parental esta em storage local simples e deve migrar para storage seguro + hash.
-- Flags de hardening de release Android ainda nao estao totalmente ativas.
-- Workflow de CI ainda precisa de menor privilegio explicito e hardening de supply chain.
+- PIN parental migrou para storage seguro com validacao por hash (com migracao do legado).
+- Hardening de release Android esta ativo (`minify`, `shrink`, ofuscacao no CI).
+- Workflow de CI ainda precisa de hardening de supply chain (actions pinadas por SHA).

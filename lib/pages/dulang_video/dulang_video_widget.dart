@@ -29,11 +29,13 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
   late DulangVideoModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  late final Future<List<VideoRow>> _videosFuture;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => DulangVideoModel());
+    _videosFuture = SupabaseService.instance.getVideos();
     WidgetsBinding.instance.addObserver(this);
     ParentalService.isOnVideoScreen = true;
   }
@@ -57,7 +59,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<VideoRow>>(
-      future: SupabaseService.instance.getVideos(),
+      future: _videosFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
