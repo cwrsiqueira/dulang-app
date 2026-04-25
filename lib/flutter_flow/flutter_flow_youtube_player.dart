@@ -96,6 +96,7 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
     if (!handleFullScreen || _youtubeWrapper?._controller == null) {
       _tearDownPlayer();
     } else {
+      _youtubeWrapper?.resetOverlay();
       if (_subscribedRoute) {
         routeObserver.unsubscribe(this);
         _subscribedRoute = false;
@@ -127,6 +128,7 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   }
 
   void _tearDownPlayer() {
+    _youtubeWrapper?.resetOverlay();
     if (_subscribedRoute) {
       routeObserver.unsubscribe(this);
       _subscribedRoute = false;
@@ -138,6 +140,7 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
     }
     _controller = null;
     _videoId = null;
+    _youtubeWrapper = null;
   }
 
   @override
@@ -193,9 +196,9 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
       _controller!.setFullScreenListener((fullScreen) {
         if (fullScreen) {
           _youtubeFullScreenControllerMap[_videoId!] = _controller!;
-          _youtubeWrapper!.updateYoutubePlayer(_controller, _videoId);
+          _youtubeWrapper?.updateYoutubePlayer(_controller, _videoId);
         } else {
-          _youtubeWrapper!.updateYoutubePlayer();
+          _youtubeWrapper?.updateYoutubePlayer();
         }
       });
     }
@@ -245,6 +248,16 @@ class YoutubeFullScreenWrapper extends StatefulWidget {
 class _YoutubeFullScreenWrapperState extends State<YoutubeFullScreenWrapper> {
   YoutubePlayerController? _controller;
   String? _videoId;
+
+  void resetOverlay() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _controller = null;
+      _videoId = null;
+    });
+  }
 
   void updateYoutubePlayer([
     YoutubePlayerController? controller,

@@ -11,6 +11,7 @@ Last updated: 2026-04-25
 | Parental PIN + onboarding | Implemented (basic) | Works, but advanced controls are pending |
 | Player hardening | Partial | Important restrictions exist; keep validating policy details |
 | Video navigation from list | Fixed (needs device QA) | Second tap on same route now recreates player state; list fetch memoized per screen |
+| Video back navigation | Fixed (needs device QA) | Use GoRouter safePop and reset fullscreen wrapper overlay to avoid black screen returning home |
 | RevenueCat monetization | Pending | Dependency present, end-to-end flow missing |
 | Channel sync automation | Pending | Needs backend/app operational closure |
 | Parent value features | Pending | Time control, schedule, history, profiles |
@@ -26,6 +27,7 @@ Last updated: 2026-04-25
 - Institutional pages exist (about/contact/terms).
 - YouTube player has key restrictions (controls minimized and related behavior constrained).
 - Video screen navigation hardened: route rebuilds player state per selected video id and player reacts to url changes.
+- Video screen exit hardened: back navigation uses GoRouter safe pop and clears YouTube fullscreen overlay state to prevent a blank home screen.
 
 ### Priority gaps
 
@@ -69,6 +71,7 @@ Last updated: 2026-04-25
 - Telas institucionais existem (sobre/contato/termos).
 - Player do YouTube com restricoes importantes (controles reduzidos e relacionados limitados).
 - Navegacao na tela de video endurecida: a rota recria o estado do player por id do video e o player reage a mudancas de `url`.
+- Saida da tela de video endurecida: voltar usa safe pop do GoRouter e limpa overlay de fullscreen do YouTube para evitar tela inicial em branco.
 
 ### Gaps prioritarios
 

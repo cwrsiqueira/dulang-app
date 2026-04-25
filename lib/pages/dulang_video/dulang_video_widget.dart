@@ -85,7 +85,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
             onPopInvokedWithResult: (didPop, _) {
               if (didPop) return;
               // Pop normal: volta ao feed sem pedir PIN.
-              Navigator.of(context).pop();
+              context.safePop();
             },
             child: GestureDetector(
               onTap: () {
@@ -115,7 +115,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
                             color: FlutterFlowTheme.of(context).primary,
                             size: 30.0,
                           ),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => context.safePop(),
                         ),
                         actions: [],
                         flexibleSpace: FlexibleSpaceBar(
