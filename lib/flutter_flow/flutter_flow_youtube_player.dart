@@ -24,13 +24,91 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart' as uri_launcher;
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '/flutter_flow/flutter_flow_util.dart' show routeObserver;
+
+/// Replaces [YoutubePlayerController]'s delegate: upstream only handles a few
+/// `feature=` values for related/endscreen taps; YouTube adds new `emb_rel_*`
+/// names, which then get [NavigationDecision.prevent] with no [loadVideoById].
+NavigationDecision _dulangYoutubeNavigationDecision(
+  YoutubePlayerController controller,
+  Uri? uri,
+) {
+  if (uri == null) return NavigationDecision.prevent;
+
+  final params = uri.queryParameters;
+  final host = uri.host;
+  final path = uri.path;
+
+  String? featureName;
+  if (host.contains('facebook') ||
+      host.contains('twitter') ||
+      host == 'youtu') {
+    featureName = 'social';
+  } else if (params.containsKey('feature')) {
+    featureName = params['feature'];
+  } else if (path == '/watch' || path == '/watch/') {
+    featureName = 'emb_info';
+  } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+    return NavigationDecision.navigate;
+  }
+
+  final v = params['v'];
+  if (v != null &&
+      v.isNotEmpty &&
+      featureName != null &&
+      featureName.startsWith('emb_rel')) {
+    unawaited(controller.loadVideoById(videoId: v));
+    return NavigationDecision.prevent;
+  }
+
+  switch (featureName) {
+    case 'emb_rel_pause':
+    case 'emb_rel_end':
+    case 'emb_info':
+      final videoId = params['v'];
+      if (videoId != null) {
+        unawaited(controller.loadVideoById(videoId: videoId));
+      }
+      break;
+    case 'emb_title':
+    case 'emb_logo':
+    case 'social':
+    case 'wl_button':
+      unawaited(uri_launcher.launchUrl(uri));
+      break;
+  }
+
+  return NavigationDecision.prevent;
+}
+
+void _installDulangYoutubeNavigationDelegate(YoutubePlayerController controller) {
+  // Package sets NavigationDelegate in the ctor only; no override hook. We must
+  // replace it so newer YouTube `feature=emb_rel_*` URLs still load in-player.
+  // ignore: invalid_use_of_internal_member
+  controller.webViewController.setNavigationDelegate(
+    NavigationDelegate(
+      onWebResourceError: (error) {
+        developer.log(
+          error.description,
+          name: error.errorType.toString(),
+        );
+      },
+      onNavigationRequest: (request) {
+        final uri = Uri.tryParse(request.url);
+        return _dulangYoutubeNavigationDecision(controller, uri);
+      },
+    ),
+  );
+}
 
 const kYoutubeAspectRatio = 16 / 9;
 final _youtubeFullScreenControllerMap = <String, YoutubePlayerController>{};
@@ -203,6 +281,8 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
         unawaited(_controller!.cueVideoById(videoId: videoId));
       }
     }
+
+    _installDulangYoutubeNavigationDelegate(_controller!);
 
     _playerSubscription?.cancel();
     _playerSubscription = _controller!.listen(_handlePlayerValue);

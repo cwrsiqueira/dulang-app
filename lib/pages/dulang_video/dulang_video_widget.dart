@@ -102,12 +102,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
               // Pop normal: volta ao feed sem pedir PIN.
               context.safePop();
             },
-            child: GestureDetector(
-              onTap: () {
-                FocusScope.of(context).unfocus();
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-              child: Scaffold(
+            child: Scaffold(
                 key: scaffoldKey,
                 appBar: responsiveVisibility(
                               context: context,
@@ -405,7 +400,6 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
                   ),
                 ),
               ),
-            ),
           ),
         );
       },
