@@ -11,11 +11,32 @@ class OnboardingWidget extends StatefulWidget {
 }
 
 class _OnboardingWidgetState extends State<OnboardingWidget> {
-  int _step = 0;
+  /// 0 = carrossel de boas-vindas; 1 = fluxo PIN parental.
+  int _phase = 0;
+  final PageController _introController = PageController();
+  int _introPage = 0;
+
   String _pin = '';
   String _entered = '';
   bool _isConfirming = false;
   String? _errorMessage;
+
+  static const _introHeadlines = [
+    'Conteúdo pensado para pequenos',
+    'Sem distrações do YouTube',
+    'Controle nas mãos dos pais',
+  ];
+  static const _introSubtitles = [
+    'Vídeos em inglês, curadoria segura e ambiente fechado para crianças.',
+    'Nada de links externos nem navegação fora do app.',
+    'PIN, horários e limite diário quando você quiser usar.',
+  ];
+
+  @override
+  void dispose() {
+    _introController.dispose();
+    super.dispose();
+  }
 
   void _onKey(String key) {
     setState(() => _errorMessage = null);
@@ -56,11 +77,12 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
 
   Future<void> _finish(String pin) async {
     await ParentalService.completeOnboarding(pin);
+    await ParentalService.requestProfilePickerAfterOnboarding();
     if (!mounted) return;
     AppStateNotifier.instance.setOnboardingDone();
   }
 
-  Widget _buildDots() {
+  Widget _buildPinDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(4, (i) {
@@ -124,67 +146,166 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     );
   }
 
-  Widget _buildWelcome() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              'assets/images/dulang512x512.png',
-              width: 100,
-              height: 100,
+  Widget _buildIntroPageIndicator() {
+    final accent = FlutterFlowTheme.of(context).tertiary;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (i) {
+        final active = i == _introPage;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: active ? 28 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: active ? accent : Colors.grey.shade700,
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildIntro() {
+    final accent = FlutterFlowTheme.of(context).tertiary;
+    return Column(
+      children: [
+        Expanded(
+          flex: 11,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const _IntroCollage(),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 100,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0),
+                        Colors.black,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 10,
+          child: ColoredBox(
+            color: Colors.black,
+            child: Column(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: _introController,
+                    onPageChanged: (i) => setState(() => _introPage = i),
+                    itemCount: 3,
+                    itemBuilder: (context, i) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(28, 8, 28, 0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _introHeadlines[i],
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              _introSubtitles[i],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.72),
+                                fontSize: 15,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildIntroPageIndicator(),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: accent,
+                        foregroundColor: Colors.black,
+                        shape: const StadiumBorder(),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        if (_introPage < 2) {
+                          _introController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutCubic,
+                          );
+                        } else {
+                          setState(() => _phase = 1);
+                        }
+                      },
+                      child: Text(
+                        _introPage < 2 ? 'Continuar' : 'Começar',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 28),
-          Text(
-            'Bem-vindo ao Dulang!',
-            style: FlutterFlowTheme.of(context).headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Olá! O Dulang é um ambiente seguro para seu filho assistir vídeos em inglês selecionados para crianças de 0 a 5 anos.\n\nNenhum link externo, sem distrações do YouTube.\n\nA seguir, vamos criar um PIN parental para proteger as configurações do app.',
-            style: FlutterFlowTheme.of(context).bodyMedium.copyWith(
-                  color: FlutterFlowTheme.of(context).secondaryText,
-                  height: 1.6,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 40),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: () => setState(() => _step = 1),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: FlutterFlowTheme.of(context).primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text(
-                'Criar PIN e começar',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildSetPin() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              onPressed: () => setState(() {
+                _phase = 0;
+                _entered = '';
+                _isConfirming = false;
+                _pin = '';
+                _errorMessage = null;
+              }),
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                color: FlutterFlowTheme.of(context).secondaryText,
+              ),
+            ),
+          ),
           Icon(Icons.lock_outline,
               size: 48, color: FlutterFlowTheme.of(context).primary),
           const SizedBox(height: 16),
@@ -204,7 +325,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          _buildDots(),
+          _buildPinDots(),
           if (_errorMessage != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -240,10 +361,77 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        backgroundColor: _phase == 0
+            ? Colors.black
+            : FlutterFlowTheme.of(context).primaryBackground,
         body: SafeArea(
-          child: _step == 0 ? _buildWelcome() : _buildSetPin(),
+          child: _phase == 0 ? _buildIntro() : _buildSetPin(),
         ),
+      ),
+    );
+  }
+}
+
+/// Grade de “posters” com leve rotação, inspirada em apps de streaming.
+class _IntroCollage extends StatelessWidget {
+  const _IntroCollage();
+
+  @override
+  Widget build(BuildContext context) {
+    const assets = [
+      'assets/images/dulang512x512.png',
+      'assets/images/dulang.webp',
+      'assets/images/dulang1_bgtransparent.png',
+      'assets/images/Ad_do_App.png',
+    ];
+    return ColoredBox(
+      color: const Color(0xFF141414),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final w = c.maxWidth;
+          final h = c.maxHeight;
+          final specs = <({
+            double lx,
+            double ty,
+            double rw,
+            double rh,
+            double angle
+          })>[
+            (lx: 0.02, ty: 0.06, rw: 0.38, rh: 0.42, angle: -0.09),
+            (lx: 0.48, ty: 0.02, rw: 0.44, rh: 0.38, angle: 0.07),
+            (lx: 0.12, ty: 0.38, rw: 0.36, rh: 0.40, angle: 0.05),
+            (lx: 0.52, ty: 0.42, rw: 0.40, rh: 0.36, angle: -0.06),
+            (lx: -0.04, ty: 0.52, rw: 0.34, rh: 0.34, angle: 0.04),
+            (lx: 0.62, ty: 0.58, rw: 0.32, rh: 0.32, angle: -0.05),
+          ];
+          return Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              for (var i = 0; i < specs.length; i++)
+                Positioned(
+                  left: w * specs[i].lx,
+                  top: h * specs[i].ty,
+                  child: Transform.rotate(
+                    angle: specs[i].angle,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.asset(
+                        assets[i % assets.length],
+                        width: w * specs[i].rw,
+                        height: h * specs[i].rh,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: w * specs[i].rw,
+                          height: h * specs[i].rh,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

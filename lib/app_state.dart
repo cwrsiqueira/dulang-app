@@ -129,6 +129,64 @@ class FFAppState extends ChangeNotifier {
     prefs.setStringList(
         'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());
   }
+
+  String? _youtubeIdOf(dynamic e) {
+    if (e is! Map) return null;
+    final m = Map<String, dynamic>.from(e);
+    return m['youtube_video_id'] as String?;
+  }
+
+  void addOrUpdateHistoryEntry(Map<String, dynamic> engagement) {
+    update(() {
+      final id = engagement['youtube_video_id'] as String?;
+      if (id == null || id.isEmpty) return;
+      _history.removeWhere((e) => _youtubeIdOf(e) == id);
+      _history.insert(0, engagement);
+      prefs.setStringList(
+          'ff_history', _history.map((x) => jsonEncode(x)).toList());
+    });
+  }
+
+  bool isFavoriteVideoId(String youtubeVideoId) {
+    return _favorites.any((e) => _youtubeIdOf(e) == youtubeVideoId);
+  }
+
+  void toggleFavoriteEntry(Map<String, dynamic> engagement) {
+    final id = engagement['youtube_video_id'] as String?;
+    if (id == null || id.isEmpty) return;
+    update(() {
+      final exists = _favorites.any((e) => _youtubeIdOf(e) == id);
+      if (exists) {
+        _favorites.removeWhere((e) => _youtubeIdOf(e) == id);
+      } else {
+        _favorites.insert(0, engagement);
+      }
+      prefs.setStringList(
+          'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());
+    });
+  }
+
+  void removeFavoriteByVideoId(String youtubeVideoId) {
+    update(() {
+      _favorites.removeWhere((e) => _youtubeIdOf(e) == youtubeVideoId);
+      prefs.setStringList(
+          'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());
+    });
+  }
+
+  void clearHistory() {
+    update(() {
+      _history = [];
+      prefs.setStringList('ff_history', []);
+    });
+  }
+
+  void clearFavorites() {
+    update(() {
+      _favorites = [];
+      prefs.setStringList('ff_favorites', []);
+    });
+  }
 }
 
 void _safeInit(Function() initializeField) {

@@ -66,4 +66,55 @@ class VideoRow {
       channelName: (json['channels'] as Map<String, dynamic>?)?['name'] as String? ?? '',
     );
   }
+
+  /// Map for [FFAppState] favorites/history persistence.
+  Map<String, dynamic> toEngagementMap() {
+    return {
+      'youtube_video_id': youtubeVideoId,
+      'title': title,
+      'thumbnail_high': thumbnailHigh,
+      'thumbnail_default': thumbnailDefault,
+      'channel_name': channelName,
+      'at': DateTime.now().toIso8601String(),
+    };
+  }
+
+  static VideoRow? fromEngagementMap(Map<String, dynamic> m) {
+    final vid = m['youtube_video_id'] as String?;
+    if (vid == null || vid.isEmpty) return null;
+    return VideoRow(
+      id: m['id'] as String? ?? vid,
+      youtubeVideoId: vid,
+      channelId: m['channel_id'] as String? ?? '',
+      title: m['title'] as String? ?? '',
+      description: '',
+      thumbnailDefault: m['thumbnail_default'] as String? ?? '',
+      thumbnailHigh: m['thumbnail_high'] as String? ?? '',
+      publishedAt: null,
+      channelName: m['channel_name'] as String? ?? '',
+    );
+  }
+
+  /// URL para exibição: usa thumb salva ou padrão do YouTube pelo id.
+  String get displayThumbnailUrl {
+    final t = thumbnailHigh.trim();
+    if (t.isNotEmpty) return t;
+    final d = thumbnailDefault.trim();
+    if (d.isNotEmpty) return d;
+    final id = youtubeVideoId.trim();
+    if (id.isEmpty) return '';
+    return 'https://img.youtube.com/vi/$id/hqdefault.jpg';
+  }
+
+  String get displayTitle {
+    final t = title.trim();
+    if (t.isNotEmpty) return t;
+    return 'Vídeo';
+  }
+
+  String get displayChannelLabel {
+    final c = channelName.trim();
+    if (c.isNotEmpty) return c;
+    return 'Dulang';
+  }
 }

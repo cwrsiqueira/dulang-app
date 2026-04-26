@@ -5,7 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Legado: `true` = escuro, `false` = claro, ausente = primeira instalação (escuro).
 const kThemeModeKey = '__theme_mode__';
+/// Preferência explícita: `light` | `dark` | `system`.
+const kThemeModePrefKey = '__theme_mode_pref_v2__';
 
 SharedPreferences? _prefs;
 
@@ -14,17 +17,36 @@ abstract class FlutterFlowTheme {
       _prefs = await SharedPreferences.getInstance();
 
   static ThemeMode get themeMode {
-    final darkMode = _prefs?.getBool(kThemeModeKey);
-    return darkMode == null
-        ? ThemeMode.system
-        : darkMode
-            ? ThemeMode.dark
-            : ThemeMode.light;
+    final p = _prefs;
+    if (p == null) return ThemeMode.dark;
+    final v2 = p.getString(kThemeModePrefKey);
+    if (v2 != null) {
+      switch (v2) {
+        case 'light':
+          return ThemeMode.light;
+        case 'system':
+          return ThemeMode.system;
+        case 'dark':
+        default:
+          return ThemeMode.dark;
+      }
+    }
+    final legacy = p.getBool(kThemeModeKey);
+    if (legacy == null) return ThemeMode.dark;
+    return legacy ? ThemeMode.dark : ThemeMode.light;
   }
 
-  static void saveThemeMode(ThemeMode mode) => mode == ThemeMode.system
-      ? _prefs?.remove(kThemeModeKey)
-      : _prefs?.setBool(kThemeModeKey, mode == ThemeMode.dark);
+  static void saveThemeMode(ThemeMode mode) {
+    final p = _prefs;
+    if (p == null) return;
+    final s = switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    };
+    p.setString(kThemeModePrefKey, s);
+    p.remove(kThemeModeKey);
+  }
 
   static FlutterFlowTheme of(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
@@ -332,15 +354,15 @@ class DarkModeTheme extends FlutterFlowTheme {
   late Color primary = const Color(0xFF19DB8A);
   late Color secondary = const Color(0xFF36B4FF);
   late Color tertiary = const Color(0xFFFFA130);
-  late Color alternate = const Color(0xFF2B323B);
+  late Color alternate = const Color(0xFF2A2A2A);
   late Color primaryText = const Color(0xFFFFFFFF);
-  late Color secondaryText = const Color(0xFF95A1AC);
-  late Color primaryBackground = const Color(0xFF14181B);
-  late Color secondaryBackground = const Color(0xFF1D2429);
+  late Color secondaryText = const Color(0xFFB0B8C1);
+  late Color primaryBackground = const Color(0xFF121212);
+  late Color secondaryBackground = const Color(0xFF1E1E1E);
   late Color accent1 = const Color(0x4C19DB8A);
   late Color accent2 = const Color(0x4D36B4FF);
   late Color accent3 = const Color(0x4CFFA130);
-  late Color accent4 = const Color(0xB214181B);
+  late Color accent4 = const Color(0xCC121212);
   late Color success = const Color(0xFF16B070);
   late Color warning = const Color(0xFFCC8E30);
   late Color error = const Color(0xFFFF5963);

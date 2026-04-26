@@ -1,14 +1,11 @@
-import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dulang_premium_model.dart';
 export 'dulang_premium_model.dart';
 
-/// Pagina de venda do Dulang
+/// Paywall estilo streaming; integração RevenueCat em etapa futura.
 class DulangPremiumWidget extends StatefulWidget {
   const DulangPremiumWidget({super.key});
 
@@ -19,339 +16,214 @@ class DulangPremiumWidget extends StatefulWidget {
   State<DulangPremiumWidget> createState() => _DulangPremiumWidgetState();
 }
 
-class _DulangPremiumWidgetState extends State<DulangPremiumWidget>
-    with TickerProviderStateMixin {
+class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   late DulangPremiumModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final animationsMap = <String, AnimationInfo>{};
+  static const _priceLabel = r'$9,97';
+  static const _period = '/mês';
+
+  static const _benefits = <(IconData, String)>[
+    (Icons.favorite_rounded, 'Favoritos para salvar o que mais gostam'),
+    (Icons.history_rounded, 'Histórico de tudo que já assistiram'),
+    (Icons.verified_user_rounded, 'Bloqueio parental com PIN e limites'),
+    (Icons.schedule_rounded, 'Horários de uso e tempo diário configuráveis'),
+    (Icons.groups_rounded, 'Vários perfis de criança na mesma conta'),
+    (Icons.video_library_rounded, 'Catálogo completo em inglês, sem sair do app'),
+  ];
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => DulangPremiumModel());
-
-    animationsMap.addAll({
-      'textOnPageLoadAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-          MoveEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: Offset(0.0, 60.0),
-            end: Offset(0.0, 0.0),
-          ),
-        ],
-      ),
-      'rowOnPageLoadAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-          MoveEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: Offset(0.0, 80.0),
-            end: Offset(0.0, 0.0),
-          ),
-        ],
-      ),
-      'containerOnPageLoadAnimation': AnimationInfo(
-        trigger: AnimationTrigger.onPageLoad,
-        effectsBuilder: () => [
-          FadeEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: 0.0,
-            end: 1.0,
-          ),
-          MoveEffect(
-            curve: Curves.easeInOut,
-            delay: 0.0.ms,
-            duration: 600.0.ms,
-            begin: Offset(0.0, 140.0),
-            end: Offset(0.0, 0.0),
-          ),
-        ],
-      ),
-    });
-    setupAnimations(
-      animationsMap.values.where((anim) =>
-          anim.trigger == AnimationTrigger.onActionTrigger ||
-          !anim.applyInitialState),
-      this,
-    );
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
+  }
+
+  void _onSubscribePlaceholder() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Assinaturas pela loja (RevenueCat) chegam em breve. Obrigado por apoiar o Dulang!',
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    final tertiary = theme.tertiary;
+    final onCard = theme.primaryText;
+    final onCardMuted = theme.secondaryText;
+
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-      appBar: responsiveVisibility(
-        context: context,
-        tabletLandscape: false,
-      )
-          ? AppBar(
-              backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-              automaticallyImplyLeading: false,
-              actions: [],
-              flexibleSpace: FlexibleSpaceBar(
-                title: Align(
-                  alignment: AlignmentDirectional(1.0, 1.0),
-                  child: Text(
-                    '',
-                    textAlign: TextAlign.start,
-                    style: FlutterFlowTheme.of(context).headlineMedium.override(
-                          font: GoogleFonts.inter(
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .headlineMedium
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .headlineMedium
-                                .fontStyle,
-                          ),
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          fontSize: 12.0,
-                          letterSpacing: 0.0,
-                          fontWeight: FlutterFlowTheme.of(context)
-                              .headlineMedium
-                              .fontWeight,
-                          fontStyle: FlutterFlowTheme.of(context)
-                              .headlineMedium
-                              .fontStyle,
-                        ),
+      backgroundColor: theme.primaryBackground,
+      appBar: AppBar(
+        backgroundColor: theme.secondaryBackground,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: theme.primaryText),
+          onPressed: () => context.safePop(),
+        ),
+        title: Text(
+          'Dulang',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            color: tertiary,
+          ),
+        ),
+        centerTitle: false,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+        children: [
+          Text(
+            'Cancele quando quiser. Sem taxas escondidas.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              color: onCardMuted,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 28),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.secondaryBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: tertiary, width: 2),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: tertiary,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
-                background: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0.0, 20.0, 0.0, 0.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.asset(
-                      'assets/images/dulang1_bgtransparent.png',
-                      fit: BoxFit.contain,
-                      alignment: Alignment(0.0, 0.0),
+                  child: Text(
+                    'Acesso completo',
+                    style: GoogleFonts.inter(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
                     ),
                   ),
                 ),
-                centerTitle: false,
-                expandedTitleScale: 1.0,
-              ),
-              elevation: 2.0,
-            )
-          : null,
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 16.0),
-                    child: Hero(
-                      tag: 'mainImage',
-                      transitionOnUserGestures: true,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(0.0),
-                        child: Image.asset(
-                          'assets/images/Ad_do_App.png',
-                          width: double.infinity,
-                          height: 360.0,
-                          fit: BoxFit.contain,
+                const SizedBox(height: 16),
+                Text(
+                  'Plano mensal',
+                  style: GoogleFonts.inter(
+                    color: onCardMuted,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _priceLabel,
+                      style: GoogleFonts.inter(
+                        color: onCard,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        height: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4, left: 4),
+                      child: Text(
+                        _period,
+                        style: GoogleFonts.inter(
+                          color: onCardMuted,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
+                    const Spacer(),
+                    Icon(Icons.check_circle, color: tertiary, size: 32),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Tudo o que o Dulang oferece hoje, com suporte contínuo ao aprendizado em inglês.',
+                  style: GoogleFonts.inter(
+                    color: onCardMuted,
+                    fontSize: 14,
+                    height: 1.4,
                   ),
-                  Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 0.0, 0.0),
-                    child: Text(
-                      'Dulang',
-                      style:
-                          FlutterFlowTheme.of(context).headlineSmall.override(
-                                font: GoogleFonts.inter(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .headlineSmall
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .headlineSmall
-                                      .fontStyle,
-                                ),
-                                letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .headlineSmall
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .headlineSmall
-                                    .fontStyle,
-                              ),
-                    ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'O que está incluído',
+                  style: GoogleFonts.inter(
+                    color: onCard,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
                   ),
+                ),
+                const SizedBox(height: 12),
+                for (final b in _benefits)
                   Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 16.0),
-                    child: Text(
-                      'Mais de 400 vídeos seguros em inglês nativo, cuidadosamente selecionados para transformar o tempo de tela em aprendizado natural e divertido para crianças de 0 a 6 anos.',
-                      style: FlutterFlowTheme.of(context).labelMedium.override(
-                            font: GoogleFonts.readexPro(
-                              fontWeight: FlutterFlowTheme.of(context)
-                                  .labelMedium
-                                  .fontWeight,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .labelMedium
-                                  .fontStyle,
-                            ),
-                            letterSpacing: 0.0,
-                            fontWeight: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .fontWeight,
-                            fontStyle: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .fontStyle,
-                          ),
-                    ).animateOnPageLoad(
-                        animationsMap['textOnPageLoadAnimation']!),
-                  ),
-                  Padding(
-                    padding:
-                        EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 40.0),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '\$59.99',
-                          textAlign: TextAlign.start,
-                          style: FlutterFlowTheme.of(context)
-                              .headlineSmall
-                              .override(
-                                font: GoogleFonts.inter(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .headlineSmall
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .headlineSmall
-                                      .fontStyle,
-                                ),
-                                letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .headlineSmall
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .headlineSmall
-                                    .fontStyle,
-                              ),
+                        Icon(b.$1, color: tertiary, size: 22),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            b.$2,
+                            style: GoogleFonts.inter(
+                              color: onCard,
+                              fontSize: 14,
+                              height: 1.35,
+                            ),
+                          ),
                         ),
                       ],
-                    ).animateOnPageLoad(
-                        animationsMap['rowOnPageLoadAnimation']!),
+                    ),
                   ),
-                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: tertiary,
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 54),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: _onSubscribePlaceholder,
+            child: Text(
+              'Assinar agora',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
               ),
             ),
           ),
-          Material(
-            color: Colors.transparent,
-            elevation: 3.0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(0.0),
-            ),
-            child: Container(
-              width: double.infinity,
-              height: 100.0,
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).primaryBackground,
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 4.0,
-                    color: Color(0x320F1113),
-                    offset: Offset(
-                      0.0,
-                      -2.0,
-                    ),
-                  )
-                ],
-                borderRadius: BorderRadius.circular(0.0),
-              ),
-              child: Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 34.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    FFButtonWidget(
-                      onPressed: () async {
-                        await launchURL(
-                            'https://play.google.com/store/apps/details?id=com.mycompany.dulang&pcampaignid=web_share');
-                      },
-                      text: 'Baixe Agora',
-                      options: FFButtonOptions(
-                        width: 130.0,
-                        height: 50.0,
-                        padding:
-                            EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
-                        iconPadding:
-                            EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 0.0),
-                        color: FlutterFlowTheme.of(context).primary,
-                        textStyle:
-                            FlutterFlowTheme.of(context).titleSmall.override(
-                                  font: GoogleFonts.readexPro(
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleSmall
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleSmall
-                                        .fontStyle,
-                                  ),
-                                  color: Colors.white,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .titleSmall
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .titleSmall
-                                      .fontStyle,
-                                ),
-                        elevation: 2.0,
-                        borderSide: BorderSide(
-                          color: Colors.transparent,
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!),
-        ],
+        ),
       ),
     );
   }

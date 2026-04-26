@@ -8,6 +8,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import '/backend/sqlite/sqlite_manager.dart';
 import '/features/parental/parental_service.dart';
 import '/features/parental/pin_dialog.dart';
+import '/features/profiles/child_profile_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
@@ -31,6 +32,7 @@ void main() async {
 
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
+  await ChildProfileService.instance.ensureDefaultProfile();
 
   final onboardingDone = await ParentalService.isOnboardingDone();
   AppStateNotifier.instance.onboardingDone = onboardingDone;
@@ -111,11 +113,13 @@ class _MyAppState extends State<MyApp> {
       ],
       theme: ThemeData(
         brightness: Brightness.light,
-        useMaterial3: false,
+        useMaterial3: true,
+        colorSchemeSeed: const Color(0xFFFFA130),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        useMaterial3: false,
+        useMaterial3: true,
+        colorSchemeSeed: const Color(0xFFFFA130),
       ),
       themeMode: _themeMode,
       routerConfig: _router,
@@ -140,14 +144,95 @@ class NavBarPage extends StatefulWidget {
 }
 
 /// This is the private State class that goes with NavBarPage.
-class _NavBarPageState extends State<NavBarPage> {
+class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   String _currentPageName = 'Dulang';
   late Widget? _currentPage;
+  DateTime? _lastResumeAt;
+  bool _playbackLocked = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _checkParentalLimits();
+      final pending = await ParentalService.consumePendingProfilePicker();
+      if (pending && mounted) {
+        context.pushNamed(SelecionarPerfilWidget.routeName);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _lastResumeAt = DateTime.now();
+      _checkParentalLimits();
+    } else if (state == AppLifecycleState.paused && _lastResumeAt != null) {
+      final mins = DateTime.now().difference(_lastResumeAt!).inMinutes;
+      if (mins > 0) {
+        ParentalService.addUsedMinutes(mins);
+      }
+    }
+  }
+
+  Future<void> _checkParentalLimits() async {
+    if (!mounted) return;
+    final inWindow = await ParentalService.isWithinAllowedAccessHours();
+    final underDaily = await ParentalService.isUnderDailyLimit();
+    final locked = !inWindow || !underDaily;
+    final wasLocked = _playbackLocked;
+
+    if (ParentalService.isOnVideoScreen) {
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _playbackLocked = locked);
+
+    if (locked && !wasLocked) {
+      if (!inWindow) {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Horário de uso'),
+            content: const Text(
+              'Está fora da janela permitida pelos pais. Os vídeos ficam bloqueados até o horário configurado em Ajustes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Tempo do dia'),
+            content: const Text(
+              'O tempo de uso diário configurado pelos pais foi atingido. Os vídeos ficam bloqueados até amanhã ou até um adulto ajustar em Ajustes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _onBackPressed() async {
@@ -187,13 +272,16 @@ class _NavBarPageState extends State<NavBarPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = {
-      'Dulang': DulangWidget(),
-      'Contato': ContatoWidget(),
-      'SobreODulang': SobreODulangWidget(),
-      'DulangPremium': DulangPremiumWidget(),
+    final tabs = <String, Widget>{
+      'Dulang': const DulangWidget(),
+      'Favoritos': const FavoritosWidget(),
+      'Historico': const HistoricoWidget(),
+      'Configuracoes': const ConfiguracoesWidget(),
     };
-    final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
+    final keys = tabs.keys.toList();
+    final currentIndex = keys.indexOf(_currentPageName).clamp(0, keys.length - 1);
+    final tabBody = _currentPage ?? tabs[_currentPageName]!;
+    final showPlaybackLock = _playbackLocked && currentIndex != 3;
 
     return PopScope(
       canPop: false,
@@ -207,100 +295,105 @@ class _NavBarPageState extends State<NavBarPage> {
         await _onBackPressed();
       },
       child: Scaffold(
-      resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
-      body: _currentPage ?? tabs[_currentPageName],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (i) async {
-          if (i != 0) {
-            final result = await ScaffoldMessenger.of(context)
-                .showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.lock_outline, color: Colors.white, size: 18),
-                        SizedBox(width: 8),
-                        Flexible(child: Text('Área restrita')),
-                      ],
+        resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            tabBody,
+            if (showPlaybackLock)
+              Positioned.fill(
+                child: AbsorbPointer(
+                  absorbing: true,
+                  child: Material(
+                    color: Colors.black.withValues(alpha: 0.88),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 56,
+                              color: FlutterFlowTheme.of(context).tertiary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Pausa no Dulang',
+                              textAlign: TextAlign.center,
+                              style: FlutterFlowTheme.of(context)
+                                  .headlineSmall
+                                  .override(
+                                    color: Colors.white,
+                                  ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Um adulto pode revisar horários e limites em Ajustes (ícone de engrenagem).',
+                              textAlign: TextAlign.center,
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
+                                  .override(
+                                    color: Colors.white70,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    action: SnackBarAction(
-                      label: 'DIGITAR PIN',
-                      textColor: Colors.amber,
-                      onPressed: () {},
-                    ),
-                    duration: const Duration(seconds: 3),
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(
-                        bottom: 72, left: 16, right: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
                   ),
-                )
-                .closed;
-            if (result != SnackBarClosedReason.action || !mounted) return;
-            final ok = await showPinDialog(context);
-            if (!ok || !mounted) return;
-          }
-          safeSetState(() {
-            _currentPage = null;
-            _currentPageName = tabs.keys.toList()[i];
-          });
-        },
-        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        selectedItemColor: FlutterFlowTheme.of(context).primary,
-        unselectedItemColor: FlutterFlowTheme.of(context).secondaryText,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.smart_toy_outlined,
+                ),
+              ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (i) async {
+            final prev = currentIndex;
+            if (i == 3) {
+              final ok = await showPinDialog(context);
+              if (!ok || !mounted) return;
+            }
+            safeSetState(() {
+              _currentPage = null;
+              _currentPageName = keys[i];
+            });
+            if (i == 0 || (prev == 3 && i != 3)) {
+              await _checkParentalLimits();
+            }
+          },
+          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+          selectedItemColor: FlutterFlowTheme.of(context).tertiary,
+          unselectedItemColor: FlutterFlowTheme.of(context).secondaryText,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 12,
+          unselectedFontSize: 11,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_rounded),
+              label: 'Home',
             ),
-            activeIcon: Icon(
-              Icons.smart_toy_rounded,
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite_border_rounded),
+              activeIcon: Icon(Icons.favorite_rounded),
+              label: 'Favoritos',
             ),
-            label: '',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.email_outlined,
-              size: 24.0,
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history_rounded),
+              activeIcon: Icon(Icons.history_rounded),
+              label: 'Histórico',
             ),
-            activeIcon: Icon(
-              Icons.email_rounded,
+            BottomNavigationBarItem(
+              icon: Icon(Icons.settings_outlined),
+              activeIcon: Icon(Icons.settings_rounded),
+              label: 'Ajustes',
             ),
-            label: 'Profile',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.help_outline,
-              size: 24.0,
-            ),
-            activeIcon: Icon(
-              Icons.help,
-              size: 24.0,
-            ),
-            label: 'Sobre',
-            tooltip: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.monetization_on_outlined,
-              size: 24.0,
-            ),
-            activeIcon: Icon(
-              Icons.monetization_on_rounded,
-              size: 24.0,
-            ),
-            label: 'Home',
-            tooltip: '',
-          )
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }

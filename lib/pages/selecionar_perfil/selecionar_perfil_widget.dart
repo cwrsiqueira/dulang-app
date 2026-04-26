@@ -1,0 +1,264 @@
+import '/features/profiles/child_profile_service.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// Tela estilo streaming: "Quem está assistindo?".
+class SelecionarPerfilWidget extends StatefulWidget {
+  const SelecionarPerfilWidget({super.key});
+
+  static const String routeName = 'SelecionarPerfil';
+  static const String routePath = '/selecionarPerfil';
+
+  @override
+  State<SelecionarPerfilWidget> createState() => _SelecionarPerfilWidgetState();
+}
+
+class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
+  List<ChildProfile> _list = [];
+  String? _activeId;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  Future<void> _reload() async {
+    final s = ChildProfileService.instance;
+    await s.ensureDefaultProfile();
+    final list = await s.loadProfiles();
+    final id = await s.activeProfileId();
+    if (!mounted) return;
+    setState(() {
+      _list = list;
+      _activeId = id;
+      _loading = false;
+    });
+  }
+
+  Future<void> _select(ChildProfile p) async {
+    await ChildProfileService.instance.setActiveProfileId(p.id);
+    if (!mounted) return;
+    context.safePop();
+  }
+
+  Future<void> _add() async {
+    final name = TextEditingController();
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Novo perfil'),
+          content: TextField(
+            controller: name,
+            decoration: const InputDecoration(
+              labelText: 'Nome da criança',
+              border: OutlineInputBorder(),
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Adicionar'),
+            ),
+          ],
+        ),
+      );
+      if (ok == true && mounted) {
+        await ChildProfileService.instance.addProfile(name.text, 0xFF36B4FF);
+        await _reload();
+      }
+    } finally {
+      name.dispose();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tertiary = FlutterFlowTheme.of(context).tertiary;
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D0D0D),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
+          onPressed: () => context.safePop(),
+        ),
+        title: Text(
+          'Dulang',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            color: tertiary,
+            letterSpacing: -0.5,
+          ),
+        ),
+        centerTitle: false,
+        actions: [
+          TextButton(
+            onPressed: _loading ? null : _add,
+            child: Text(
+              'NOVO PERFIL +',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    'Quem está assistindo?',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 20,
+                        crossAxisSpacing: 20,
+                        childAspectRatio: 0.72,
+                      ),
+                      itemCount: _list.length,
+                      itemBuilder: (context, i) {
+                        final p = _list[i];
+                        final active = p.id == _activeId;
+                        return _ProfileTile(
+                          profile: p,
+                          selected: active,
+                          onTap: () => _select(p),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+class _ProfileTile extends StatelessWidget {
+  const _ProfileTile({
+    required this.profile,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final ChildProfile profile;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color(profile.colorValue);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.85),
+                          color.withValues(alpha: 0.45),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: selected
+                            ? FlutterFlowTheme.of(context).tertiary
+                            : Colors.white12,
+                        width: selected ? 3 : 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        profile.name.isNotEmpty
+                            ? profile.name[0].toUpperCase()
+                            : '?',
+                        style: GoogleFonts.inter(
+                          fontSize: 56,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2A2A2A),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: selected ? Colors.greenAccent : Colors.white24,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      profile.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

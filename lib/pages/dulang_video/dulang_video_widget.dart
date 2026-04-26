@@ -6,6 +6,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_youtube_player.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'dulang_video_model.dart';
 export 'dulang_video_model.dart';
 
@@ -30,10 +31,13 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late final Future<List<VideoRow>> _videosFuture;
+  bool _historyRecorded = false;
 
-  void _onInPlayerVideoSelected(String videoId) {
+  Future<void> _onInPlayerVideoSelected(String videoId) async {
     if (!mounted) return;
     if (videoId.isEmpty) return;
+    if (await ParentalService.warnIfPlaybackBlocked(context)) return;
+    if (!mounted) return;
 
     context.goNamed(
       DulangVideoWidget.routeName,
@@ -46,6 +50,12 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
     );
   }
 
+  Future<void> _enforcePlaybackIfNeeded() async {
+    if (!mounted) return;
+    if (await ParentalService.isPlaybackAllowed()) return;
+    if (mounted) context.go('/');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +63,9 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
     _videosFuture = SupabaseService.instance.getVideos();
     WidgetsBinding.instance.addObserver(this);
     ParentalService.isOnVideoScreen = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _enforcePlaybackIfNeeded();
+    });
   }
 
   @override
@@ -65,10 +78,93 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Garante que o flag está correto ao retornar ao app enquanto no player.
     if (state == AppLifecycleState.resumed) {
       ParentalService.isOnVideoScreen = true;
+      _enforcePlaybackIfNeeded();
     }
+  }
+
+  /// Lista vertical de carrosséis, um por canal (como na Home).
+  Widget _buildChannelCarousels(
+    BuildContext context,
+    List<VideoRow> videos,
+  ) {
+    final byChannel = <String, List<VideoRow>>{};
+    for (final v in videos) {
+      final key =
+          v.channelName.trim().isEmpty ? 'Dulang' : v.channelName.trim();
+      byChannel.putIfAbsent(key, () => []).add(v);
+    }
+    final names = byChannel.keys.toList()..sort();
+    final thumbWidth = MediaQuery.sizeOf(context).width * 0.42;
+    final children = <Widget>[];
+    for (final name in names) {
+      final list = byChannel[name]!;
+      if (children.isNotEmpty) {
+        children.add(const SizedBox(height: 8));
+      }
+      children.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  name,
+                  style: FlutterFlowTheme.of(context).titleLarge.override(
+                        font: GoogleFonts.readexPro(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: FlutterFlowTheme.of(context).secondaryText,
+              ),
+            ],
+          ),
+        ),
+      );
+      children.add(
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            scrollDirection: Axis.horizontal,
+            itemCount: list.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final videoItem = list[i];
+              return _VideoRailCard(
+                width: thumbWidth,
+                video: videoItem,
+                onTap: () {
+                  ParentalService.warnIfPlaybackBlocked(context)
+                      .then((blocked) {
+                    if (blocked || !context.mounted) return;
+                    context.goNamed(
+                      DulangVideoWidget.routeName,
+                      queryParameters: {
+                        'url': serializeParam(
+                          videoItem.youtubeVideoId,
+                          ParamType.String,
+                        ),
+                      }.withoutNulls,
+                    );
+                  });
+                },
+              );
+            },
+          ),
+        ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
+    );
   }
 
   @override
@@ -93,6 +189,33 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
         }
 
         final videos = snapshot.data!;
+        final url = widget.url;
+        if (!_historyRecorded && url != null && url.isNotEmpty) {
+          _historyRecorded = true;
+          VideoRow? current;
+          for (final v in videos) {
+            if (v.youtubeVideoId == url) {
+              current = v;
+              break;
+            }
+          }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            final app = context.read<FFAppState>();
+            if (current != null) {
+              app.addOrUpdateHistoryEntry(current.toEngagementMap());
+            } else {
+              app.addOrUpdateHistoryEntry({
+                'youtube_video_id': url,
+                'title': 'Vídeo',
+                'thumbnail_high': '',
+                'thumbnail_default': '',
+                'channel_name': '',
+                'at': DateTime.now().toIso8601String(),
+              });
+            }
+          });
+        }
 
         return YoutubeFullScreenWrapper(
           child: PopScope(
@@ -127,7 +250,45 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
                           ),
                           onPressed: () => context.safePop(),
                         ),
-                        actions: [],
+                        actions: [
+                          if (widget.url != null && widget.url!.isNotEmpty)
+                            Consumer<FFAppState>(
+                              builder: (context, app, _) {
+                                final fav = app.isFavoriteVideoId(widget.url!);
+                                return IconButton(
+                                  icon: Icon(
+                                    fav
+                                        ? Icons.favorite_rounded
+                                        : Icons.favorite_border_rounded,
+                                    color: fav
+                                        ? FlutterFlowTheme.of(context).tertiary
+                                        : FlutterFlowTheme.of(context).primaryText,
+                                  ),
+                                  onPressed: () {
+                                    VideoRow? row;
+                                    for (final v in videos) {
+                                      if (v.youtubeVideoId == widget.url) {
+                                        row = v;
+                                        break;
+                                      }
+                                    }
+                                    if (row != null) {
+                                      app.toggleFavoriteEntry(row.toEngagementMap());
+                                    } else {
+                                      app.toggleFavoriteEntry({
+                                        'youtube_video_id': widget.url!,
+                                        'title': 'Vídeo',
+                                        'thumbnail_high': '',
+                                        'thumbnail_default': '',
+                                        'channel_name': '',
+                                        'at': DateTime.now().toIso8601String(),
+                                      });
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                        ],
                         flexibleSpace: FlexibleSpaceBar(
                           title: Align(
                             alignment: AlignmentDirectional(0.0, -1.0),
@@ -233,165 +394,10 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
                             child: Container(
                               width: double.infinity,
                               height: double.infinity,
-                              decoration: BoxDecoration(),
+                              decoration: const BoxDecoration(),
                               child: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.max,
-                                  children:
-                                      List.generate(videos.length, (videoIndex) {
-                                    final videoItem = videos[videoIndex];
-                                    return InkWell(
-                                      splashColor: Colors.transparent,
-                                      focusColor: Colors.transparent,
-                                      hoverColor: Colors.transparent,
-                                      highlightColor: Colors.transparent,
-                                      onTap: () {
-                                        // goNamed substitui a rota atual pelo novo vídeo.
-                                        context.goNamed(
-                                          DulangVideoWidget.routeName,
-                                          queryParameters: {
-                                            'url': serializeParam(
-                                              videoItem.youtubeVideoId,
-                                              ParamType.String,
-                                            ),
-                                          }.withoutNulls,
-                                        );
-                                      },
-                                      child: Container(
-                                        width:
-                                            MediaQuery.sizeOf(context).width *
-                                                1.0,
-                                        decoration: BoxDecoration(
-                                          color: FlutterFlowTheme.of(context)
-                                              .secondaryBackground,
-                                        ),
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16.0),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Padding(
-                                                padding: EdgeInsetsDirectional
-                                                    .fromSTEB(
-                                                        16.0, 0.0, 16.0, 0.0),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          8.0),
-                                                  child: Image.network(
-                                                    videoItem.thumbnailHigh,
-                                                    width: MediaQuery.sizeOf(
-                                                                context)
-                                                            .width *
-                                                        1.0,
-                                                    height: 120.0,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (_, __, ___) =>
-                                                            Container(
-                                                      width: double.infinity,
-                                                      height: 120.0,
-                                                      color:
-                                                          Colors.grey.shade200,
-                                                      child: const Icon(
-                                                          Icons
-                                                              .play_circle_outline,
-                                                          size: 40,
-                                                          color: Colors.grey),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Row(
-                                                mainAxisSize: MainAxisSize.max,
-                                                children: [
-                                                  Container(
-                                                    width: 36.0,
-                                                    height: 36.0,
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              18.0),
-                                                    ),
-                                                    child: ClipRRect(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              18.0),
-                                                      child: Image.network(
-                                                        videoItem
-                                                            .thumbnailDefault,
-                                                        width: 36.0,
-                                                        height: 36.0,
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (_,
-                                                                __,
-                                                                ___) =>
-                                                            const CircleAvatar(
-                                                                radius: 18,
-                                                                child: Icon(
-                                                                    Icons
-                                                                        .tv,
-                                                                    size: 18)),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          videoItem.title,
-                                                          maxLines: 2,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .readexPro(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500,
-                                                                ),
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                              ),
-                                                        ),
-                                                        Text(
-                                                          videoItem.channelName,
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodySmall
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .readexPro(),
-                                                                color: FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .secondaryText,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                              ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ].divide(SizedBox(height: 8.0)),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }).divide(SizedBox(height: 8.0)),
-                                ),
+                                padding: const EdgeInsets.only(bottom: 24),
+                                child: _buildChannelCarousels(context, videos),
                               ),
                             ),
                           ),
@@ -403,6 +409,66 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
           ),
         );
       },
+    );
+  }
+}
+
+class _VideoRailCard extends StatelessWidget {
+  const _VideoRailCard({
+    required this.width,
+    required this.video,
+    required this.onTap,
+  });
+
+  final double width;
+  final VideoRow video;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: FlutterFlowTheme.of(context).secondaryBackground,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Image.network(
+                  video.displayThumbnailUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: Colors.grey.shade800,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.play_circle_outline_rounded,
+                      size: 40,
+                      color: FlutterFlowTheme.of(context).tertiary,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                child: Text(
+                  video.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.readexPro(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: FlutterFlowTheme.of(context).primaryText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

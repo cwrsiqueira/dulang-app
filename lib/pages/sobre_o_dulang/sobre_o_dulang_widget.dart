@@ -53,6 +53,11 @@ class _SobreODulangWidgetState extends State<SobreODulangWidget> {
             ? AppBar(
                 backgroundColor: FlutterFlowTheme.of(context).primaryText,
                 automaticallyImplyLeading: false,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded,
+                      color: Colors.white70),
+                  onPressed: () => context.safePop(),
+                ),
                 title: Text(
                   'Sobre',
                   style: FlutterFlowTheme.of(context).headlineMedium.override(

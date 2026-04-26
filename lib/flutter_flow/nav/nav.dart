@@ -10,6 +10,9 @@ import '/main.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 import '/index.dart';
+import '/pages/configuracoes/alterar_pin_widget.dart';
+import '/pages/configuracoes/horarios_acesso_widget.dart';
+import '/pages/configuracoes/perfis_gerenciar_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -83,16 +86,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: SobreODulangWidget.routeName,
           path: SobreODulangWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'SobreODulang')
-              : SobreODulangWidget(),
+          builder: (context, params) => const SobreODulangWidget(),
         ),
         FFRoute(
           name: DulangWidget.routeName,
           path: DulangWidget.routePath,
           builder: (context, params) => params.isEmpty
               ? NavBarPage(initialPage: 'Dulang')
-              : DulangWidget(),
+              : const DulangWidget(),
         ),
         FFRoute(
           name: DulangVideoWidget.routeName,
@@ -111,17 +112,49 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
         FFRoute(
           name: ContatoWidget.routeName,
           path: ContatoWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'Contato')
-              : ContatoWidget(),
+          builder: (context, params) => const ContatoWidget(),
         ),
         FFRoute(
           name: DulangPremiumWidget.routeName,
           path: DulangPremiumWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'DulangPremium')
-              : DulangPremiumWidget(),
-        )
+          builder: (context, params) => const DulangPremiumWidget(),
+        ),
+        FFRoute(
+          name: CanalVideosWidget.routeName,
+          path: CanalVideosWidget.routePath,
+          builder: (context, params) {
+            final channelName = params.getParam(
+              'channelName',
+              ParamType.String,
+            );
+            return CanalVideosWidget(channelName: channelName);
+          },
+        ),
+        FFRoute(
+          name: AparenciaWidget.routeName,
+          path: AparenciaWidget.routePath,
+          builder: (context, params) => const AparenciaWidget(),
+        ),
+        FFRoute(
+          name: AlterarPinWidget.routeName,
+          path: AlterarPinWidget.routePath,
+          builder: (context, params) => const AlterarPinWidget(),
+        ),
+        FFRoute(
+          name: HorariosAcessoWidget.routeName,
+          path: HorariosAcessoWidget.routePath,
+          builder: (context, params) => const HorariosAcessoWidget(),
+        ),
+        FFRoute(
+          name: PerfisGerenciarWidget.routeName,
+          path: PerfisGerenciarWidget.routePath,
+          builder: (context, params) => const PerfisGerenciarWidget(),
+        ),
+        FFRoute(
+          name: SelecionarPerfilWidget.routeName,
+          path: SelecionarPerfilWidget.routePath,
+          builder: (context, params) => const SelecionarPerfilWidget(),
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
       observers: [routeObserver],
     );
