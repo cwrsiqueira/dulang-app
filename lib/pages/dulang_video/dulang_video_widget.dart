@@ -31,6 +31,21 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late final Future<List<VideoRow>> _videosFuture;
 
+  void _onInPlayerVideoSelected(String videoId) {
+    if (!mounted) return;
+    if (videoId.isEmpty) return;
+
+    context.goNamed(
+      DulangVideoWidget.routeName,
+      queryParameters: {
+        'url': serializeParam(
+          videoId,
+          ParamType.String,
+        ),
+      }.withoutNulls,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -206,6 +221,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
                                 showControls: false,
                                 showFullScreen: true,
                                 strictRelatedVideos: true,
+                                onVideoIdChanged: _onInPlayerVideoSelected,
                               ),
                             ),
                           ),

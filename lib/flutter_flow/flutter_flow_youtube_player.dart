@@ -48,6 +48,7 @@ class FlutterFlowYoutubePlayer extends StatefulWidget {
     this.showFullScreen = false,
     this.pauseOnNavigate = true,
     this.strictRelatedVideos = false,
+    this.onVideoIdChanged,
   });
 
   final String url;
@@ -60,6 +61,7 @@ class FlutterFlowYoutubePlayer extends StatefulWidget {
   final bool showFullScreen;
   final bool pauseOnNavigate;
   final bool strictRelatedVideos;
+  final ValueChanged<String>? onVideoIdChanged;
 
   @override
   State<FlutterFlowYoutubePlayer> createState() =>
@@ -72,6 +74,9 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   String? _videoId;
   _YoutubeFullScreenWrapperState? _youtubeWrapper;
   bool _subscribedRoute = false;
+  StreamSubscription<YoutubePlayerValue>? _playerSubscription;
+  String? _expectedVideoId;
+  String? _lastNotifiedVideoId;
 
   bool get handleFullScreen =>
       !kIsWeb && widget.showFullScreen && _youtubeWrapper != null;
@@ -128,6 +133,10 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   }
 
   void _tearDownPlayer() {
+    _playerSubscription?.cancel();
+    _playerSubscription = null;
+    _expectedVideoId = null;
+    _lastNotifiedVideoId = null;
     _youtubeWrapper?.resetOverlay();
     if (_subscribedRoute) {
       routeObserver.unsubscribe(this);
@@ -167,6 +176,8 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
     if (videoId == null) {
       return;
     }
+    _expectedVideoId = videoId;
+    _lastNotifiedVideoId = null;
     _videoId = videoId;
     _youtubeWrapper = YoutubeFullScreenWrapper.of(context);
 
@@ -192,6 +203,10 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
         unawaited(_controller!.cueVideoById(videoId: videoId));
       }
     }
+
+    _playerSubscription?.cancel();
+    _playerSubscription = _controller!.listen(_handlePlayerValue);
+
     if (handleFullScreen) {
       _controller!.setFullScreenListener((fullScreen) {
         if (fullScreen) {
@@ -202,6 +217,32 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
         }
       });
     }
+  }
+
+  void _handlePlayerValue(YoutubePlayerValue value) {
+    if (!mounted) {
+      return;
+    }
+    if (widget.onVideoIdChanged == null) {
+      return;
+    }
+    if (value.playerState != PlayerState.playing) {
+      return;
+    }
+
+    final currentId = value.metaData.videoId;
+    if (currentId.isEmpty) {
+      return;
+    }
+    if (_expectedVideoId != null && currentId == _expectedVideoId) {
+      return;
+    }
+    if (currentId == _lastNotifiedVideoId) {
+      return;
+    }
+
+    _lastNotifiedVideoId = currentId;
+    widget.onVideoIdChanged!(currentId);
   }
 
   @override
