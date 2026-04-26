@@ -35,9 +35,23 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '/flutter_flow/flutter_flow_util.dart' show routeObserver;
 
+bool _tryLoadVideoFromYoutubeNavigationUri(
+  YoutubePlayerController controller,
+  Uri uri,
+) {
+  final id = YoutubePlayerController.convertUrlToId(uri.toString());
+  if (id == null || id.isEmpty) return false;
+  unawaited(controller.loadVideoById(videoId: id));
+  return true;
+}
+
 /// Replaces [YoutubePlayerController]'s delegate: upstream only handles a few
 /// `feature=` values for related/endscreen taps; YouTube adds new `emb_rel_*`
 /// names, which then get [NavigationDecision.prevent] with no [loadVideoById].
+///
+/// Also, any main-frame YouTube URL with a parsable id is handled via
+/// [YoutubePlayerController.convertUrlToId] so unknown `feature=` values still
+/// load in-player instead of being blocked.
 NavigationDecision _dulangYoutubeNavigationDecision(
   YoutubePlayerController controller,
   Uri? uri,
@@ -78,13 +92,19 @@ NavigationDecision _dulangYoutubeNavigationDecision(
       if (videoId != null) {
         unawaited(controller.loadVideoById(videoId: videoId));
       }
-      break;
+      return NavigationDecision.prevent;
     case 'emb_title':
     case 'emb_logo':
     case 'social':
     case 'wl_button':
       unawaited(uri_launcher.launchUrl(uri));
+      return NavigationDecision.prevent;
+    default:
       break;
+  }
+
+  if (_tryLoadVideoFromYoutubeNavigationUri(controller, uri)) {
+    return NavigationDecision.prevent;
   }
 
   return NavigationDecision.prevent;
@@ -155,6 +175,7 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   StreamSubscription<YoutubePlayerValue>? _playerSubscription;
   String? _expectedVideoId;
   String? _lastNotifiedVideoId;
+  Timer? _inPlayerVideoIdPollTimer;
 
   bool get handleFullScreen =>
       !kIsWeb && widget.showFullScreen && _youtubeWrapper != null;
@@ -176,6 +197,8 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
 
   @override
   void dispose() {
+    _inPlayerVideoIdPollTimer?.cancel();
+    _inPlayerVideoIdPollTimer = null;
     if (!handleFullScreen || _youtubeWrapper?._controller == null) {
       _tearDownPlayer();
     } else {
@@ -211,6 +234,8 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   }
 
   void _tearDownPlayer() {
+    _inPlayerVideoIdPollTimer?.cancel();
+    _inPlayerVideoIdPollTimer = null;
     _playerSubscription?.cancel();
     _playerSubscription = null;
     _expectedVideoId = null;
@@ -287,6 +312,8 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
     _playerSubscription?.cancel();
     _playerSubscription = _controller!.listen(_handlePlayerValue);
 
+    _startInPlayerVideoIdPollingIfNeeded();
+
     if (handleFullScreen) {
       _controller!.setFullScreenListener((fullScreen) {
         if (fullScreen) {
@@ -297,6 +324,37 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
         }
       });
     }
+  }
+
+  /// Related/endscreen taps run inside the YouTube iframe; Android WebView only
+  /// forwards [NavigationDelegate.onNavigationRequest] for the **main** frame,
+  /// so we poll [YoutubePlayerController.videoData] to sync when the iframe
+  /// switches video without a top-level navigation.
+  void _startInPlayerVideoIdPollingIfNeeded() {
+    _inPlayerVideoIdPollTimer?.cancel();
+    if (widget.onVideoIdChanged == null) {
+      return;
+    }
+    _inPlayerVideoIdPollTimer =
+        Timer.periodic(const Duration(milliseconds: 700), (_) {
+      unawaited(_pollInPlayerVideoId());
+    });
+  }
+
+  Future<void> _pollInPlayerVideoId() async {
+    final c = _controller;
+    if (!mounted || c == null || widget.onVideoIdChanged == null) {
+      return;
+    }
+    try {
+      final data = await c.videoData;
+      final id = data.videoId;
+      if (id.isEmpty) return;
+      if (_expectedVideoId != null && id == _expectedVideoId) return;
+      if (id == _lastNotifiedVideoId) return;
+      _lastNotifiedVideoId = id;
+      widget.onVideoIdChanged!(id);
+    } catch (_) {}
   }
 
   void _handlePlayerValue(YoutubePlayerValue value) {
