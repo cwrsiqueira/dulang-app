@@ -1,3 +1,6 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '/features/auth/login_widget.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/aparencia/aparencia_widget.dart';
@@ -33,6 +36,45 @@ class ConfiguracoesWidget extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _sectionTitle(context, 'Conta e família'),
+          Builder(
+            builder: (context) {
+              final email =
+                  Supabase.instance.client.auth.currentUser?.email;
+              if (email == null || email.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  leading: Icon(
+                    Icons.account_circle_outlined,
+                    color: FlutterFlowTheme.of(context).tertiary,
+                  ),
+                  title: Text(
+                    email,
+                    style: FlutterFlowTheme.of(context).bodyMedium,
+                  ),
+                  subtitle: Text(
+                    'Conta conectada',
+                    style: FlutterFlowTheme.of(context).bodySmall,
+                  ),
+                ),
+              );
+            },
+          ),
+          _tile(
+            context,
+            icon: Icons.logout_rounded,
+            title: 'Sair da conta',
+            subtitle: 'Encerra a sessão neste aparelho',
+            onTap: () async {
+              await Supabase.instance.client.auth.signOut();
+              if (context.mounted) {
+                context.go(LoginWidget.routePath);
+              }
+            },
+          ),
           _tile(
             context,
             icon: Icons.switch_account_rounded,

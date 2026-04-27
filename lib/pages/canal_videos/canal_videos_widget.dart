@@ -1,3 +1,5 @@
+import '/features/subscription/premium_catalog_lock.dart';
+import '/features/subscription/subscription_service.dart';
 import '/features/parental/parental_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -33,6 +35,25 @@ class _CanalVideosWidgetState extends State<CanalVideosWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (!SubscriptionService.instance.hasPremiumAccess) {
+      final theme = FlutterFlowTheme.of(context);
+      return Scaffold(
+        backgroundColor: theme.primaryBackground,
+        appBar: AppBar(
+          backgroundColor: theme.secondaryBackground,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => context.safePop(),
+          ),
+          title: Text(
+            'Dulang Premium',
+            style: FlutterFlowTheme.of(context).headlineSmall,
+          ),
+        ),
+        body: const PremiumCatalogLockBody(title: 'Catálogo no Premium'),
+      );
+    }
+
     final label = (widget.channelName == null || widget.channelName!.isEmpty)
         ? 'Todos os vídeos'
         : widget.channelName!;

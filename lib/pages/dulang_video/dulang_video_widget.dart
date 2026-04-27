@@ -1,3 +1,5 @@
+import '/features/subscription/premium_catalog_lock.dart';
+import '/features/subscription/subscription_service.dart';
 import '/services/supabase_service.dart';
 import '/features/parental/parental_service.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -169,6 +171,29 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
 
   @override
   Widget build(BuildContext context) {
+    if (!SubscriptionService.instance.hasPremiumAccess) {
+      final theme = FlutterFlowTheme.of(context);
+      return Scaffold(
+        backgroundColor: theme.primaryBackground,
+        appBar: AppBar(
+          backgroundColor: theme.secondaryBackground,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: theme.primaryText),
+            onPressed: () => context.safePop(),
+          ),
+          title: Text(
+            'Dulang Premium',
+            style: FlutterFlowTheme.of(context).headlineSmall,
+          ),
+        ),
+        body: const PremiumCatalogLockBody(
+          title: 'Assinatura necessária',
+          subtitle:
+              'Para assistir com segurança, ative o Premium com 7 dias grátis.',
+        ),
+      );
+    }
+
     return FutureBuilder<List<VideoRow>>(
       future: _videosFuture,
       builder: (context, snapshot) {

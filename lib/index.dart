@@ -1,4 +1,5 @@
 // Export pages
+export '/features/auth/login_widget.dart' show LoginWidget;
 export '/pages/termos_de_uso_e_politica_de_privacidade/termos_de_uso_e_politica_de_privacidade_widget.dart'
     show TermosDeUsoEPoliticaDePrivacidadeWidget;
 export '/pages/sobre_o_dulang/sobre_o_dulang_widget.dart'
