@@ -17,3 +17,5 @@ Priority reading order:
 
 Do not create a parallel source of truth in tool-specific files.
 Tool-specific guidance should remain minimal and point back to `docs/ai-context/`.
+
+When the user or project material is in Portuguese, write **Brazilian Portuguese (pt-BR)** only—not European Portuguese (pt-PT). See `docs/ai-context/developer-profile.md` and `engineering-rules.md`.

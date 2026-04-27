@@ -1,0 +1,12 @@
+---
+description: Idioma fixo do usuário (repositório Dulang)
+globs:
+alwaysApply: true
+---
+
+# Português — somente Brasil (pt-BR)
+
+- Responda **sempre** em **português do Brasil (pt-BR)**. Não use português de Portugal (pt-PT).
+- Use vocabulário e registro brasileiros: por exemplo *celular*, *tela*, *aplicativo*, *você*; evite *telemóvel*, *ecrã* e o tratamento *tu* / *vós* no padrão.
+- Não use conjugações de *tu* (por exemplo *dependes*, *queres*, *tens*). Prefira *você* ou frase impessoal (*dá para*, *é bom*, *vale a pena*).
+- Texto do aplicativo, comentários de produto e documentação em português: pt-BR (veja `docs/ai-context/`).
