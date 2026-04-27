@@ -7,9 +7,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import '/features/auth/login_widget.dart';
 import '/features/parental/parental_service.dart';
 import '/features/parental/pin_dialog.dart';
 import '/features/profiles/child_profile_service.dart';
+import '/features/subscription/premium_catalog_lock.dart';
+import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
@@ -28,6 +31,16 @@ void main() async {
     anonKey: environmentValues.supabaseAnonKey,
   );
 
+  await SubscriptionService.instance.initRevenueCat(environmentValues);
+
+  Supabase.instance.client.auth.onAuthStateChange.listen((event) async {
+    await SubscriptionService.instance.onAuthSession(event.session);
+    AppStateNotifier.instance.notifyListeners();
+  });
+  await SubscriptionService.instance.onAuthSession(
+    Supabase.instance.client.auth.currentSession,
+  );
+
   await FlutterFlowTheme.initialize();
 
   final appState = FFAppState(); // Initialize FFAppState
@@ -37,8 +50,11 @@ void main() async {
   final onboardingDone = await ParentalService.isOnboardingDone();
   AppStateNotifier.instance.onboardingDone = onboardingDone;
 
-  runApp(ChangeNotifierProvider(
-    create: (context) => appState,
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => appState),
+      ChangeNotifierProvider.value(value: SubscriptionService.instance),
+    ],
     child: MyApp(),
   ));
 }
@@ -292,10 +308,25 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     };
     final keys = tabs.keys.toList();
     final currentIndex = keys.indexOf(_currentPageName).clamp(0, keys.length - 1);
-    final tabBody = _currentPage ?? tabs[_currentPageName]!;
+    final baseTab = _currentPage ?? tabs[_currentPageName]!;
     final showPlaybackLock = _playbackLocked && currentIndex != 3;
 
-    return PopScope(
+    return ListenableBuilder(
+      listenable: SubscriptionService.instance,
+      builder: (context, _) {
+        final premiumLocked =
+            !SubscriptionService.instance.hasPremiumAccess && currentIndex != 3;
+        final tabBody = premiumLocked
+            ? PremiumCatalogLockBody(
+                title: switch (_currentPageName) {
+                  'Favoritos' => 'Favoritos no Premium',
+                  'Historico' => 'Histórico no Premium',
+                  _ => 'Catálogo no Premium',
+                },
+              )
+            : baseTab;
+
+        return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
@@ -406,6 +437,8 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

@@ -50,6 +50,12 @@
 - Why: on target API 36 the native approach still did not hide bars reliably in the field; avoid ongoing maintenance risk while child-safety navigation in the player stays unchanged.
 - Impact: `MainActivity` is a plain `FlutterActivity` again; no `androidx.core` dependency added for this purpose.
 
+### 2026-04-28 - Phase 2: login required, RevenueCat entitlement, Flutter paywall (no RC paywall UI)
+
+- Decision: after parental onboarding, require **Supabase Auth** session before the main shell; gate Home/Favorites/History on RevenueCat entitlement **`premium`** (includes store free trial when configured); implement **custom Flutter paywall** (`DulangPremiumWidget`) with monthly/annual packages from the default offering, annual pre-selected, pricing from the store via SDK—**not** RevenueCat’s hosted paywall UI (`purchases_ui_flutter`).
+- Why: align with product (account + subscription only), keep brand/UI control, and use RevenueCat for receipts and `CustomerInfo` only.
+- Impact: `GoRouter` redirect to `/login` when logged out (public exceptions: login, terms, about, contact); `SubscriptionService` configures SDK, `logIn`/`logOut` with Supabase `user.id`; `NavBarPage` shows `PremiumCatalogLockBody` when not entitled; `DulangVideoWidget` / `CanalVideosWidget` defensively block without entitlement; settings adds sign-out.
+
 ### 2026-04-28 - Child profiles: no silent "Perfil 1"; Netflix-style picker
 
 - Decision: replace `ensureDefaultProfile()` with `syncActiveProfileWithStoredList()` (never auto-create a profile). After onboarding the pending picker remains; `NavBarPage` also opens `SelecionarPerfil` when the stored profile list is empty.
@@ -133,6 +139,12 @@
 - Decisao: remover `MethodChannel` / loop no `MainActivity` e os ganchos Dart especificos de Android; manter overlay de fullscreen (fundo preto + `SystemChrome` como antes do experimento).
 - Motivo: no aparelho ainda nao escondia as barras de forma confiavel com target API 36; reduz risco de manutencao sem mexer na delegacao de navegacao do player.
 - Impacto: `MainActivity` volta a ser `FlutterActivity` simples; dependencia `androidx.core` extra removida.
+
+### 2026-04-28 - Fase 2: login obrigatorio, entitlement RevenueCat, paywall Flutter (sem UI nativa RC)
+
+- Decisao: apos onboarding parental, exigir **sessao Supabase Auth** antes do shell principal; bloquear Home/Favoritos/Historico pelo entitlement **`premium`** no RevenueCat (inclui teste gratis da loja quando configurado); paywall **custom em Flutter** (`DulangPremiumWidget`) com pacotes mensal/anual da oferta padrao, **anual pre-selecionado**, precos da loja via SDK — **sem** paywall hospedada do RevenueCat (`purchases_ui_flutter`).
+- Motivo: alinhar produto (so conta + assinatura), manter controle de marca/UI e usar RevenueCat so para recibos e `CustomerInfo`.
+- Impacto: `GoRouter` redireciona para `/login` sem sessao (excecoes publicas: login, termos, sobre, contato); `SubscriptionService` configura SDK e faz `logIn`/`logOut` com `user.id` do Supabase; `NavBarPage` mostra `PremiumCatalogLockBody` sem direito ativo; `DulangVideoWidget` / `CanalVideosWidget` bloqueiam sem entitlement; Ajustes ganha sair da conta.
 
 ### 2026-04-28 - Perfis infantis: sem "Perfil 1" automatico; picker estilo Netflix
 

@@ -2,7 +2,7 @@
 
 This folder is the canonical context for the Dulang project across tools, machines, and AI assistants.
 
-**Milestone (2026-04-27):** Phase 1 closed by operator sign-off; engineering focus moves to **Phase 2 — RevenueCat** (see `current-status.md`, `roadmap-priorities.md`).
+**Milestone (2026-04-27):** Phase 1 closed by operator sign-off. **Update (2026-04-28):** Phase 2 **app integration** (Auth gate, RevenueCat SDK, Flutter paywall, entitlement gating) is in the repo; **store/RevenueCat dashboard + device QA** still open — see `current-status.md`.
 
 ## How to use
 
@@ -22,7 +22,7 @@ For any Portuguese aimed at humans or assistant replies in Portuguese, use **Bra
 
 Texto em português para pessoas e respostas de assistente em português: use **somente português do Brasil (pt-BR)** (não português de Portugal). Detalhes em `developer-profile.md` e `engineering-rules.md`.
 
-**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador; o foco de engenharia passa para a **Fase 2 — RevenueCat** (veja `current-status.md` e `roadmap-priorities.md`).
+**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador. **Atualização (2026-04-28):** a **integração da Fase 2 no app** (login obrigatório, SDK RevenueCat, paywall Flutter, bloqueio por entitlement) já está no repositório; **configuração nas lojas/RevenueCat + QA em aparelho** ainda em aberto — veja `current-status.md`.
 
 1. Comece por este arquivo.
 2. Leia `project-overview.md` para produto e missão.

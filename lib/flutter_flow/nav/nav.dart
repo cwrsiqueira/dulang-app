@@ -1,11 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/backend/schema/structs/index.dart';
 
+import '/features/auth/login_widget.dart';
 import '/features/parental/onboarding_widget.dart';
+import '/features/subscription/subscription_service.dart';
 import '/main.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
@@ -41,11 +45,56 @@ class AppStateNotifier extends ChangeNotifier {
   }
 }
 
-GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
+GoRouter createRouter(AppStateNotifier appStateNotifier) {
+  final refresh = Listenable.merge([
+    appStateNotifier,
+    SubscriptionService.instance,
+  ]);
+
+  return GoRouter(
       initialLocation: '/',
       debugLogDiagnostics: true,
-      refreshListenable: appStateNotifier,
+      refreshListenable: refresh,
       navigatorKey: appNavigatorKey,
+      redirect: (context, state) {
+        final notifier = appStateNotifier;
+        if (notifier.showSplashImage) {
+          return null;
+        }
+
+        final path = state.uri.path;
+
+        if (!notifier.onboardingDone) {
+          if (path == LoginWidget.routePath) {
+            return '/';
+          }
+          return null;
+        }
+
+        final session = Supabase.instance.client.auth.currentSession;
+        const publicWhenLoggedOut = <String>{
+          LoginWidget.routePath,
+          TermosDeUsoEPoliticaDePrivacidadeWidget.routePath,
+          SobreODulangWidget.routePath,
+          ContatoWidget.routePath,
+        };
+
+        if (session == null) {
+          if (publicWhenLoggedOut.contains(path)) {
+            return null;
+          }
+          if (path != LoginWidget.routePath) {
+            return LoginWidget.routePath;
+          }
+          return null;
+        }
+
+        if (path == LoginWidget.routePath) {
+          return '/';
+        }
+
+        return null;
+      },
       errorBuilder: (context, state) => appStateNotifier.showSplashImage
           ? Builder(
               builder: (context) => Container(
@@ -76,6 +125,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               : appStateNotifier.onboardingDone
                   ? NavBarPage()
                   : const OnboardingWidget(),
+        ),
+        FFRoute(
+          name: LoginWidget.routeName,
+          path: LoginWidget.routePath,
+          builder: (context, params) => const LoginWidget(),
         ),
         FFRoute(
           name: TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,
@@ -158,6 +212,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
       observers: [routeObserver],
     );
+}
 
 extension NavParamExtensions on Map<String, String?> {
   Map<String, String> get withoutNulls => Map.fromEntries(

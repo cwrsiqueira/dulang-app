@@ -36,5 +36,19 @@ class FFDevEnvironmentValues {
     }
     return _values['YOUTUBE_API_KEY'] ?? '';
   }
-  String get revenueCatAndroidKey => _values['REVENUECAT_ANDROID_KEY'] ?? '';
+  String get revenueCatAndroidKey {
+    const fromDefine = String.fromEnvironment('REVENUECAT_ANDROID_KEY');
+    if (fromDefine.isNotEmpty) {
+      return fromDefine;
+    }
+    return _values['REVENUECAT_ANDROID_KEY'] ?? '';
+  }
+
+  String get revenueCatIosKey {
+    const fromDefine = String.fromEnvironment('REVENUECAT_IOS_KEY');
+    if (fromDefine.isNotEmpty) {
+      return fromDefine;
+    }
+    return _values['REVENUECAT_IOS_KEY'] ?? '';
+  }
 }
