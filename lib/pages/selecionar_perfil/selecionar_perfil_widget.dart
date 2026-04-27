@@ -23,12 +23,19 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
   @override
   void initState() {
     super.initState();
+    ChildProfileService.instance.setProfilePickerRouteOpen(true);
     _reload();
+  }
+
+  @override
+  void dispose() {
+    ChildProfileService.instance.setProfilePickerRouteOpen(false);
+    super.dispose();
   }
 
   Future<void> _reload() async {
     final s = ChildProfileService.instance;
-    await s.ensureDefaultProfile();
+    await s.syncActiveProfileWithStoredList();
     final list = await s.loadProfiles();
     final id = await s.activeProfileId();
     if (!mounted) return;
@@ -73,7 +80,13 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
         ),
       );
       if (ok == true && mounted) {
+        final wasEmpty = _list.isEmpty;
         await ChildProfileService.instance.addProfile(name.text, 0xFF36B4FF);
+        if (!mounted) return;
+        if (wasEmpty) {
+          context.safePop();
+          return;
+        }
         await _reload();
       }
     } finally {
@@ -84,34 +97,59 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
   @override
   Widget build(BuildContext context) {
     final tertiary = FlutterFlowTheme.of(context).tertiary;
-    return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
-          onPressed: () => context.safePop(),
-        ),
-        title: Text(
-          'Dulang',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w800,
-            fontSize: 22,
-            color: tertiary,
-            letterSpacing: -0.5,
-          ),
-        ),
+    final isEmpty = _list.isEmpty;
+    // Enquanto [isEmpty] (incl. carregando), bloquear voltar: evita Home sem perfil.
+    final mustStay = isEmpty;
+    return PopScope(
+      canPop: !mustStay,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF0D0D0D),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          leading: mustStay
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded,
+                      color: Colors.white70),
+                  onPressed: () => context.safePop(),
+                ),
+        title: isEmpty
+            ? const SizedBox.shrink()
+            : Text(
+                'Dulang',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                  color: tertiary,
+                  letterSpacing: -0.5,
+                ),
+              ),
         centerTitle: false,
         actions: [
-          TextButton(
-            onPressed: _loading ? null : _add,
-            child: Text(
-              'NOVO PERFIL +',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: TextButton.icon(
+              onPressed: _loading ? null : _add,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white38,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(
+                Icons.add,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.45),
+              ),
+              label: Text(
+                'Novo perfil +',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ),
@@ -119,46 +157,212 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-                  Text(
-                    'Quem está assistindo?',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+          : isEmpty
+              ? SafeArea(
+                  child: _EmptyWhoIsWatching(
+                    onAdd: _add,
                   ),
-                  const SizedBox(height: 32),
-                  Expanded(
-                    child: GridView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 20,
-                        crossAxisSpacing: 20,
-                        childAspectRatio: 0.72,
+                )
+              : SafeArea(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        'Quem está assistindo?',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
-                      itemCount: _list.length,
-                      itemBuilder: (context, i) {
-                        final p = _list[i];
-                        final active = p.id == _activeId;
-                        return _ProfileTile(
-                          profile: p,
-                          selected: active,
-                          onTap: () => _select(p),
-                        );
-                      },
-                    ),
+                      const SizedBox(height: 32),
+                      Expanded(
+                        child: GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 20,
+                            crossAxisSpacing: 20,
+                            childAspectRatio: 0.72,
+                          ),
+                          itemCount: _list.length + 1,
+                          itemBuilder: (context, i) {
+                            if (i == _list.length) {
+                              return _AddProfileSquareInGrid(
+                                onTap: _add,
+                              );
+                            }
+                            final p = _list[i];
+                            final active = p.id == _activeId;
+                            return _ProfileTile(
+                              profile: p,
+                              selected: active,
+                              onTap: () => _select(p),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+      ),
+    );
+  }
+}
+
+/// Tela vazia: título leve, quadrado com + (estilo “adicionar perfil”) e logo discreto.
+class _EmptyWhoIsWatching extends StatelessWidget {
+  const _EmptyWhoIsWatching({
+    required this.onAdd,
+  });
+
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Quem está assistindo?',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.45),
               ),
             ),
+            const SizedBox(height: 36),
+            _AddProfileSquare(
+              onTap: onAdd,
+              size: 196,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Toque no quadrado para criar o primeiro perfil',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.white30,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Quadrado com borda e + no centro (estilo “adicionar perfil” de streaming).
+class _AddProfileSquare extends StatelessWidget {
+  const _AddProfileSquare({
+    required this.onTap,
+    this.size = 196,
+  });
+
+  final VoidCallback onTap;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Semantics(
+          label: 'Adicionar novo perfil',
+          button: true,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFF141414),
+              border: Border.all(
+                color: Colors.white30,
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: Icon(
+                Icons.add,
+                size: size * 0.3,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Mesmo padrão no final da grade, alinhado ao tile de perfil.
+class _AddProfileSquareInGrid extends StatelessWidget {
+  const _AddProfileSquareInGrid({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFF141414),
+                  border: Border.all(
+                    color: Colors.white30,
+                    width: 1.2,
+                  ),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, c) {
+                    return Center(
+                      child: Icon(
+                        Icons.add,
+                        size: c.maxWidth * 0.3,
+                        color: Colors.white70,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2A2A2A),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Novo perfil',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  color: Colors.white.withValues(alpha: 0.45),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

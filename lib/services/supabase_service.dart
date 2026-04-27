@@ -8,10 +8,13 @@ class SupabaseService {
   SupabaseClient get client => Supabase.instance.client;
 
   Future<List<VideoRow>> getVideos() async {
-    final data = await client
-        .from('videos')
-        .select('*, channels(name)')
-        .eq('is_active', true);
+    final data = await _withRetry(
+      () => client
+          .from('videos')
+          .select('*, channels(name)')
+          .eq('is_active', true)
+          .timeout(const Duration(seconds: 8)),
+    );
     final list = data.map((e) => VideoRow.fromJson(e)).toList();
     list.shuffle(Random());
     return list;
@@ -19,12 +22,39 @@ class SupabaseService {
 
   Future<List<VideoRow>> getFavoritos(List<String> videoIds) async {
     if (videoIds.isEmpty) return [];
-    final data = await client
-        .from('videos')
-        .select('*, channels(name)')
-        .eq('is_active', true)
-        .inFilter('youtube_video_id', videoIds);
+    final data = await _withRetry(
+      () => client
+          .from('videos')
+          .select('*, channels(name)')
+          .eq('is_active', true)
+          .inFilter('youtube_video_id', videoIds)
+          .timeout(const Duration(seconds: 8)),
+    );
     return data.map((e) => VideoRow.fromJson(e)).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> _withRetry(
+    Future<List<Map<String, dynamic>>> Function() op,
+  ) async {
+    try {
+      return await op();
+    } catch (_) {
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      try {
+        return await op();
+      } catch (_) {
+        throw const CatalogUnavailableException();
+      }
+    }
+  }
+}
+
+class CatalogUnavailableException implements Exception {
+  const CatalogUnavailableException();
+
+  @override
+  String toString() {
+    return 'Não foi possível carregar o catálogo agora. Verifique a internet e tente novamente.';
   }
 }
 

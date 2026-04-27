@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import '/backend/sqlite/sqlite_manager.dart';
 import '/features/parental/parental_service.dart';
 import '/features/parental/pin_dialog.dart';
 import '/features/profiles/child_profile_service.dart';
@@ -27,12 +28,11 @@ void main() async {
     anonKey: environmentValues.supabaseAnonKey,
   );
 
-  await SQLiteManager.initialize();
   await FlutterFlowTheme.initialize();
 
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
-  await ChildProfileService.instance.ensureDefaultProfile();
+  await ChildProfileService.instance.syncActiveProfileWithStoredList();
 
   final onboardingDone = await ParentalService.isOnboardingDone();
   AppStateNotifier.instance.onboardingDone = onboardingDone;
@@ -158,11 +158,22 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     _currentPage = widget.page;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _checkParentalLimits();
-      final pending = await ParentalService.consumePendingProfilePicker();
-      if (pending && mounted) {
-        context.pushNamed(SelecionarPerfilWidget.routeName);
-      }
+      await _openProfileSelectionIfNeeded();
     });
+  }
+
+  /// Abre a seleção de perfil se não houver criança definida (ou pós-onboarding) e
+  /// se a rota ainda não estiver aberta.
+  Future<void> _openProfileSelectionIfNeeded() async {
+    final pending = await ParentalService.consumePendingProfilePicker();
+    final profiles = await ChildProfileService.instance.loadProfiles();
+    if (!mounted) return;
+    if (ChildProfileService.instance.isProfilePickerRouteOpen) {
+      return;
+    }
+    if (pending || profiles.isEmpty) {
+      context.pushNamed(SelecionarPerfilWidget.routeName);
+    }
   }
 
   @override
@@ -175,7 +186,8 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _lastResumeAt = DateTime.now();
-      _checkParentalLimits();
+      unawaited(_checkParentalLimits());
+      unawaited(_openProfileSelectionIfNeeded());
     } else if (state == AppLifecycleState.paused && _lastResumeAt != null) {
       final mins = DateTime.now().difference(_lastResumeAt!).inMinutes;
       if (mins > 0) {

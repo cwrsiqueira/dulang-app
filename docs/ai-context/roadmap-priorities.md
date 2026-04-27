@@ -2,15 +2,11 @@
 
 ## EN
 
-### Phase 1 - Store approval and compliance (urgent)
+### Phase 1 - Store approval and compliance — **closed 2026-04-27** (operator sign-off)
 
-1. Harden parental protection (PIN exit and restricted routes).
-2. Ensure player isolation from YouTube ecosystem signals.
-3. Finalize SQLite to Supabase migration boundaries.
-4. Implement reliable channel-to-video sync workflow.
-5. Strengthen policy and compliance surface (Families, COPPA, LGPD messaging and behavior).
+Baseline delivered: parental PIN/onboarding, player isolation work, Supabase-first catalog, daily channel sync path in production (per operator), compliance surface acceptable for milestone. Residual: SQLite files in repo (no startup init), CI SHA pins optional, thin tests.
 
-### Phase 2 - Monetization
+### Phase 2 - Monetization (**current focus**)
 
 1. Integrate RevenueCat subscriptions and trial.
 2. Gate content by active entitlement.
@@ -25,15 +21,11 @@
 
 ## PT-BR
 
-### Fase 1 - Aprovacao da loja e compliance (urgente)
+### Fase 1 - Aprovacao da loja e compliance — **encerrada em 2026-04-27** (aceite do operador)
 
-1. Endurecer protecao parental (saida por PIN e rotas restritas).
-2. Garantir isolamento do player de sinais do ecossistema YouTube.
-3. Fechar fronteiras da migracao SQLite para Supabase.
-4. Implementar fluxo confiavel de sync de canais para videos.
-5. Fortalecer superficie de politica e compliance (Families, COPPA, LGPD no comportamento e comunicacao).
+Entregas: protecao parental basica, trabalho de isolamento do player, catalogo Supabase-first, sync diario canais->videos em producao (conforme operador), superficie de compliance suficiente para o marco. Residual: arquivos SQLite no repo (sem init no startup), pin SHA no CI opcional, poucos testes.
 
-### Fase 2 - Monetizacao
+### Fase 2 - Monetizacao (**foco atual**)
 
 1. Integrar assinatura e trial com RevenueCat.
 2. Bloquear conteudo por entitlement ativo.

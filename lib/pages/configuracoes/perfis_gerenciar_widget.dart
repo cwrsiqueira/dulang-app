@@ -90,7 +90,16 @@ class _PerfisGerenciarWidgetState extends State<PerfisGerenciarWidget> {
       ),
     );
     if (ok == true && mounted) {
-      await ChildProfileService.instance.removeProfile(p.id);
+      final didRemove =
+          await ChildProfileService.instance.removeProfile(p.id);
+      if (!didRemove && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Crie outro perfil antes de excluir o único.'),
+          ),
+        );
+        return;
+      }
       await _reload();
     }
   }
@@ -144,7 +153,12 @@ class _PerfisGerenciarWidgetState extends State<PerfisGerenciarWidget> {
                         : const Text('Toque para ativar'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline_rounded),
-                      onPressed: () => _remove(p),
+                      tooltip: _list.length == 1
+                          ? 'É preciso outro perfil para poder excluir'
+                          : 'Excluir perfil',
+                      onPressed: _list.length == 1
+                          ? null
+                          : () => _remove(p),
                     ),
                     onTap: active
                         ? null

@@ -29,11 +29,13 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart' as uri_launcher;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
-import '/flutter_flow/flutter_flow_util.dart' show routeObserver;
+import '/flutter_flow/flutter_flow_util.dart'
+    show fixStatusBarOniOS16AndBelow, routeObserver;
 
 bool _tryLoadVideoFromYoutubeNavigationUri(
   YoutubePlayerController controller,
@@ -132,6 +134,58 @@ void _installDulangYoutubeNavigationDelegate(YoutubePlayerController controller)
 
 const kYoutubeAspectRatio = 16 / 9;
 final _youtubeFullScreenControllerMap = <String, YoutubePlayerController>{};
+
+/// Lets the WebView win vertical/horizontal drags in the gesture arena (needed
+/// for scrolling/panning inside the YouTube iframe, especially on iOS).
+final Set<Factory<OneSequenceGestureRecognizer>>
+    _dulangYoutubeWebViewGestureRecognizers =
+    <Factory<OneSequenceGestureRecognizer>>{
+  Factory<VerticalDragGestureRecognizer>(VerticalDragGestureRecognizer.new),
+  Factory<HorizontalDragGestureRecognizer>(HorizontalDragGestureRecognizer.new),
+};
+
+void _dulangEnterYoutubeFullscreenUi() {
+  if (kIsWeb) return;
+  void applyImmersive() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
+  applyImmersive();
+  // iOS: reaplica imersivo apos o YoutubePlayerScaffold; evita overlay pesado
+  // no mesmo tick que deixa a status bar visivel.
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      applyImmersive();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        applyImmersive();
+      });
+    });
+    return;
+  }
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ),
+  );
+}
+
+void _dulangExitYoutubeFullscreenUi(BuildContext? context) {
+  if (kIsWeb) return;
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+  if (context != null && context.mounted) {
+    fixStatusBarOniOS16AndBelow(context);
+  }
+}
 
 class FlutterFlowYoutubePlayer extends StatefulWidget {
   const FlutterFlowYoutubePlayer({
@@ -298,6 +352,7 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
           showControls: widget.showControls,
           showFullscreenButton: widget.showFullScreen,
           strictRelatedVideos: widget.strictRelatedVideos,
+          showVideoAnnotations: false,
         ),
       );
       if (widget.autoPlay) {
@@ -384,30 +439,65 @@ class _FlutterFlowYoutubePlayerState extends State<FlutterFlowYoutubePlayer>
   }
 
   @override
-  Widget build(BuildContext context) => FittedBox(
-        fit: BoxFit.cover,
-        child: Container(
-          height: height,
-          width: width,
-          child: _controller != null
-              ? handleFullScreen
-                  ? YoutubePlayerScaffold(
-                      controller: _controller!,
-                      builder: (_, player) => player,
-                      autoFullScreen: false,
-                      gestureRecognizers: const <Factory<
-                          TapGestureRecognizer>>{},
-                      enableFullScreenOnVerticalDrag: false,
-                    )
-                  : YoutubePlayer(
-                      controller: _controller!,
-                      gestureRecognizers: const <Factory<
-                          TapGestureRecognizer>>{},
-                      enableFullScreenOnVerticalDrag: false,
-                    )
-              : Container(color: Colors.transparent),
-        ),
+  Widget build(BuildContext context) {
+    if (_controller == null) {
+      return SizedBox(
+        width: width,
+        height: height,
+        child: const ColoredBox(color: Colors.transparent),
       );
+    }
+    final player = handleFullScreen
+        ? YoutubePlayerScaffold(
+            controller: _controller!,
+            builder: (_, player) => player,
+            autoFullScreen: false,
+            gestureRecognizers: _dulangYoutubeWebViewGestureRecognizers,
+            enableFullScreenOnVerticalDrag: false,
+          )
+        : YoutubePlayer(
+            controller: _controller!,
+            gestureRecognizers: _dulangYoutubeWebViewGestureRecognizers,
+            enableFullScreenOnVerticalDrag: false,
+          );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var maxW = constraints.hasBoundedWidth && constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : width;
+        var maxH =
+            constraints.hasBoundedHeight && constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : height;
+        if (maxW <= 0 || !maxW.isFinite) {
+          maxW = MediaQuery.sizeOf(context).width;
+        }
+        if (maxH <= 0 || !maxH.isFinite) {
+          maxH = maxW / kYoutubeAspectRatio;
+        }
+
+        final boxAspect = maxW / maxH;
+        late final double videoW;
+        late final double videoH;
+        if (boxAspect > kYoutubeAspectRatio) {
+          videoH = maxH;
+          videoW = videoH * kYoutubeAspectRatio;
+        } else {
+          videoW = maxW;
+          videoH = videoW / kYoutubeAspectRatio;
+        }
+
+        return Center(
+          child: SizedBox(
+            width: videoW,
+            height: videoH,
+            child: player,
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// Wraps the page in order to properly show the YouTube video when fullscreen.
@@ -432,6 +522,9 @@ class _YoutubeFullScreenWrapperState extends State<YoutubeFullScreenWrapper> {
     if (!mounted) {
       return;
     }
+    if (_controller != null) {
+      _dulangExitYoutubeFullscreenUi(context);
+    }
     setState(() {
       _controller = null;
       _videoId = null;
@@ -441,27 +534,54 @@ class _YoutubeFullScreenWrapperState extends State<YoutubeFullScreenWrapper> {
   void updateYoutubePlayer([
     YoutubePlayerController? controller,
     String? videoId,
-  ]) =>
-      setState(() {
-        _controller = controller;
-        _videoId = videoId;
+  ]) {
+    final wasOverlay = _controller != null;
+    final nowOverlay = controller != null;
+    if (!nowOverlay && wasOverlay) {
+      _dulangExitYoutubeFullscreenUi(context);
+    }
+    setState(() {
+      _controller = controller;
+      _videoId = videoId;
+    });
+    if (nowOverlay && !wasOverlay) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _controller == null) return;
+        _dulangEnterYoutubeFullscreenUi();
       });
+    }
+  }
 
   @override
   void dispose() {
+    if (_controller != null) {
+      _dulangExitYoutubeFullscreenUi(null);
+    }
     _controller?.close();
     _youtubeFullScreenControllerMap.remove(_videoId);
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => _controller != null
-      ? YoutubePlayerScaffold(
-          controller: _controller!,
-          builder: (_, player) => player,
-          enableFullScreenOnVerticalDrag: false,
-        )
-      : widget.child;
+  Widget build(BuildContext context) {
+    if (_controller == null) {
+      return widget.child;
+    }
+    return Material(
+      color: Colors.black,
+      child: ColoredBox(
+        color: Colors.black,
+        child: SizedBox.expand(
+          child: YoutubePlayerScaffold(
+            controller: _controller!,
+            builder: (_, player) => player,
+            gestureRecognizers: _dulangYoutubeWebViewGestureRecognizers,
+            enableFullScreenOnVerticalDrag: false,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 String? _convertUrlToId(String url, {bool trimWhitespaces = true}) {

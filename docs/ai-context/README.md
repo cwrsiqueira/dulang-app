@@ -2,7 +2,11 @@
 
 This folder is the canonical context for the Dulang project across tools, machines, and AI assistants.
 
+**Milestone (2026-04-27):** Phase 1 closed by operator sign-off; engineering focus moves to **Phase 2 — RevenueCat** (see `current-status.md`, `roadmap-priorities.md`).
+
 ## How to use
+
+For any Portuguese aimed at humans or assistant replies in Portuguese, use **Brazilian Portuguese (pt-BR)** only—not European Portuguese. See `developer-profile.md` and `engineering-rules.md`.
 
 1. Read this file first.
 2. Read `project-overview.md` for product and mission.
@@ -12,8 +16,13 @@ This folder is the canonical context for the Dulang project across tools, machin
 6. Read `developer-profile.md` for working style and constraints.
 7. Read `decisions-log.md` for stable decisions and rationale.
 8. Read `security-checklist.md`, `security-strategy.md`, and `security-incidents.md`.
+9. Read `.cursor/rules/portugues-brasil.mdc` for assistant language enforcement (pt-BR only).
 
 ## Como usar (PT-BR)
+
+Texto em português para pessoas e respostas de assistente em português: use **somente português do Brasil (pt-BR)** (não português de Portugal). Detalhes em `developer-profile.md` e `engineering-rules.md`.
+
+**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador; o foco de engenharia passa para a **Fase 2 — RevenueCat** (veja `current-status.md` e `roadmap-priorities.md`).
 
 1. Comece por este arquivo.
 2. Leia `project-overview.md` para produto e missão.
@@ -23,6 +32,7 @@ This folder is the canonical context for the Dulang project across tools, machin
 6. Leia `developer-profile.md` para perfil e modo de trabalho.
 7. Leia `decisions-log.md` para decisões e justificativas.
 8. Leia `security-checklist.md`, `security-strategy.md` e `security-incidents.md`.
+9. Leia `.cursor/rules/portugues-brasil.mdc` para reforço de idioma do assistente (somente pt-BR).
 
 ## Session Aliases / Aliases de Sessao
 
@@ -57,6 +67,16 @@ When `CTX-UPDATE-ALL` (or `Atualizar todo o contexto`) is requested:
 - Keep security docs updated with each architecture or deployment change.
 - Keep this folder tool-agnostic; adapters in other files must only point here.
 
+## Complementary context (outside the canonical sequence)
+
+These files can add useful operational context, but they do **not** replace the canonical source in `docs/ai-context/`:
+
+- `PLAYSTORE_CONTEXT.md`: store-facing notes and compliance support context.
+- `.cursor/rules/ai-context.mdc`: adapter rule that points assistants to this hub.
+- `.cursor/rules/portugues-brasil.mdc`: language enforcement for assistant replies in Portuguese (pt-BR only).
+- `.claude/settings.local.json`: local tool configuration; treat as environment-specific, not canonical project context.
+- `docs/ai-context/channel-sync-operational.md`: operational spec for daily channel-to-video sync.
+
 ## Checklist de manutenção (PT-BR)
 
 - Atualizar `current-status.md` a cada entrega relevante.
@@ -64,3 +84,13 @@ When `CTX-UPDATE-ALL` (or `Atualizar todo o contexto`) is requested:
 - Manter `roadmap-priorities.md` alinhado com negócio e aprovação da loja.
 - Manter os docs de seguranca atualizados em mudancas de arquitetura e deploy.
 - Manter esta pasta neutra para ferramentas; adaptadores externos só apontam para cá.
+
+## Contexto complementar (fora da sequência canônica)
+
+Estes arquivos podem acrescentar contexto operacional, mas **não** substituem a fonte canônica em `docs/ai-context/`:
+
+- `PLAYSTORE_CONTEXT.md`: notas voltadas para loja e apoio de compliance.
+- `.cursor/rules/ai-context.mdc`: regra adaptadora que aponta assistentes para este hub.
+- `.cursor/rules/portugues-brasil.mdc`: reforço de idioma para respostas em português (somente pt-BR).
+- `.claude/settings.local.json`: configuração local de ferramenta; trate como algo de ambiente, não como contexto canônico do projeto.
+- `docs/ai-context/channel-sync-operational.md`: especificação operacional do sync diário de canais para vídeos.

@@ -44,6 +44,7 @@
 - Keep production logging minimal and sanitized.
 - Keep release hardening enabled for mobile builds.
 - Use `security-checklist.md` in PR/release checkpoints.
+- **Portuguese copy:** all human-facing project text in Portuguese must be **Brazilian Portuguese (pt-BR)**, not European Portuguese.
 
 ## PT-BR
 
@@ -74,6 +75,10 @@
 - `android/key.properties` (gerado no CI, nao commitar)
 - `.github/workflows/deploy_android.yml`
 - `pubspec.yaml` (overrides e mudancas que impactam release)
+
+### Idioma (texto em portugues)
+
+- Tudo o que for escrito em portugues para humanos (docs, comentarios de produto, strings quando aplicavel) deve ser em **português do Brasil (pt-BR)**, nao em portugues de Portugal. Assistentes de IA no projeto: ao responder em portugues, usar **pt-BR**.
 
 ### Regras operacionais
 

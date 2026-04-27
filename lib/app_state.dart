@@ -3,6 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'dart:convert';
 
+/// Limite de itens persistidos. Ordem: mais recente no indice 0 (MRU); o excedente
+/// remove os itens mais antigos (fim da lista).
+const int kMaxHistoryEntries = 100;
+const int kMaxFavorites = 60;
+
 class FFAppState extends ChangeNotifier {
   static FFAppState _instance = FFAppState._internal();
 
@@ -40,6 +45,53 @@ class FFAppState extends ChangeNotifier {
           }).toList() ??
           _favorites;
     });
+    _applyPersistedListCapsIfNeeded();
+  }
+
+  void _applyPersistedListCapsIfNeeded() {
+    var changed = false;
+    if (_history.length > kMaxHistoryEntries) {
+      _history = _history.sublist(0, kMaxHistoryEntries);
+      changed = true;
+    }
+    if (_favorites.length > kMaxFavorites) {
+      _favorites = _favorites.sublist(0, kMaxFavorites);
+      changed = true;
+    }
+    if (changed) {
+      prefs.setStringList(
+        'ff_history',
+        _history.map((x) => jsonEncode(x)).toList(),
+      );
+      prefs.setStringList(
+        'ff_favorites',
+        _favorites.map((x) => jsonEncode(x)).toList(),
+      );
+    }
+  }
+
+  void _capHistoryRecencyNewestFirst() {
+    if (_history.length > kMaxHistoryEntries) {
+      _history = _history.sublist(0, kMaxHistoryEntries);
+    }
+  }
+
+  void _capHistoryAppendedRemoveOldest() {
+    while (_history.length > kMaxHistoryEntries) {
+      _history.removeAt(0);
+    }
+  }
+
+  void _capFavoritesRecencyNewestFirst() {
+    if (_favorites.length > kMaxFavorites) {
+      _favorites = _favorites.sublist(0, kMaxFavorites);
+    }
+  }
+
+  void _capFavoritesAppendedRemoveOldest() {
+    while (_favorites.length > kMaxFavorites) {
+      _favorites.removeAt(0);
+    }
   }
 
   void update(VoidCallback callback) {
@@ -53,11 +105,14 @@ class FFAppState extends ChangeNotifier {
   List<dynamic> get history => _history;
   set history(List<dynamic> value) {
     _history = value;
-    prefs.setStringList('ff_history', value.map((x) => jsonEncode(x)).toList());
+    _capHistoryRecencyNewestFirst();
+    prefs.setStringList(
+        'ff_history', _history.map((x) => jsonEncode(x)).toList());
   }
 
   void addToHistory(dynamic value) {
-    history.add(value);
+    _history.add(value);
+    _capHistoryAppendedRemoveOldest();
     prefs.setStringList(
         'ff_history', _history.map((x) => jsonEncode(x)).toList());
   }
@@ -84,7 +139,8 @@ class FFAppState extends ChangeNotifier {
   }
 
   void insertAtIndexInHistory(int index, dynamic value) {
-    history.insert(index, value);
+    _history.insert(index, value);
+    _capHistoryRecencyNewestFirst();
     prefs.setStringList(
         'ff_history', _history.map((x) => jsonEncode(x)).toList());
   }
@@ -93,12 +149,14 @@ class FFAppState extends ChangeNotifier {
   List<dynamic> get favorites => _favorites;
   set favorites(List<dynamic> value) {
     _favorites = value;
+    _capFavoritesRecencyNewestFirst();
     prefs.setStringList(
-        'ff_favorites', value.map((x) => jsonEncode(x)).toList());
+        'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());
   }
 
   void addToFavorites(dynamic value) {
-    favorites.add(value);
+    _favorites.add(value);
+    _capFavoritesAppendedRemoveOldest();
     prefs.setStringList(
         'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());
   }
@@ -125,7 +183,8 @@ class FFAppState extends ChangeNotifier {
   }
 
   void insertAtIndexInFavorites(int index, dynamic value) {
-    favorites.insert(index, value);
+    _favorites.insert(index, value);
+    _capFavoritesRecencyNewestFirst();
     prefs.setStringList(
         'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());
   }
@@ -142,6 +201,7 @@ class FFAppState extends ChangeNotifier {
       if (id == null || id.isEmpty) return;
       _history.removeWhere((e) => _youtubeIdOf(e) == id);
       _history.insert(0, engagement);
+      _capHistoryRecencyNewestFirst();
       prefs.setStringList(
           'ff_history', _history.map((x) => jsonEncode(x)).toList());
     });
@@ -160,6 +220,7 @@ class FFAppState extends ChangeNotifier {
         _favorites.removeWhere((e) => _youtubeIdOf(e) == id);
       } else {
         _favorites.insert(0, engagement);
+        _capFavoritesRecencyNewestFirst();
       }
       prefs.setStringList(
           'ff_favorites', _favorites.map((x) => jsonEncode(x)).toList());

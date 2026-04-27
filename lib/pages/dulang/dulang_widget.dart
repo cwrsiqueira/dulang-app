@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '/features/parental/parental_service.dart';
 import '/features/profiles/child_profile_service.dart';
 import '/services/supabase_service.dart';
@@ -23,28 +25,41 @@ class DulangWidget extends StatefulWidget {
 
 class _DulangWidgetState extends State<DulangWidget> {
   late DulangModel _model;
+  late Future<List<VideoRow>> _videosFuture;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
   String _profileGreeting = '';
+
+  void _onActiveProfileListenable() {
+    unawaited(_loadProfileGreeting());
+  }
+
+  Future<void> _loadProfileGreeting() async {
+    final p = await ChildProfileService.instance.activeProfile();
+    if (!mounted) return;
+    setState(() {
+      _profileGreeting = p == null ? '' : 'Olá, ${p.name}';
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => DulangModel());
+    _videosFuture = SupabaseService.instance.getVideos();
+    ChildProfileService.instance.profileChangeCount
+        .addListener(_onActiveProfileListenable);
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       await actions.lockOrientation();
-      final p = await ChildProfileService.instance.activeProfile();
-      if (mounted) {
-        setState(() {
-          _profileGreeting = p == null ? '' : 'Olá, ${p.name}';
-        });
-      }
+      await _loadProfileGreeting();
     });
   }
 
   @override
   void dispose() {
+    ChildProfileService.instance.profileChangeCount
+        .removeListener(_onActiveProfileListenable);
     _model.dispose();
     super.dispose();
   }
@@ -52,7 +67,7 @@ class _DulangWidgetState extends State<DulangWidget> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<VideoRow>>(
-      future: SupabaseService.instance.getVideos(),
+      future: _videosFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
@@ -75,18 +90,77 @@ class _DulangWidgetState extends State<DulangWidget> {
           return Scaffold(
             backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
             body: Center(
-              child: Text(
-                'Erro ao carregar vídeos. Tente novamente.',
-                style: FlutterFlowTheme.of(context).bodyMedium,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Não foi possível carregar os vídeos agora.',
+                      textAlign: TextAlign.center,
+                      style: FlutterFlowTheme.of(context).titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Verifique sua internet e tente novamente.',
+                      textAlign: TextAlign.center,
+                      style: FlutterFlowTheme.of(context).bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _videosFuture = SupabaseService.instance.getVideos();
+                        });
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
         }
 
         final videos = snapshot.data!;
-        final hero = videos.isEmpty
-            ? null
-            : videos[_stableHeroIndex(videos)];
+        if (videos.isEmpty) {
+          return Scaffold(
+            backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Catálogo em atualização',
+                      textAlign: TextAlign.center,
+                      style: FlutterFlowTheme.of(context).titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ainda não há vídeos disponíveis. Puxe para atualizar ou tente novamente em instantes.',
+                      textAlign: TextAlign.center,
+                      style: FlutterFlowTheme.of(context).bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _videosFuture = SupabaseService.instance.getVideos();
+                        });
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Atualizar catálogo'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+        final hero = videos[_stableHeroIndex(videos)];
 
         return GestureDetector(
           onTap: () {
@@ -157,7 +231,10 @@ class _DulangWidgetState extends State<DulangWidget> {
               top: true,
               child: RefreshIndicator(
                 onRefresh: () async {
-                  setState(() {});
+                  setState(() {
+                    _videosFuture = SupabaseService.instance.getVideos();
+                  });
+                  await _videosFuture;
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -166,7 +243,7 @@ class _DulangWidgetState extends State<DulangWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (hero != null) _buildHero(context, hero),
+                        _buildHero(context, hero),
                         const SizedBox(height: 28),
                         ..._buildFeaturedSection(context, videos),
                         const SizedBox(height: 28),
@@ -350,6 +427,7 @@ class _DulangWidgetState extends State<DulangWidget> {
   }
 
   Widget _buildChannelGrid(BuildContext context, List<VideoRow> videos) {
+    final repByChannel = _representativeVideoByChannelName(videos);
     final names = videos.map((v) => v.channelName).where((n) => n.isNotEmpty).toSet().toList()
       ..sort();
     final tiles = <String>['Todos', ...names];
@@ -365,38 +443,126 @@ class _DulangWidgetState extends State<DulangWidget> {
       itemCount: tiles.length,
       itemBuilder: (context, i) {
         final name = tiles[i];
+        final isTodos = name == 'Todos';
+        final thumbUrl = isTodos
+            ? ''
+            : (repByChannel[name]?.displayThumbnailUrl.trim() ?? '');
         return Material(
           color: FlutterFlowTheme.of(context).secondaryBackground,
           borderRadius: BorderRadius.circular(12),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
               _openCanalList(
                 context,
-                name == 'Todos' ? null : name,
+                isTodos ? null : name,
               );
             },
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  name,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.readexPro(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: FlutterFlowTheme.of(context).primaryText,
+            child: thumbUrl.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text(
+                        name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.readexPro(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: FlutterFlowTheme.of(context).primaryText,
+                        ),
+                      ),
+                    ),
+                  )
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        thumbUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => ColoredBox(
+                          color: FlutterFlowTheme.of(context).secondaryBackground,
+                          child: Icon(
+                            Icons.tv_rounded,
+                            size: 40,
+                            color: FlutterFlowTheme.of(context).primaryText
+                                .withValues(alpha: 0.35),
+                          ),
+                        ),
+                      ),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.28),
+                              Colors.black.withValues(alpha: 0.78),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            name,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.readexPro(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: Colors.white,
+                              height: 1.2,
+                              shadows: const [
+                                Shadow(
+                                  blurRadius: 10,
+                                  color: Colors.black54,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            ),
           ),
         );
       },
     );
   }
+}
+
+/// Por nome de canal (mesma chave da grade), o vídeo com [publishedAt] mais recente.
+Map<String, VideoRow> _representativeVideoByChannelName(List<VideoRow> videos) {
+  final byName = <String, List<VideoRow>>{};
+  for (final v in videos) {
+    final n = v.channelName.trim();
+    if (n.isEmpty) continue;
+    (byName[n] ??= []).add(v);
+  }
+  final out = <String, VideoRow>{};
+  for (final e in byName.entries) {
+    out[e.key] = _pickNewestVideoByPublishedAt(e.value);
+  }
+  return out;
+}
+
+VideoRow _pickNewestVideoByPublishedAt(List<VideoRow> rows) {
+  final sorted = List<VideoRow>.from(rows)
+    ..sort((a, b) {
+      final ap = a.publishedAt;
+      final bp = b.publishedAt;
+      if (ap == null && bp == null) return 0;
+      if (ap == null) return 1;
+      if (bp == null) return -1;
+      return bp.compareTo(ap);
+    });
+  return sorted.first;
 }
 
 class _FeaturedCard extends StatelessWidget {
