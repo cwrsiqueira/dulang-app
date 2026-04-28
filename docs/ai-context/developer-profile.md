@@ -26,7 +26,7 @@
 - Keep responses objective and action-oriented.
 - Prioritize child safety, compliance, and release risk reduction.
 - Prefer clear next steps over generic advice.
-- **Language:** for any Portuguese text aimed at the team or product (and for assistant replies when the user uses Portuguese), use **Brazilian Portuguese (pt-BR)** only—not European Portuguese (pt-PT). Prefer vocabulary and phrasing from Brazil (e.g. *celular*, *tela*, *baixar*; avoid *telemóvel*, *ecrã*, *tu* as default).
+- **Language:** for any Portuguese text aimed at the team or product (and for assistant replies when the user uses Portuguese), use **Brazilian Portuguese (pt-BR)** only—not European Portuguese (pt-PT). Prefer vocabulary and phrasing from Brazil (e.g. *celular*, *tela*, *arquivo*, *baixar*; avoid *telemóvel*, *ecrã*, *ficheiro*, *tu* as default). The Cursor rule **`.cursor/rules/portugues-brasil.mdc`** repeats this so tooling and canonical docs stay aligned.
 
 ## PT-BR
 
@@ -54,4 +54,4 @@
 - Respostas objetivas e orientadas a acao.
 - Priorizar seguranca infantil, compliance e reducao de risco de release.
 - Preferir proximos passos claros em vez de orientacao generica.
-- **Idioma:** em portugues, usar **somente português do Brasil (pt-BR)** em respostas ao time e em documentação humana, **não** português de Portugal (pt-PT). Preferir vocabulário brasileiro (ex.: *celular*, *tela*, *você*; evitar *telemóvel*, *ecrã*, tratamento padrão com *tu*).
+- **Idioma:** em portugues, usar **somente português do Brasil (pt-BR)** em respostas ao time, em documentação humana **e nas respostas de assistentes**, **não** português de Portugal (pt-PT). Mesma linha nas **rules** `.cursor/rules/portugues-brasil.mdc` e em `engineering-rules.md`. Vocabulário: *arquivo(s)* (nao *ficheiro(s)*), *celular*, *tela*, *você*; evitar *telemóvel*, *ecrã*, *tu*.

@@ -6,7 +6,7 @@ This folder is the canonical context for the Dulang project across tools, machin
 
 ## How to use
 
-For any Portuguese aimed at humans or assistant replies in Portuguese, use **Brazilian Portuguese (pt-BR)** only—not European Portuguese. See `developer-profile.md` and `engineering-rules.md`.
+For any Portuguese aimed at humans or assistant replies in Portuguese, use **Brazilian Portuguese (pt-BR)** only—not European Portuguese (avoid *ficheiros*, *telemóvel*, *ecrã*—use *arquivo(s)*, *celular*, *tela*). Same rule in **`developer-profile.md`**, **`engineering-rules.md`**, and **always-applied Cursor rules**: `.cursor/rules/portugues-brasil.mdc`.
 
 1. Read this file first.
 2. Read `project-overview.md` for product and mission.
@@ -20,7 +20,7 @@ For any Portuguese aimed at humans or assistant replies in Portuguese, use **Bra
 
 ## Como usar (PT-BR)
 
-Texto em português para pessoas e respostas de assistente em português: use **somente português do Brasil (pt-BR)** (não português de Portugal). Detalhes em `developer-profile.md` e `engineering-rules.md`.
+Texto em português para pessoas e respostas de assistente: use **somente pt-BR** (não pt-PT; ex.: **arquivo(s)**, não *ficheiro(s)*). Detalhes em `developer-profile.md`, `engineering-rules.md` e `.cursor/rules/portugues-brasil.mdc` (**rules**, não só guideline).
 
 **Marco (2026-04-27):** Fase 1 encerrada por aceite do operador. **Atualização (2026-04-30):** **integração da Fase 2 no app** (SDK RevenueCat, paywall Flutter com CTA fixo, paywall direta em toques premium, **Gerenciar assinatura** com link da loja via `managementURL`, bloqueio por entitlement, **sem login obrigatório**; troca de PIN parental com **biometria/PIN do aparelho**); **lojas/RevenueCat + QA em aparelho** ainda em aberto — veja `current-status.md`.
 

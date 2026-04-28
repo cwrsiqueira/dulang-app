@@ -44,7 +44,7 @@
 - Keep production logging minimal and sanitized.
 - Keep release hardening enabled for mobile builds.
 - Use `security-checklist.md` in PR/release checkpoints.
-- **Portuguese copy:** all human-facing project text in Portuguese must be **Brazilian Portuguese (pt-BR)**, not European Portuguese.
+- **Portuguese copy:** all human-facing project text in Portuguese must be **Brazilian Portuguese (pt-BR)**, not European Portuguese. AI assistants must follow the same rule (also in `.cursor/rules/portugues-brasil.mdc`).
 
 ## PT-BR
 
@@ -78,7 +78,9 @@
 
 ### Idioma (texto em portugues)
 
-- Tudo o que for escrito em portugues para humanos (docs, comentarios de produto, strings quando aplicavel) deve ser em **português do Brasil (pt-BR)**, nao em portugues de Portugal. Assistentes de IA no projeto: ao responder em portugues, usar **pt-BR**.
+- Tudo o que for escrito em portugues para humanos (docs, comentarios de produto, strings quando aplicavel) deve ser em **português do Brasil (pt-BR)**, nao em portugues de Portugal.
+- **Assistentes (Cursor e similares):** mesma obrigacao que o texto do produto; a premissa esta tambem nas **rules** do repositorio (`.cursor/rules/portugues-brasil.mdc`).
+- Vocabulário: usar **arquivo(s)**, **celular**, **tela**; **nao** usar *ficheiros*, *telemóvel*, *ecrã* quando estiver falando como em pt-BR.
 
 ### Regras operacionais
 

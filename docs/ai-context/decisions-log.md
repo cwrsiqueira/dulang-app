@@ -8,6 +8,12 @@
 - Why: Apple/Google own cancellation and plan changes; the app must explain and deep-link, not duplicate store policy.
 - Impact: `nav.dart`, `index.dart`, `configuracoes_widget.dart`, `dulang_premium_widget.dart`, new `dulang_subscription_manage_widget.dart`; context docs updated.
 
+### 2026-04-28 - RevenueCat entitlement identifier `dulang_premium_entitlement`
+
+- Decision: use RevenueCat entitlement identifier **`dulang_premium_entitlement`** in the dashboard and in app code (`SubscriptionConstants.premiumEntitlementId`); retire **`premium`** as the entitlement id string in operator-facing docs.
+- Why: The RC project is configured with this identifier; `CustomerInfo.entitlements` lookups must match exactly.
+- Impact: `lib/features/subscription/subscription_constants.dart`; `docs/ai-context/current-status.md`, `roadmap-priorities.md`, `PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`. Older log bullets that mention entitlement **`premium`** describe the earlier naming before this alignment.
+
 ### 2026-04-29 - Remove mandatory app login; RevenueCat decoupled from Supabase Auth; parental PIN change uses device auth
 
 - Decision: drop **required Supabase Auth** for the main shell; remove `/login` route and GoRouter redirects to it; remove settings **sign-out**; keep Supabase client init for catalog APIs; **RevenueCat** no longer calls `Purchases.logIn` with Supabase `user.id` (store account + restore purchases is the recovery path). **Change parental PIN** screen requires **device biometrics or device PIN** via `local_auth` before saving (`ParentalService.setPinAfterDeviceAuth`), not the old in-app PIN.
@@ -121,6 +127,12 @@
 - Decisao: assinantes abrem **Gerenciar assinatura** (`DulangSubscriptionManageWidget`) nos Ajustes (e a paywall redireciona se ja houver entitlement); tela mostra resumo e **Abrir na loja** com **`CustomerInfo.managementURL`** do RevenueCat (UI nativa Apple/Google). Quem nao assina segue em **`DulangPremiumWidget`** (CTA fixo, placeholders se faltar offering). Overrides de Premium em debug removidos no mesmo ciclo.
 - Motivo: cancelamento e mudanca de plano sao da loja; o app explica e deep-linka, nao duplica politica das lojas.
 - Impacto: `nav.dart`, `index.dart`, `configuracoes_widget.dart`, `dulang_premium_widget.dart`, novo `dulang_subscription_manage_widget.dart`; docs de contexto.
+
+### 2026-04-28 - Identificador de entitlement RevenueCat `dulang_premium_entitlement`
+
+- Decisao: usar no painel RevenueCat e no codigo o identificador de entitlement **`dulang_premium_entitlement`** (`SubscriptionConstants.premiumEntitlementId`); deixar de documentar **`premium`** como id do entitlement para operacao.
+- Motivo: O projeto no RC usa esse id; as leituras em `CustomerInfo.entitlements` precisam bater exatamente.
+- Impacto: `lib/features/subscription/subscription_constants.dart`; `docs/ai-context/current-status.md`, `roadmap-priorities.md`, `PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`. Entradas antigas do log que citam entitlement **`premium`** referem-se ao nome anterior a este alinhamento.
 
 ### 2026-04-29 - Sem login obrigatorio no app; RevenueCat sem Supabase Auth; troca de PIN com biometria/PIN do aparelho
 

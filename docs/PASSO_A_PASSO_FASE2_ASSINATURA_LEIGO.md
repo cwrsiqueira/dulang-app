@@ -12,7 +12,7 @@ Este guia é para **quem vai fazer funcionar de verdade** no dia a dia: criar a 
    Quem cobra é a **Google Play** (Android) ou a **App Store** (iPhone). O app **não** inventa preço sozinho: ele mostra o que a loja mandar. Quem paga já tem uma **conta na loja** (Google ou Apple); é ela que “segura” a compra quando a família troca de celular ou reinstala — use **Restaurar compras** no app com a **mesma conta da loja**.
 
 2. **O “intermediário” que o app pergunta “está pago?”**  
-   O projeto usa o **RevenueCat**: ele conversa com a Play e com a Apple e devolve para o app um “sim/não” para o acesso premium. No código isso aparece como o direito **`premium`** — o nome precisa ser **exatamente** esse no painel do RevenueCat, igual está no app.
+   O projeto usa o **RevenueCat**: ele conversa com a Play e com a Apple e devolve para o app um “sim/não” para o acesso premium. No código o identificador do entitlement é **`dulang_premium_entitlement`** (`SubscriptionConstants` / RevenueCat) — precisa ser **exatamente** esse no painel do RevenueCat, igual no app.
 
 O app **não exige login com e-mail no Dulang** para assistir ou para assinar: menos fricção para a família. (Se no futuro você quiser conta na nuvem só para preferências, isso é outro passo — opcional.)
 
@@ -120,7 +120,7 @@ A Play exige que binários com bibliotecas nativas (`.so`) sejam compatíveis co
 
 1. Crie um projeto no site do **RevenueCat** (se ainda não existir).
 2. **Android (Play) — agora:** siga a **Parte 2b** (JSON da conta de serviço). **iPhone:** fica para depois, como combinado — App Store Connect + credenciais Apple no RevenueCat quando for a vez.
-3. Crie um **direito** (no painel eles chamam de *entitlement*) com o nome **`premium`**. Tem que bater com o app.
+3. Crie um **direito** (no painel eles chamam de *entitlement*) com o identificador **`dulang_premium_entitlement`**. Tem que bater com o app.
 4. Crie uma **oferta padrão** (*default offering*) e coloque **dois pacotes**: um ligado à assinatura **mensal** e outro à **anual** (os IDs que você anotou na Play / Apple).
 5. **Chave pública do SDK (Android):** copie a **Public API Key** do app Android no RevenueCat e coloque no build (`REVENUECAT_ANDROID_KEY` em `assets/environment_values/environment.json` no ambiente que vocês usam, ou `--dart-define=REVENUECAT_ANDROID_KEY=...` no CI — **não** commitem chaves em repositório público).
 
@@ -148,7 +148,7 @@ Explique isso em qualquer FAQ para pais, para evitar frustração.
 
 ## Se algo der errado
 
-- **Catálogo continua bloqueado depois de pagar:** confira se o direito no RevenueCat se chama **`premium`**, se a oferta padrão tem os dois pacotes, se o **JSON da Play** está válido no RevenueCat, e se a compra de teste foi feita com a **mesma conta Google** da Play no aparelho; use **Restaurar compras** no app.
+- **Catálogo continua bloqueado depois de pagar:** confira se o entitlement no RevenueCat é **`dulang_premium_entitlement`**, se a oferta padrão tem os dois pacotes, se o **JSON da Play** está válido no RevenueCat, e se a compra de teste foi feita com a **mesma conta Google** da Play no aparelho; use **Restaurar compras** no app.
 - **Só Android funciona:** iOS precisa da chave pública do iOS no build e produto criado na Apple.
 - **Erro na loja:** quase sempre é produto ainda em rascunho, app assinado com outra conta, ou testador não autorizado.
 
@@ -160,4 +160,4 @@ Para atualizar vídeos e canais no servidor, use o outro passo a passo simples: 
 
 ---
 
-*Última revisão: Parte 2d (GitHub Actions → teste interno), permissão BILLING via Play Billing, Parte 2b/2c, troubleshooting sem login obrigatório.*  
+*Última revisão: entitlement RevenueCat `dulang_premium_entitlement`; Parte 2d (GitHub Actions → teste interno); BILLING; Parte 2b/2c; troubleshooting sem login obrigatório.*  

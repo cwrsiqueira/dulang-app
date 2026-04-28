@@ -3,6 +3,12 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/main.dart';
 import 'package:flutter/material.dart';
 
+String _savedThemeLabel(ThemeMode mode) => switch (mode) {
+      ThemeMode.light => 'Claro',
+      ThemeMode.dark => 'Escuro',
+      ThemeMode.system => 'Sistema',
+    };
+
 /// Tema: claro, escuro ou sistema.
 class AparenciaWidget extends StatelessWidget {
   const AparenciaWidget({super.key});
@@ -36,6 +42,12 @@ class AparenciaWidget extends StatelessWidget {
           Text(
             'Tema do app',
             style: theme.titleMedium.override(color: theme.primaryText),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Salvo: ${_savedThemeLabel(mode)} — pode coincidir com o visual '
+            'quando “Sistema” e o aparelho já estão no mesmo claro ou escuro.',
+            style: theme.bodySmall.override(color: theme.secondaryText),
           ),
           const SizedBox(height: 12),
           _ThemeOptionTile(
@@ -97,8 +109,7 @@ class _ThemeOptionTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
+          child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(

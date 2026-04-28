@@ -112,10 +112,20 @@ class _MyAppState extends State<MyApp> {
     safeSetState(() => _locale = createLocale(language));
   }
 
-  void setThemeMode(ThemeMode mode) => safeSetState(() {
+  /// Troca o [ThemeMode] do [MaterialApp] **após** o frame atual.
+  ///
+  /// Atualizar o ancestral no mesmo frame do `onTap` do [InkWell] (Aparência)
+  /// pode disparar assert esporádico `renderObject.child == child` ao combinar
+  /// com splash / tema / [AnimatedContainer] nos tiles.
+  void setThemeMode(ThemeMode mode) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      safeSetState(() {
         _themeMode = mode;
         FlutterFlowTheme.saveThemeMode(mode);
       });
+    });
+  }
 
   /// Preferência de tema exibida pela UI (mantida em lockstep com [MaterialApp.themeMode]).
   /// Não usar [FlutterFlowTheme.themeMode] em telas para “selecionado”: o persistido em disco

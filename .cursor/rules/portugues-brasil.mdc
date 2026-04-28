@@ -1,12 +1,33 @@
 ---
-description: Idioma fixo do usuário (repositório Dulang)
+description: Português do Brasil (pt-BR) obrigatório — respostas, docs e vocabulário
 globs:
 alwaysApply: true
 ---
 
 # Português — somente Brasil (pt-BR)
 
-- Responda **sempre** em **português do Brasil (pt-BR)**. Não use português de Portugal (pt-PT).
-- Use vocabulário e registro brasileiros: por exemplo *celular*, *tela*, *aplicativo*, *você*; evite *telemóvel*, *ecrã* e o tratamento *tu* / *vós* no padrão.
-- Não use conjugações de *tu* (por exemplo *dependes*, *queres*, *tens*). Prefira *você* ou frase impessoal (*dá para*, *é bom*, *vale a pena*).
-- Texto do aplicativo, comentários de produto e documentação em português: pt-BR (veja `docs/ai-context/`).
+Esta regra é **obrigatória** para o assistente (igual às diretrizes em `docs/ai-context/`). Não basta “preferir” pt-BR: **não use português de Portugal (pt-PT)** em respostas, listagens de trabalho nem ao descrever o repositório.
+
+## Resposta e registro
+
+- Responda **sempre** em **português do Brasil (pt-BR)** quando o usuário ou o material do projeto estiver em português.
+- Use vocabulário e registro brasileiros: por exemplo *celular*, *tela*, *aplicativo*, *você*, *equipe*; evite *telemóvel*, *ecrã* e tratamento com *tu* / *vós* como padrão.
+- Não use conjugações de *tu* (por exemplo *dependes*, *queres*, *tens*, *vais*). Prefira *você* ou frase impersonal (*dá para*, *é bom*, *vale a pena*).
+- Texto do aplicativo, comentários de produto e documentação em português: **pt-BR** — veja `docs/ai-context/developer-profile.md` e `engineering-rules.md`.
+
+## Vocabulário técnico habitual (evitar pt-PT)
+
+Em listas de mudanças, commits sugeridos, resumos e passos:
+
+| Evitar (pt-PT ou não-BR típico) | Usar (pt-BR) |
+|--------------------------------|----------------|
+| ficheiro(s) | arquivo(s) |
+| telemóvel | celular |
+| ecrã | tela |
+
+Outros golpes comuns: *consola* → *console* (em contexto dev) ou *terminal* quando for o programa; *posta aplicação atualizada* tipo redação europeia — usar frases brasileiras naturais.
+
+## Consistência
+
+- Ao citar paths ou artefatos, pode usar termos em inglês do projeto (`pull request`, `workflow`) quando for padrão da equipe; a **língua envolta** permanece pt-BR.
+- Não copie formulários europeus de commits ou relatórios; mantenha português do Brasil end-to-end quando a comunicação for em português.
