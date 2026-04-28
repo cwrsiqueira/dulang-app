@@ -2,11 +2,29 @@
 
 ## EN
 
+### 2026-04-30 - Subscription management screen; store `managementURL`; paywall UX refinements
+
+- Decision: subscribers open **Gerenciar assinatura** (`DulangSubscriptionManageWidget`) from Settings (and paywall redirects away if already entitled); screen shows current entitlement/product summary and **Abrir na loja** using RevenueCat **`CustomerInfo.managementURL`** (native Apple/Google subscription UI). Non-subscribers still use **`DulangPremiumWidget`** (sticky CTA, placeholders when offerings missing). Removed in-app Premium debug overrides earlier in the same initiative cycle.
+- Why: Apple/Google own cancellation and plan changes; the app must explain and deep-link, not duplicate store policy.
+- Impact: `nav.dart`, `index.dart`, `configuracoes_widget.dart`, `dulang_premium_widget.dart`, new `dulang_subscription_manage_widget.dart`; context docs updated.
+
+### 2026-04-29 - Remove mandatory app login; RevenueCat decoupled from Supabase Auth; parental PIN change uses device auth
+
+- Decision: drop **required Supabase Auth** for the main shell; remove `/login` route and GoRouter redirects to it; remove settings **sign-out**; keep Supabase client init for catalog APIs; **RevenueCat** no longer calls `Purchases.logIn` with Supabase `user.id` (store account + restore purchases is the recovery path). **Change parental PIN** screen requires **device biometrics or device PIN** via `local_auth` before saving (`ParentalService.setPinAfterDeviceAuth`), not the old in-app PIN.
+- Why: minimize friction for families and paying users while keeping a meaningful adult gate for parental settings changes.
+- Impact: `nav.dart`, `main.dart`, `subscription_service.dart`, `configuracoes_widget.dart`, `alterar_pin_widget.dart`, Android `USE_BIOMETRIC`, iOS `NSFaceIDUsageDescription`, docs updated; `login_widget.dart` left in repo unused (can delete later).
+
 ### 2026-04-27 - Phase 1 closed; Phase 2 starts with RevenueCat
 
 - Decision: treat **Phase 1** (store/compliance baseline) as **complete on 2026-04-27** by operator sign-off, then prioritize **RevenueCat** integration as the next engineering block.
 - Why: catalog sync, access posture, and player behavior are sufficient to move on; monetization was always the next roadmap phase.
 - Impact: context docs and backlog shift to subscription SDK, offerings, paywall, and entitlement gating; residual items (SQLite file cleanup, SHA-pinned actions, more tests) stay as non-blocking follow-ups.
+
+### 2026-04-29 - Single “Who is watching?” screen; premium title contrast; sign-out confirm; Phase 2 ops guide
+
+- Decision: delete **PerfisGerenciar**; add **rename/delete** on profile cards (overflow menu) in **SelecionarPerfil**; keep legacy GoRoute `/perfisGerenciar` → same widget; **confirm dialog** before account sign-out; **PremiumCatalogLockBody** title uses `primaryText` so light theme stays readable; add non-technical ops doc `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` (stores, RevenueCat, Supabase account, parental PIN “forgot” reality).
+- Why: one parent flow; fewer accidental logouts; fix contrast bug; give operators a plain-language checklist outside code.
+- Impact: `perfis_gerenciar_widget.dart` removed; `nav.dart`, `configuracoes_widget.dart`, `selecionar_perfil_widget.dart`, `premium_catalog_lock.dart` updated; README + `current-status.md` link the new guide.
 
 ### 2026-04-27 - Home channel grid: thumbnail from newest catalog video per channel
 
@@ -98,6 +116,18 @@
 
 ## PT-BR
 
+### 2026-04-30 - Tela Gerenciar assinatura; `managementURL` da loja; refinamentos de UX do paywall
+
+- Decisao: assinantes abrem **Gerenciar assinatura** (`DulangSubscriptionManageWidget`) nos Ajustes (e a paywall redireciona se ja houver entitlement); tela mostra resumo e **Abrir na loja** com **`CustomerInfo.managementURL`** do RevenueCat (UI nativa Apple/Google). Quem nao assina segue em **`DulangPremiumWidget`** (CTA fixo, placeholders se faltar offering). Overrides de Premium em debug removidos no mesmo ciclo.
+- Motivo: cancelamento e mudanca de plano sao da loja; o app explica e deep-linka, nao duplica politica das lojas.
+- Impacto: `nav.dart`, `index.dart`, `configuracoes_widget.dart`, `dulang_premium_widget.dart`, novo `dulang_subscription_manage_widget.dart`; docs de contexto.
+
+### 2026-04-29 - Sem login obrigatorio no app; RevenueCat sem Supabase Auth; troca de PIN com biometria/PIN do aparelho
+
+- Decisao: tirar **login obrigatorio** (Supabase) do shell principal; remover rota `/login` e redirects do GoRouter; remover **Sair da conta** dos Ajustes; manter init do Supabase para leitura de catalogo; **RevenueCat** deixa de usar `Purchases.logIn` com `user.id` do Supabase (recuperacao = **conta da loja** + restaurar compras). Tela **Alterar PIN parental** exige **biometria ou PIN do aparelho** (`local_auth`) antes de salvar (`setPinAfterDeviceAuth`), nao o PIN antigo do Dulang.
+- Motivo: menos friccao para familia e para quem quer assinar, mantendo trava razoavel para mudanca de PIN parental.
+- Impacto: `nav.dart`, `main.dart`, `subscription_service.dart`, `configuracoes_widget.dart`, `alterar_pin_widget.dart`, permissao Android e texto iOS Face ID, docs; `login_widget.dart` fica no repo sem uso (pode apagar depois).
+
 ### 2026-04-27 - Fase 1 encerrada; Fase 2 comeca pelo RevenueCat
 
 - Decisao: considerar a **Fase 1** (baseline loja/compliance) **concluida em 2026-04-27** por aceite do operador e priorizar em seguida a integracao **RevenueCat**.
@@ -145,6 +175,12 @@
 - Decisao: apos onboarding parental, exigir **sessao Supabase Auth** antes do shell principal; bloquear Home/Favoritos/Historico pelo entitlement **`premium`** no RevenueCat (inclui teste gratis da loja quando configurado); paywall **custom em Flutter** (`DulangPremiumWidget`) com pacotes mensal/anual da oferta padrao, **anual pre-selecionado**, precos da loja via SDK — **sem** paywall hospedada do RevenueCat (`purchases_ui_flutter`).
 - Motivo: alinhar produto (so conta + assinatura), manter controle de marca/UI e usar RevenueCat so para recibos e `CustomerInfo`.
 - Impacto: `GoRouter` redireciona para `/login` sem sessao (excecoes publicas: login, termos, sobre, contato); `SubscriptionService` configura SDK e faz `logIn`/`logOut` com `user.id` do Supabase; `NavBarPage` mostra `PremiumCatalogLockBody` sem direito ativo; `DulangVideoWidget` / `CanalVideosWidget` bloqueiam sem entitlement; Ajustes ganha sair da conta.
+
+### 2026-04-29 - Tela unica de perfis; contraste do titulo Premium; confirmar sair; guia Fase 2 leigo
+
+- Decisao: remover **Gerenciar perfis**; renomear/excluir pelo menu no card em **Quem esta assistindo?** (`SelecionarPerfil`); manter rota antiga `/perfisGerenciar` apontando para a mesma tela; dialogo de confirmacao antes de **Sair da conta**; titulo do bloqueio Premium com cor legivel no tema claro; novo arquivo `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` (lojas, assinatura, conta, PIN esquecido).
+- Motivo: um fluxo so para o responsavel; menos saida acidental da conta; correcao de leitura; roteiro acessivel fora do codigo.
+- Impacto: `perfis_gerenciar_widget.dart` removido; ajustes em `nav.dart`, `configuracoes_widget.dart`, `selecionar_perfil_widget.dart`, `premium_catalog_lock.dart`; links no README do hub e em `current-status.md`.
 
 ### 2026-04-28 - Perfis infantis: sem "Perfil 1" automatico; picker estilo Netflix
 

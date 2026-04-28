@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-04-28
+Last updated: 2026-04-30
 
 ## Phase 1 closure / Encerramento da Fase 1
 
@@ -8,11 +8,15 @@ Last updated: 2026-04-28
 
 **PT-BR:** A **Fase 1** permanece **encerrada com aceite do operador em 2026-04-27** (sem mudança).
 
-## Phase 2 progress / Andamento da Fase 2 (2026-04-28)
+## Phase 2 progress / Andamento da Fase 2 (2026-04-30)
 
-**EN:** **App-side Phase 2 landed in-repo on 2026-04-28:** Supabase Auth **login required** after onboarding (`/login`, GoRouter redirect); RevenueCat SDK via **`SubscriptionService`** with entitlement **`premium`**, `logIn`/`logOut` tied to Supabase `user.id`; **custom Flutter paywall** on `DulangPremiumWidget` (monthly/annual from default offering, annual pre-selected, restore purchases); **catalog gates** (`PremiumCatalogLockBody` on Home/Favorites/History tabs, defensive blocks on video/channel routes); settings **sign-out**. **Still required outside the repo / on consoles:** RevenueCat + Play/App Store products (7-day trial, monthly + annual pricing rule), default offering package types, `REVENUECAT_IOS_KEY` (or dart-define), Supabase Auth configuration for real users, and **device QA** for purchase/restore on Android (Windows) and iOS (Mac mini).
+**EN:** **App-side Phase 2 (updated 2026-04-30):** **No mandatory app login** — catalog and paywall are open after onboarding; purchases restore via **store account** + RevenueCat; RevenueCat SDK via **`SubscriptionService`** with entitlement **`premium`** (anonymous RC user per install; no Supabase `logIn` coupling); **custom Flutter paywall** (`DulangPremiumWidget`, sticky CTA); **direct paywall** when tapping premium content without entitlement; **subscription management** (`DulangSubscriptionManageWidget` + `managementURL`) for subscribers; **parental PIN** still gates settings; **change parental PIN** uses **device biometrics / device PIN** (`local_auth`) before saving. **Still required outside the repo / on consoles:** RevenueCat + Play/App Store products (7-day trial, monthly + annual pricing rule), default offering package types, `REVENUECAT_IOS_KEY` (or dart-define), and **device QA** for purchase/restore on Android (Windows) and iOS (Mac mini). Supabase remains for data APIs as configured; Auth optional.
 
-**PT-BR:** **No código, a Fase 2 entrou em 2026-04-28:** login **obrigatório** com Supabase Auth após o onboarding (rota `/login` + redirect do GoRouter); SDK RevenueCat em **`SubscriptionService`** com entitlement **`premium`** e `logIn`/`logOut` ligados ao `user.id` do Supabase; **paywall em Flutter** em `DulangPremiumWidget` (mensal/anual da oferta padrão, anual pré-selecionado, restaurar compras); **bloqueio do catálogo** (`PremiumCatalogLockBody` nas abas Home/Favoritos/Histórico e checagem em vídeo/canal); **sair da conta** em Ajustes. **Ainda falta fora do repositório:** produtos nas lojas + RevenueCat (trial 7 dias, regra de preço anual = 10 mensais), oferta padrão com pacotes reconhecidos pelo SDK, chave **`REVENUECAT_IOS_KEY`** (ou `--dart-define`), configuração do Auth no Supabase para uso real e **QA em aparelho** (compra/restauração no Android/Windows e iOS/Mac mini).
+**Plain-language ops guide (stores + subscription + parental PIN limits):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md).
+
+**PT-BR:** **Fase 2 no app (atualizado em 2026-04-30):** **sem login obrigatório no app** — catálogo e assinatura após onboarding; compras na **conta da loja** + restaurar compras; SDK RevenueCat em **`SubscriptionService`** com entitlement **`premium`** (usuário anônimo RC por instalação); **paywall Flutter** (`DulangPremiumWidget`, CTA fixo); **paywall direta** ao tocar conteúdo premium sem direito; **Gerenciar assinatura** (`DulangSubscriptionManageWidget` + `managementURL`) para quem já tem Premium; **PIN parental** protege Ajustes; **alterar PIN parental** com **`local_auth`**. **Ainda falta fora do repositório:** produtos nas lojas + RevenueCat, oferta padrão, **`REVENUECAT_IOS_KEY`**, **QA em aparelho**. Supabase para APIs de dados; Auth opcional.
+
+**Guia operacional em linguagem simples (lojas + assinatura + PIN):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md) — inclui **Parte 2b** (conta de serviço Google + JSON no RevenueCat, AAB em teste interno) e **Parte 2c** (Famílias/WebView, 16 KB, API 35 / `targetSdk`).
 
 **Still tracked as follow-up (not blocking the Phase 1 milestone label):** SQLite legacy modules remain in the repo (bootstrap removed from `main.dart`); GitHub Actions in `deploy_android.yml` still use version tags instead of SHA pins; automated tests remain thin; consider versioning Supabase RLS policies in SQL migrations when convenient.
 
@@ -28,15 +32,17 @@ Last updated: 2026-04-28
 
 | Area | Status | Notes |
 |---|---|---|
-| Supabase in feed/player | Stable | Primary catalog and playback path; operator sign-off for Phase 1; **Auth** now required to reach shell after onboarding |
+| Supabase in feed/player | Stable | Catalog/reads; **no mandatory Auth** in app shell (2026-04-29); operator sign-off for Phase 1 |
 | SQLite legacy removal | Partial | No SQLite bootstrap on startup; legacy `lib/backend/sqlite` and references remain — cleanup backlog |
 | Parental PIN + onboarding | Implemented (basic) | Works; advanced controls remain Phase 3 |
 | Player hardening | Stable for Phase 1 | Restrictions in place; periodic policy re-check on store updates |
 | Video navigation from list | Fixed | Player state keyed by video id; device QA as needed per release |
 | Video back navigation | Fixed | safePop + fullscreen overlay reset |
-| RevenueCat monetization | **In progress** | SDK + entitlement gate + Flutter paywall in app; dashboard/store products + iOS key + device QA still open |
+| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall (`DulangPremiumWidget`, CTA fixo) + **Gerenciar assinatura** (`DulangSubscriptionManageWidget`, `CustomerInfo.managementURL` → loja); dashboard/store + iOS key + QA em aparelho ainda em aberto |
 | Channel sync automation | Stable for Phase 1 | Daily Edge path + contract; operator confirms prod/cron |
 | Home channel grid visuals | Done | Thumbnail from most recent active video per channel + gradient overlay (`dulang_widget`) |
+| Child profiles UX | Done | Single screen “Quem está assistindo?”: select + add + rename/delete via menu; legacy `/perfisGerenciar` opens same screen |
+| Settings polish | Done | Ajustes: item **Dulang Premium** / **Gerenciar assinatura** conforme entitlement; tela de gestão com link nativo da loja; alterar PIN parental enxuto + link de ajuda; Aparência: seleção de tema alinhada ao `themePreference` do `MyApp` |
 | Parent value features | Pending | Time control, schedule, history, profiles (Phase 3) |
 | Tests and reliability | Low coverage | Expand before high-risk releases |
 | Security posture | Improving | Keys/PIN/release hardening; version RLS in repo + SHA-pin CI when scheduled |
@@ -55,7 +61,8 @@ Last updated: 2026-04-28
 - Catalog fetch now uses timeout + retry and Home has explicit recovery states (error retry and empty-catalog refresh).
 - Daily sync contract defined in repo (`supabase_daily_sync_contract.sql`) with inactivation + TTL cleanup model.
 - Home **Channels** grid: background thumbnail from the newest active video per channel (`published_at`) with gradient overlay for readability (`dulang_widget`).
-- **Phase 2 (2026-04-28):** Supabase Auth login screen and router gate; `SubscriptionService` + `Purchases.configure` / `CustomerInfo` / purchase + restore; entitlement **`premium`** gates catalog tabs and video surfaces; `DulangPremiumWidget` two-plan paywall (store prices); `REVENUECAT_*` and `YOUTUBE_API_KEY` support `--dart-define` (see `environment_values.dart`).
+- **Phase 2 (2026-04-28 → 2026-04-29):** RevenueCat `SubscriptionService` + `Purchases.configure` / `CustomerInfo` / purchase + restore; entitlement **`premium`** gates playback and listas premium; `DulangPremiumWidget` two-plan paywall (store prices); `REVENUECAT_*` and `YOUTUBE_API_KEY` support `--dart-define` (see `environment_values.dart`). **2026-04-29:** removed mandatory **Supabase Auth** / `/login` route and router redirect; removed **sign-out** tile; RC no longer `logIn` with Supabase user id.
+- **UX assinatura (2026-04-27 → 2026-04-30):** sem entitlement ativo, toque em conteúdo premium abre **direto a paywall** (`PremiumPaywallRedirectScaffold`); com entitlement, **Ajustes** abre **Gerenciar assinatura** (`DulangSubscriptionManageWidget`: plano atual + **Abrir na loja** via `managementURL` do RevenueCat). Paywall com **rodapé fixo** (CTA sempre visível); sem override de Premium em debug. **Aparência:** tema usa `MyApp.themePreference` (evita dessincronia com `SharedPreferences`). **Alterar PIN:** fluxo curto + `DeviceAuthHelp`; teclado PIN com debounce + `InkWell` para feedback visual. Ops: [`PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md).
 
 ### Priority gaps
 
@@ -85,7 +92,7 @@ Last updated: 2026-04-28
 ### Suggested next execution steps
 
 1. **RevenueCat + stores:** wire products and default offering; confirm entitlement id `premium`; run purchase/restore QA on Android and iOS.
-2. **Supabase Auth:** confirm email provider settings for production (social logins are a separate follow-up if desired).
+2. **Supabase Auth (optional):** only if you add cloud accounts later; not required for catalog + billing flow above.
 3. Remove dead SQLite imports/paths after grep-based audit (bootstrap already removed).
 4. Optionally pin GitHub Actions by SHA in `deploy_android.yml`.
 5. Add a small automated test set around parental gate and catalog read boundaries.
@@ -104,7 +111,8 @@ Last updated: 2026-04-28
 - Busca de catalogo agora usa timeout + retry e a Home tem estados de recuperacao explicitos (erro com tentativa novamente e refresh para catalogo vazio).
 - Contrato de sync diario definido no repositorio (`supabase_daily_sync_contract.sql`) com modelo de inativacao + limpeza por TTL.
 - Grade **Canais** na Home: fundo com thumbnail do video ativo **mais recente** por canal (`published_at`), gradiente + texto legivel.
-- **Fase 2 (2026-04-28):** tela de login Supabase + bloqueio de rotas; `SubscriptionService` (RevenueCat) com entitlement **`premium`** e compra/restaurar; paywall em Flutter em `DulangPremiumWidget` (mensal/anual); bloqueio do catálogo nas abas e em vídeo/canal; suporte a `--dart-define` para `REVENUECAT_*` e `YOUTUBE_API_KEY` em `environment_values.dart`.
+- **Fase 2 (2026-04-28 → 2026-04-29):** `SubscriptionService` (RevenueCat) com entitlement **`premium`** e compra/restaurar; paywall em Flutter em `DulangPremiumWidget` (mensal/anual); bloqueio do catálogo nas abas e em vídeo/canal; `--dart-define` para `REVENUECAT_*` e `YOUTUBE_API_KEY` em `environment_values.dart`. **2026-04-29:** removidos login obrigatório, rota `/login` e redirect no GoRouter; removido bloco “Sair da conta”; RevenueCat sem `logIn` com id do Supabase.
+- **UX (2026-04-29 → 2026-04-30):** perfis na tela **Quem está assistindo?** (menu ⋮ renomear/excluir); **Gerenciar perfis** removida; paywall/gestão de assinatura conforme acima; **Alterar PIN parental** com `local_auth` e tela de ajuda; guia leigo [`PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md).
 
 ### Gaps prioritarios
 

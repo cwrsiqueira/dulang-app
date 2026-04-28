@@ -2,7 +2,7 @@
 
 This folder is the canonical context for the Dulang project across tools, machines, and AI assistants.
 
-**Milestone (2026-04-27):** Phase 1 closed by operator sign-off. **Update (2026-04-28):** Phase 2 **app integration** (Auth gate, RevenueCat SDK, Flutter paywall, entitlement gating) is in the repo; **store/RevenueCat dashboard + device QA** still open — see `current-status.md`.
+**Milestone (2026-04-27):** Phase 1 closed by operator sign-off. **Update (2026-04-30):** Phase 2 **app integration** (RevenueCat SDK, Flutter paywall with sticky CTA, direct paywall on premium taps, **Gerenciar assinatura** via store `managementURL`, entitlement gating, **no mandatory login**; parental PIN change via **device biometrics/PIN**) is in the repo; **store/RevenueCat dashboard + device QA** still open — see `current-status.md`.
 
 ## How to use
 
@@ -22,7 +22,7 @@ For any Portuguese aimed at humans or assistant replies in Portuguese, use **Bra
 
 Texto em português para pessoas e respostas de assistente em português: use **somente português do Brasil (pt-BR)** (não português de Portugal). Detalhes em `developer-profile.md` e `engineering-rules.md`.
 
-**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador. **Atualização (2026-04-28):** a **integração da Fase 2 no app** (login obrigatório, SDK RevenueCat, paywall Flutter, bloqueio por entitlement) já está no repositório; **configuração nas lojas/RevenueCat + QA em aparelho** ainda em aberto — veja `current-status.md`.
+**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador. **Atualização (2026-04-30):** **integração da Fase 2 no app** (SDK RevenueCat, paywall Flutter com CTA fixo, paywall direta em toques premium, **Gerenciar assinatura** com link da loja via `managementURL`, bloqueio por entitlement, **sem login obrigatório**; troca de PIN parental com **biometria/PIN do aparelho**); **lojas/RevenueCat + QA em aparelho** ainda em aberto — veja `current-status.md`.
 
 1. Comece por este arquivo.
 2. Leia `project-overview.md` para produto e missão.
@@ -76,6 +76,7 @@ These files can add useful operational context, but they do **not** replace the 
 - `.cursor/rules/portugues-brasil.mdc`: language enforcement for assistant replies in Portuguese (pt-BR only).
 - `.claude/settings.local.json`: local tool configuration; treat as environment-specific, not canonical project context.
 - `docs/ai-context/channel-sync-operational.md`: operational spec for daily channel-to-video sync.
+- `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`: step-by-step for non-developers (stores, subscription service, account) to finish Phase 2 outside code.
 
 ## Checklist de manutenção (PT-BR)
 
@@ -94,3 +95,4 @@ Estes arquivos podem acrescentar contexto operacional, mas **não** substituem a
 - `.cursor/rules/portugues-brasil.mdc`: reforço de idioma para respostas em português (somente pt-BR).
 - `.claude/settings.local.json`: configuração local de ferramenta; trate como algo de ambiente, não como contexto canônico do projeto.
 - `docs/ai-context/channel-sync-operational.md`: especificação operacional do sync diário de canais para vídeos.
+- `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`: passo a passo para leigos (lojas, assinatura, conta) para fechar a Fase 2 fora do código.

@@ -11,8 +11,9 @@ Baseline delivered: parental PIN/onboarding, player isolation work, Supabase-fir
 1. Integrate RevenueCat subscriptions and trial.
 2. Gate content by active entitlement.
 3. Build parent-focused paywall narrative.
+4. Subscriber path to **store subscription management** (`managementURL` / native screens), not the acquisition paywall.
 
-**Status 2026-04-28:** items 1–3 are **implemented in app code** (custom Flutter paywall, SDK, `premium` gate); **complete store + RevenueCat dashboard wiring and real-device purchase QA** to close the phase operationally.
+**Status 2026-04-30:** items 1–4 are **implemented in app code** (custom Flutter paywall with sticky CTA, SDK, `premium` gate, `DulangSubscriptionManageWidget`); **complete store + RevenueCat dashboard wiring and real-device purchase QA** to close the phase operationally.
 
 ### Phase 3 - Parent value features
 
@@ -32,8 +33,9 @@ Entregas: protecao parental basica, trabalho de isolamento do player, catalogo S
 1. Integrar assinatura e trial com RevenueCat.
 2. Bloquear conteudo por entitlement ativo.
 3. Construir narrativa de paywall orientada a pais.
+4. Caminho do assinante para **gestão na loja** (`managementURL` / telas nativas), sem reexibir a paywall de aquisição.
 
-**Status em 2026-04-28:** itens 1 a 3 **no código do app** (paywall Flutter, SDK, bloqueio `premium`); falta **fechar lojas + painel RevenueCat e validar compra/restauração em aparelho real** para encerrar a fase na operação.
+**Status em 2026-04-30:** itens 1 a 4 **no código do app** (paywall Flutter com CTA fixo, SDK, bloqueio `premium`, tela **Gerenciar assinatura**); falta **fechar lojas + painel RevenueCat e validar compra/restauração em aparelho real** para encerrar a fase na operação.
 
 ### Fase 3 - Features de valor para os pais
 
