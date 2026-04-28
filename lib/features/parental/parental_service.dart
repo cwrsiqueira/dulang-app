@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,14 +35,16 @@ class ParentalService {
     try {
       return await LocalAuthentication().authenticate(
         localizedReason: localizedReason,
-        biometricOnly: false,
-        sensitiveTransaction: true,
-        persistAcrossBackgrounding: true,
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          sensitiveTransaction: true,
+          stickyAuth: true,
+        ),
       );
-    } on LocalAuthException catch (e) {
+    } on PlatformException catch (e, st) {
       if (kDebugMode) {
         debugPrint(
-          'ParentalService.authenticateDeviceAdult: ${e.code} ${e.description}',
+          'ParentalService.authenticateDeviceAdult: ${e.code} ${e.message} $st',
         );
       }
       return false;
