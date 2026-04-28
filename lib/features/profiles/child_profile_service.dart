@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -44,8 +45,17 @@ class ChildProfileService {
   /// Incrementa após mudar perfil ativo / lista; a Home escuta e atualiza a saudação.
   final ValueNotifier<int> profileChangeCount = ValueNotifier<int>(0);
 
+  /// Evita notificar no meio do mesmo frame em que o GoRouter faz `pop` da seleção
+  /// de perfil (corrida com [DulangWidget._loadProfileGreeting] → flash de erro).
+  bool _profileChangeNotifyScheduled = false;
+
   void _notifyProfileChanged() {
-    profileChangeCount.value = profileChangeCount.value + 1;
+    if (_profileChangeNotifyScheduled) return;
+    _profileChangeNotifyScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _profileChangeNotifyScheduled = false;
+      profileChangeCount.value = profileChangeCount.value + 1;
+    });
   }
 
   /// Rota "Quem está assistindo?" montada: evita `push` duplicado a partir da [NavBarPage].

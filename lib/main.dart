@@ -1,4 +1,5 @@
 import 'dart:async' show Timer, unawaited;
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +18,23 @@ import 'flutter_flow/flutter_flow_util.dart';
 import 'flutter_flow/internationalization.dart';
 import 'index.dart';
 
+void _installGlobalErrorLogging() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('[Dulang FlutterError] ${details.exceptionAsString()}');
+    if (details.stack != null) {
+      debugPrint('[Dulang FlutterError stack]\n${details.stack}');
+    }
+  };
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    debugPrint('[Dulang async] $error\n$stack');
+    return true;
+  };
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _installGlobalErrorLogging();
   GoRouter.optionURLReflectsImperativeAPIs = true;
   usePathUrlStrategy();
 
