@@ -321,37 +321,7 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
 
   Future<void> _onBackPressed() async {
     if (!mounted) return;
-    final scaffoldKey = ScaffoldMessenger.of(context);
-    final result = await scaffoldKey
-        .showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.lock_outline, color: Colors.white, size: 18),
-                SizedBox(width: 8),
-                Flexible(child: Text('Área protegida pelos pais')),
-              ],
-            ),
-            action: SnackBarAction(
-              label: 'DIGITAR PIN',
-              textColor: Colors.amber,
-              onPressed: () {},
-            ),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 72, left: 16, right: 16),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        )
-        .closed;
-
-    if (result == SnackBarClosedReason.action && mounted) {
-      final pinResult = await showPinDialog(context);
-      if (pinResult == PinDialogResult.verified && mounted) {
-        SystemNavigator.pop();
-      }
-    }
+    SystemNavigator.pop();
   }
 
   @override

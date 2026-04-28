@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '/features/subscription/subscription_constants.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -23,6 +24,7 @@ class DulangSubscriptionManageWidget extends StatefulWidget {
 class _DulangSubscriptionManageWidgetState
     extends State<DulangSubscriptionManageWidget> {
   bool _opening = false;
+  Package? _activePackage;
 
   static String? _formatExpirationPt(String? iso) {
     if (iso == null || iso.isEmpty) return null;
@@ -50,9 +52,9 @@ class _DulangSubscriptionManageWidgetState
     switch (s) {
       case Store.appStore:
       case Store.macAppStore:
-        return 'Apple App Store';
+        return 'App Store';
       case Store.playStore:
-        return 'Google Play Store';
+        return 'Google Play';
       case Store.stripe:
         return 'Stripe';
       case Store.rcBilling:
@@ -100,30 +102,61 @@ class _DulangSubscriptionManageWidgetState
     }
   }
 
-  Future<void> _onRestore() async {
-    try {
-      await SubscriptionService.instance.restorePurchases();
-      if (!mounted) return;
-      if (!SubscriptionService.instance.hasPremiumAccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Nenhuma assinatura ativa encontrada.'),
-          ),
-        );
-        context.safePop();
-        context.pushNamed(DulangPremiumWidget.routeName);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Assinatura atualizada.')),
-        );
-        setState(() {});
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao restaurar: $e')),
-      );
+  static String _friendlyPlanName(
+    String productId,
+    PackageType? packageType,
+  ) {
+    if (packageType == PackageType.annual) return 'Plano anual';
+    if (packageType == PackageType.monthly) return 'Plano mensal';
+
+    final id = productId.toLowerCase();
+    if (id.contains('annual') || id.contains('year') || id.contains('anual')) {
+      return 'Plano anual';
     }
+    if (id.contains('month') || id.contains('mensal')) return 'Plano mensal';
+    return 'Dulang Premium';
+  }
+
+  static String _billingSuffix(PackageType? packageType, String productId) {
+    if (packageType == PackageType.annual) return '/ano';
+    if (packageType == PackageType.monthly) return '/mês';
+    if (packageType == PackageType.weekly) return '/semana';
+
+    final id = productId.toLowerCase();
+    if (id.contains('annual') || id.contains('year') || id.contains('anual')) {
+      return '/ano';
+    }
+    if (id.contains('month') || id.contains('mensal')) return '/mês';
+    return '';
+  }
+
+  static Package? _findPackageByProductId(Offerings? offerings, String id) {
+    if (offerings == null) return null;
+    Package? match;
+
+    if (offerings.current != null) {
+      for (final p in offerings.current!.availablePackages) {
+        if (p.storeProduct.identifier == id) return p;
+      }
+    }
+
+    offerings.all.forEach((_, offering) {
+      if (match != null) return;
+      for (final p in offering.availablePackages) {
+        if (p.storeProduct.identifier == id) {
+          match = p;
+          return;
+        }
+      }
+    });
+    return match;
+  }
+
+  Future<void> _loadCurrentPlanInfo(String productId) async {
+    final offerings = await SubscriptionService.instance.getOfferings();
+    final pkg = _findPackageByProductId(offerings, productId);
+    if (!mounted) return;
+    setState(() => _activePackage = pkg);
   }
 
   @override
@@ -137,7 +170,15 @@ class _DulangSubscriptionManageWidgetState
         return;
       }
       await SubscriptionService.instance.refreshCustomerInfo();
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      final info = SubscriptionService.instance.customerInfo;
+      final entitlement =
+          info?.entitlements.all[SubscriptionConstants.premiumEntitlementId];
+      if (entitlement != null) {
+        await _loadCurrentPlanInfo(entitlement.productIdentifier);
+      } else {
+        setState(() {});
+      }
     });
   }
 
@@ -150,6 +191,19 @@ class _DulangSubscriptionManageWidgetState
     final id = SubscriptionConstants.premiumEntitlementId;
     final ent = info?.entitlements.all[id];
     final hasAccess = SubscriptionService.instance.hasPremiumAccess;
+    final planName = ent == null
+        ? null
+        : _friendlyPlanName(ent.productIdentifier, _activePackage?.packageType);
+    final price = _activePackage?.storeProduct.priceString;
+    final billingSuffix = ent == null
+        ? ''
+        : _billingSuffix(_activePackage?.packageType, ent.productIdentifier);
+    final recurringLabel = price == null
+        ? null
+        : billingSuffix.isEmpty
+            ? price
+            : '$price $billingSuffix';
+    final storeName = ent == null ? null : _storeLabel(ent.store);
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
@@ -202,20 +256,30 @@ class _DulangSubscriptionManageWidgetState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      ent.productIdentifier,
+                      planName ?? 'Dulang Premium',
                       style: theme.titleSmall.override(
                         color: theme.primaryText,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      _periodLabel(ent.periodType),
-                      style: theme.bodyMedium,
-                    ),
+                    if (recurringLabel != null)
+                      Text(
+                        ent.periodType == PeriodType.trial
+                            ? 'Após o teste grátis: $recurringLabel'
+                            : recurringLabel,
+                        style: theme.bodyMedium.override(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else
+                      Text(
+                        _periodLabel(ent.periodType),
+                        style: theme.bodyMedium,
+                      ),
                     const SizedBox(height: 4),
                     Text(
-                      'Loja: ${_storeLabel(ent.store)}',
+                      'Loja: $storeName',
                       style: theme.bodySmall.override(color: theme.secondaryText),
                     ),
                     if (_formatExpirationPt(ent.expirationDate) != null) ...[
@@ -235,14 +299,14 @@ class _DulangSubscriptionManageWidgetState
             ),
             const SizedBox(height: 24),
             Text(
-              'Cancelar renovação ou mudar de plano',
+              'Gerenciar na loja',
               style: theme.titleMedium.override(color: theme.primaryText),
             ),
             const SizedBox(height: 8),
             Text(
-              'O Dulang usa a assinatura da loja do seu aparelho (Apple ou Google). '
-              'Para desativar a renovação automática, trocar de plano ou ver recibos, '
-              'use o botão abaixo e conclua na tela da loja.',
+              defaultTargetPlatform == TargetPlatform.iOS
+                  ? 'Siga para a App Store para desativar a renovação automática, trocar de plano ou ver recibos.'
+                  : 'Siga para o Google Play para desativar a renovação automática, trocar de plano ou ver recibos.',
               style: theme.bodyMedium,
             ),
             const SizedBox(height: 20),
@@ -263,22 +327,6 @@ class _DulangSubscriptionManageWidgetState
                 foregroundColor: Colors.black,
                 minimumSize: const Size(double.infinity, 48),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: _onRestore,
-              child: Text(
-                'Restaurar compras',
-                style: theme.bodyLarge.override(
-                  color: theme.tertiary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Útil se você trocou de aparelho ou reinstalou o app.',
-              style: theme.bodySmall.override(color: theme.secondaryText),
             ),
           ],
         ],
