@@ -1,5 +1,4 @@
 // Export pages
-export '/features/auth/login_widget.dart' show LoginWidget;
 export '/pages/termos_de_uso_e_politica_de_privacidade/termos_de_uso_e_politica_de_privacidade_widget.dart'
     show TermosDeUsoEPoliticaDePrivacidadeWidget;
 export '/pages/sobre_o_dulang/sobre_o_dulang_widget.dart'
@@ -9,6 +8,8 @@ export '/pages/dulang_video/dulang_video_widget.dart' show DulangVideoWidget;
 export '/pages/contato/contato_widget.dart' show ContatoWidget;
 export '/pages/dulang_premium/dulang_premium_widget.dart'
     show DulangPremiumWidget;
+export '/pages/dulang_premium/dulang_subscription_manage_widget.dart'
+    show DulangSubscriptionManageWidget;
 export '/pages/favoritos/favoritos_widget.dart' show FavoritosWidget;
 export '/pages/historico/historico_widget.dart' show HistoricoWidget;
 export '/pages/configuracoes/configuracoes_widget.dart'

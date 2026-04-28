@@ -1,3 +1,4 @@
+import '/app_build_metadata.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -149,27 +150,6 @@ class _TermosDeUsoEPoliticaDePrivacidadeWidgetState
                                   ),
                         ),
                       ),
-                      Text(
-                        'Última atualização: Fevereiro de 2026',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              font: GoogleFonts.readexPro(
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .bodyMedium
-                                    .fontStyle,
-                              ),
-                              fontSize: 12.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .fontWeight,
-                              fontStyle: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .fontStyle,
-                            ),
-                      ),
                       Padding(
                         padding: EdgeInsets.all(8.0),
                         child: Text(
@@ -197,6 +177,7 @@ class _TermosDeUsoEPoliticaDePrivacidadeWidgetState
                     ],
                   ),
                 ),
+                const AppLegalFootnote(),
               ],
             ),
           ),

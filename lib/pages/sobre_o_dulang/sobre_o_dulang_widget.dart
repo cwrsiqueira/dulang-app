@@ -1,3 +1,4 @@
+import '/app_build_metadata.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -652,6 +653,7 @@ class _SobreODulangWidgetState extends State<SobreODulangWidget> {
                     ],
                   ),
                 ),
+                const AppLegalFootnote(),
               ],
             ),
           ),

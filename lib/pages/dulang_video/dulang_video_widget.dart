@@ -1,4 +1,4 @@
-import '/features/subscription/premium_catalog_lock.dart';
+import '/features/subscription/premium_paywall_redirect.dart';
 import '/features/subscription/subscription_service.dart';
 import '/services/supabase_service.dart';
 import '/features/parental/parental_service.dart';
@@ -6,6 +6,7 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_youtube_player.dart';
+import '/pages/dulang_premium/dulang_premium_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,10 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
     if (videoId.isEmpty) return;
     if (await ParentalService.warnIfPlaybackBlocked(context)) return;
     if (!mounted) return;
+    if (!SubscriptionService.instance.hasPremiumAccess) {
+      await context.pushNamed(DulangPremiumWidget.routeName);
+      return;
+    }
 
     context.goNamed(
       DulangVideoWidget.routeName,
@@ -141,20 +146,25 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
               return _VideoRailCard(
                 width: thumbWidth,
                 video: videoItem,
-                onTap: () {
-                  ParentalService.warnIfPlaybackBlocked(context)
-                      .then((blocked) {
-                    if (blocked || !context.mounted) return;
-                    context.goNamed(
-                      DulangVideoWidget.routeName,
-                      queryParameters: {
-                        'url': serializeParam(
-                          videoItem.youtubeVideoId,
-                          ParamType.String,
-                        ),
-                      }.withoutNulls,
-                    );
-                  });
+                onTap: () async {
+                  if (await ParentalService.warnIfPlaybackBlocked(context)) {
+                    return;
+                  }
+                  if (!context.mounted) return;
+                  if (!SubscriptionService.instance.hasPremiumAccess) {
+                    await context.pushNamed(DulangPremiumWidget.routeName);
+                    return;
+                  }
+                  if (!context.mounted) return;
+                  context.goNamed(
+                    DulangVideoWidget.routeName,
+                    queryParameters: {
+                      'url': serializeParam(
+                        videoItem.youtubeVideoId,
+                        ParamType.String,
+                      ),
+                    }.withoutNulls,
+                  );
                 },
               );
             },
@@ -172,26 +182,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
   @override
   Widget build(BuildContext context) {
     if (!SubscriptionService.instance.hasPremiumAccess) {
-      final theme = FlutterFlowTheme.of(context);
-      return Scaffold(
-        backgroundColor: theme.primaryBackground,
-        appBar: AppBar(
-          backgroundColor: theme.secondaryBackground,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: theme.primaryText),
-            onPressed: () => context.safePop(),
-          ),
-          title: Text(
-            'Dulang Premium',
-            style: FlutterFlowTheme.of(context).headlineSmall,
-          ),
-        ),
-        body: const PremiumCatalogLockBody(
-          title: 'Assinatura necessária',
-          subtitle:
-              'Para assistir com segurança, ative o Premium com 7 dias grátis.',
-        ),
-      );
+      return const PremiumPaywallRedirectScaffold();
     }
 
     return FutureBuilder<List<VideoRow>>(

@@ -32,7 +32,7 @@ class ChildProfile {
 
 /// Local child profiles (multiple kids); no server sync in v1.
 ///
-/// Uso atual: nome na Home (`Olá, …`); ativo em telas de escolher/gerir perfis.
+/// Uso atual: nome na Home (`Olá, …`); escolha e edição na tela "Quem está assistindo?".
 /// Não separa ainda favoritos, histórico ou recomendação por criança (tudo comum no app).
 class ChildProfileService {
   ChildProfileService._();

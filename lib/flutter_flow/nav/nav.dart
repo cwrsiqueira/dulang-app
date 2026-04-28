@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/backend/schema/structs/index.dart';
 
-import '/features/auth/login_widget.dart';
 import '/features/parental/onboarding_widget.dart';
 import '/features/subscription/subscription_service.dart';
 import '/main.dart';
@@ -15,8 +12,8 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 import '/index.dart';
 import '/pages/configuracoes/alterar_pin_widget.dart';
+import '/pages/configuracoes/device_auth_help_widget.dart';
 import '/pages/configuracoes/horarios_acesso_widget.dart';
-import '/pages/configuracoes/perfis_gerenciar_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -52,166 +49,131 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
   ]);
 
   return GoRouter(
-      initialLocation: '/',
-      debugLogDiagnostics: true,
-      refreshListenable: refresh,
-      navigatorKey: appNavigatorKey,
-      redirect: (context, state) {
-        final notifier = appStateNotifier;
-        if (notifier.showSplashImage) {
-          return null;
-        }
-
-        final path = state.uri.path;
-
-        if (!notifier.onboardingDone) {
-          if (path == LoginWidget.routePath) {
-            return '/';
-          }
-          return null;
-        }
-
-        final session = Supabase.instance.client.auth.currentSession;
-        const publicWhenLoggedOut = <String>{
-          LoginWidget.routePath,
-          TermosDeUsoEPoliticaDePrivacidadeWidget.routePath,
-          SobreODulangWidget.routePath,
-          ContatoWidget.routePath,
-        };
-
-        if (session == null) {
-          if (publicWhenLoggedOut.contains(path)) {
-            return null;
-          }
-          if (path != LoginWidget.routePath) {
-            return LoginWidget.routePath;
-          }
-          return null;
-        }
-
-        if (path == LoginWidget.routePath) {
-          return '/';
-        }
-
-        return null;
-      },
-      errorBuilder: (context, state) => appStateNotifier.showSplashImage
-          ? Builder(
-              builder: (context) => Container(
-                color: Colors.transparent,
-                child: Image.asset(
-                  'assets/images/dulang.webp',
-                  fit: BoxFit.cover,
-                ),
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    refreshListenable: refresh,
+    navigatorKey: appNavigatorKey,
+    errorBuilder: (context, state) => appStateNotifier.showSplashImage
+        ? Builder(
+            builder: (context) => Container(
+              color: Colors.transparent,
+              child: Image.asset(
+                'assets/images/dulang.webp',
+                fit: BoxFit.cover,
               ),
-            )
-          : appStateNotifier.onboardingDone
-              ? NavBarPage()
-              : const OnboardingWidget(),
-      routes: [
-        FFRoute(
-          name: '_initialize',
-          path: '/',
-          builder: (context, _) => appStateNotifier.showSplashImage
-              ? Builder(
-                  builder: (context) => Container(
-                    color: Colors.transparent,
-                    child: Image.asset(
-                      'assets/images/dulang.webp',
-                      fit: BoxFit.cover,
-                    ),
+            ),
+          )
+        : appStateNotifier.onboardingDone
+            ? NavBarPage()
+            : const OnboardingWidget(),
+    routes: [
+      FFRoute(
+        name: '_initialize',
+        path: '/',
+        builder: (context, _) => appStateNotifier.showSplashImage
+            ? Builder(
+                builder: (context) => Container(
+                  color: Colors.transparent,
+                  child: Image.asset(
+                    'assets/images/dulang.webp',
+                    fit: BoxFit.cover,
                   ),
-                )
-              : appStateNotifier.onboardingDone
-                  ? NavBarPage()
-                  : const OnboardingWidget(),
-        ),
-        FFRoute(
-          name: LoginWidget.routeName,
-          path: LoginWidget.routePath,
-          builder: (context, params) => const LoginWidget(),
-        ),
-        FFRoute(
-          name: TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,
-          path: TermosDeUsoEPoliticaDePrivacidadeWidget.routePath,
-          builder: (context, params) =>
-              TermosDeUsoEPoliticaDePrivacidadeWidget(),
-        ),
-        FFRoute(
-          name: SobreODulangWidget.routeName,
-          path: SobreODulangWidget.routePath,
-          builder: (context, params) => const SobreODulangWidget(),
-        ),
-        FFRoute(
-          name: DulangWidget.routeName,
-          path: DulangWidget.routePath,
-          builder: (context, params) => params.isEmpty
-              ? NavBarPage(initialPage: 'Dulang')
-              : const DulangWidget(),
-        ),
-        FFRoute(
-          name: DulangVideoWidget.routeName,
-          path: DulangVideoWidget.routePath,
-          builder: (context, params) {
-            final url = params.getParam(
-              'url',
-              ParamType.String,
-            );
-            return DulangVideoWidget(
-              key: ValueKey(url ?? 'none'),
-              url: url,
-            );
-          },
-        ),
-        FFRoute(
-          name: ContatoWidget.routeName,
-          path: ContatoWidget.routePath,
-          builder: (context, params) => const ContatoWidget(),
-        ),
-        FFRoute(
-          name: DulangPremiumWidget.routeName,
-          path: DulangPremiumWidget.routePath,
-          builder: (context, params) => const DulangPremiumWidget(),
-        ),
-        FFRoute(
-          name: CanalVideosWidget.routeName,
-          path: CanalVideosWidget.routePath,
-          builder: (context, params) {
-            final channelName = params.getParam(
-              'channelName',
-              ParamType.String,
-            );
-            return CanalVideosWidget(channelName: channelName);
-          },
-        ),
-        FFRoute(
-          name: AparenciaWidget.routeName,
-          path: AparenciaWidget.routePath,
-          builder: (context, params) => const AparenciaWidget(),
-        ),
-        FFRoute(
-          name: AlterarPinWidget.routeName,
-          path: AlterarPinWidget.routePath,
-          builder: (context, params) => const AlterarPinWidget(),
-        ),
-        FFRoute(
-          name: HorariosAcessoWidget.routeName,
-          path: HorariosAcessoWidget.routePath,
-          builder: (context, params) => const HorariosAcessoWidget(),
-        ),
-        FFRoute(
-          name: PerfisGerenciarWidget.routeName,
-          path: PerfisGerenciarWidget.routePath,
-          builder: (context, params) => const PerfisGerenciarWidget(),
-        ),
-        FFRoute(
-          name: SelecionarPerfilWidget.routeName,
-          path: SelecionarPerfilWidget.routePath,
-          builder: (context, params) => const SelecionarPerfilWidget(),
-        ),
-      ].map((r) => r.toRoute(appStateNotifier)).toList(),
-      observers: [routeObserver],
-    );
+                ),
+              )
+            : appStateNotifier.onboardingDone
+                ? NavBarPage()
+                : const OnboardingWidget(),
+      ),
+      FFRoute(
+        name: TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,
+        path: TermosDeUsoEPoliticaDePrivacidadeWidget.routePath,
+        builder: (context, params) => TermosDeUsoEPoliticaDePrivacidadeWidget(),
+      ),
+      FFRoute(
+        name: SobreODulangWidget.routeName,
+        path: SobreODulangWidget.routePath,
+        builder: (context, params) => const SobreODulangWidget(),
+      ),
+      FFRoute(
+        name: DulangWidget.routeName,
+        path: DulangWidget.routePath,
+        builder: (context, params) => params.isEmpty
+            ? NavBarPage(initialPage: 'Dulang')
+            : const DulangWidget(),
+      ),
+      FFRoute(
+        name: DulangVideoWidget.routeName,
+        path: DulangVideoWidget.routePath,
+        builder: (context, params) {
+          final url = params.getParam(
+            'url',
+            ParamType.String,
+          );
+          return DulangVideoWidget(
+            key: ValueKey(url ?? 'none'),
+            url: url,
+          );
+        },
+      ),
+      FFRoute(
+        name: ContatoWidget.routeName,
+        path: ContatoWidget.routePath,
+        builder: (context, params) => const ContatoWidget(),
+      ),
+      FFRoute(
+        name: DulangPremiumWidget.routeName,
+        path: DulangPremiumWidget.routePath,
+        builder: (context, params) => const DulangPremiumWidget(),
+      ),
+      FFRoute(
+        name: DulangSubscriptionManageWidget.routeName,
+        path: DulangSubscriptionManageWidget.routePath,
+        builder: (context, params) => const DulangSubscriptionManageWidget(),
+      ),
+      FFRoute(
+        name: CanalVideosWidget.routeName,
+        path: CanalVideosWidget.routePath,
+        builder: (context, params) {
+          final channelName = params.getParam(
+            'channelName',
+            ParamType.String,
+          );
+          return CanalVideosWidget(channelName: channelName);
+        },
+      ),
+      FFRoute(
+        name: AparenciaWidget.routeName,
+        path: AparenciaWidget.routePath,
+        builder: (context, params) => const AparenciaWidget(),
+      ),
+      FFRoute(
+        name: AlterarPinWidget.routeName,
+        path: AlterarPinWidget.routePath,
+        builder: (context, params) => const AlterarPinWidget(),
+      ),
+      FFRoute(
+        name: DeviceAuthHelpWidget.routeName,
+        path: DeviceAuthHelpWidget.routePath,
+        builder: (context, params) => const DeviceAuthHelpWidget(),
+      ),
+      FFRoute(
+        name: HorariosAcessoWidget.routeName,
+        path: HorariosAcessoWidget.routePath,
+        builder: (context, params) => const HorariosAcessoWidget(),
+      ),
+      FFRoute(
+        name: SelecionarPerfilWidget.legacyPerfisGerenciarRouteName,
+        path: SelecionarPerfilWidget.legacyPerfisGerenciarRoutePath,
+        builder: (context, params) => const SelecionarPerfilWidget(),
+      ),
+      FFRoute(
+        name: SelecionarPerfilWidget.routeName,
+        path: SelecionarPerfilWidget.routePath,
+        builder: (context, params) => const SelecionarPerfilWidget(),
+      ),
+    ].map((r) => r.toRoute(appStateNotifier)).toList(),
+    observers: [routeObserver],
+  );
 }
 
 extension NavParamExtensions on Map<String, String?> {

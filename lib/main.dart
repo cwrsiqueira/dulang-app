@@ -1,4 +1,4 @@
-import 'dart:async' show unawaited;
+import 'dart:async' show Timer, unawaited;
 
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +7,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import '/features/auth/login_widget.dart';
 import '/features/parental/parental_service.dart';
 import '/features/parental/pin_dialog.dart';
+import '/pages/configuracoes/alterar_pin_widget.dart';
 import '/features/profiles/child_profile_service.dart';
-import '/features/subscription/premium_catalog_lock.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
@@ -32,14 +31,6 @@ void main() async {
   );
 
   await SubscriptionService.instance.initRevenueCat(environmentValues);
-
-  Supabase.instance.client.auth.onAuthStateChange.listen((event) async {
-    await SubscriptionService.instance.onAuthSession(event.session);
-    AppStateNotifier.instance.notifyListeners();
-  });
-  await SubscriptionService.instance.onAuthSession(
-    Supabase.instance.client.auth.currentSession,
-  );
 
   await FlutterFlowTheme.initialize();
 
@@ -110,6 +101,11 @@ class _MyAppState extends State<MyApp> {
         FlutterFlowTheme.saveThemeMode(mode);
       });
 
+  /// Preferência de tema exibida pela UI (mantida em lockstep com [MaterialApp.themeMode]).
+  /// Não usar [FlutterFlowTheme.themeMode] em telas para “selecionado”: o persistido em disco
+  /// pode atrasar uma leitura após [setString].
+  ThemeMode get themePreference => _themeMode;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
@@ -163,7 +159,9 @@ class NavBarPage extends StatefulWidget {
 class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   String _currentPageName = 'Dulang';
   late Widget? _currentPage;
-  DateTime? _lastResumeAt;
+  /// Marca o último instante em que creditamos minutos pelo ticker (uso em primeiro plano).
+  DateTime? _lastUsageAccountedAt;
+  Timer? _foregroundUsageTicker;
   bool _playbackLocked = false;
 
   @override
@@ -173,6 +171,7 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _startForegroundUsageAccounting();
       await _checkParentalLimits();
       await _openProfileSelectionIfNeeded();
     });
@@ -195,20 +194,51 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _stopForegroundUsageAccounting();
+    unawaited(_flushPartialForegroundUsage());
     super.dispose();
+  }
+
+  /// Conta minutos de uso com o app em primeiro plano (além do que já entra ao ir para segundo plano).
+  void _startForegroundUsageAccounting() {
+    _foregroundUsageTicker?.cancel();
+    _lastUsageAccountedAt = DateTime.now();
+    _foregroundUsageTicker = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => unawaited(_tickForegroundUsageMinute()),
+    );
+  }
+
+  void _stopForegroundUsageAccounting() {
+    _foregroundUsageTicker?.cancel();
+    _foregroundUsageTicker = null;
+  }
+
+  Future<void> _tickForegroundUsageMinute() async {
+    await ParentalService.addUsedMinutes(1);
+    _lastUsageAccountedAt = DateTime.now();
+  }
+
+  /// Sobra desde o último tick de 1 minuto (ex.: usuário minimizou o app no meio do minuto).
+  Future<void> _flushPartialForegroundUsage() async {
+    if (_lastUsageAccountedAt == null) return;
+    final secs = DateTime.now().difference(_lastUsageAccountedAt!).inSeconds;
+    final mins = secs ~/ 60;
+    if (mins > 0) {
+      await ParentalService.addUsedMinutes(mins);
+    }
+    _lastUsageAccountedAt = null;
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _lastResumeAt = DateTime.now();
+      _startForegroundUsageAccounting();
       unawaited(_checkParentalLimits());
       unawaited(_openProfileSelectionIfNeeded());
-    } else if (state == AppLifecycleState.paused && _lastResumeAt != null) {
-      final mins = DateTime.now().difference(_lastResumeAt!).inMinutes;
-      if (mins > 0) {
-        ParentalService.addUsedMinutes(mins);
-      }
+    } else if (state == AppLifecycleState.paused) {
+      _stopForegroundUsageAccounting();
+      unawaited(_flushPartialForegroundUsage());
     }
   }
 
@@ -291,8 +321,8 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
         .closed;
 
     if (result == SnackBarClosedReason.action && mounted) {
-      final ok = await showPinDialog(context);
-      if (ok && mounted) {
+      final pinResult = await showPinDialog(context);
+      if (pinResult == PinDialogResult.verified && mounted) {
         SystemNavigator.pop();
       }
     }
@@ -307,138 +337,127 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
       'Configuracoes': const ConfiguracoesWidget(),
     };
     final keys = tabs.keys.toList();
-    final currentIndex = keys.indexOf(_currentPageName).clamp(0, keys.length - 1);
-    final baseTab = _currentPage ?? tabs[_currentPageName]!;
+    final currentIndex =
+        keys.indexOf(_currentPageName).clamp(0, keys.length - 1);
+    final tabBody = _currentPage ?? tabs[_currentPageName]!;
     final showPlaybackLock = _playbackLocked && currentIndex != 3;
 
-    return ListenableBuilder(
-      listenable: SubscriptionService.instance,
-      builder: (context, _) {
-        final premiumLocked =
-            !SubscriptionService.instance.hasPremiumAccess && currentIndex != 3;
-        final tabBody = premiumLocked
-            ? PremiumCatalogLockBody(
-                title: switch (_currentPageName) {
-                  'Favoritos' => 'Favoritos no Premium',
-                  'Historico' => 'Histórico no Premium',
-                  _ => 'Catálogo no Premium',
-                },
-              )
-            : baseTab;
-
-        return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          router.pop();
-          return;
-        }
-        await _onBackPressed();
-      },
-      child: Scaffold(
-        resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            tabBody,
-            if (showPlaybackLock)
-              Positioned.fill(
-                child: AbsorbPointer(
-                  absorbing: true,
-                  child: Material(
-                    color: Colors.black.withValues(alpha: 0.88),
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 56,
-                              color: FlutterFlowTheme.of(context).tertiary,
+    return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) async {
+            if (didPop) return;
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+              return;
+            }
+            await _onBackPressed();
+          },
+          child: Scaffold(
+            resizeToAvoidBottomInset: !widget.disableResizeToAvoidBottomInset,
+            body: Stack(
+              fit: StackFit.expand,
+              children: [
+                tabBody,
+                if (showPlaybackLock)
+                  Positioned.fill(
+                    child: AbsorbPointer(
+                      absorbing: true,
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.88),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule_rounded,
+                                  size: 56,
+                                  color: FlutterFlowTheme.of(context).tertiary,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Pausa no Dulang',
+                                  textAlign: TextAlign.center,
+                                  style: FlutterFlowTheme.of(context)
+                                      .headlineSmall
+                                      .override(
+                                        color: Colors.white,
+                                      ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Um adulto pode revisar horários e limites em Ajustes (ícone de engrenagem).',
+                                  textAlign: TextAlign.center,
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .override(
+                                        color: Colors.white70,
+                                      ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Pausa no Dulang',
-                              textAlign: TextAlign.center,
-                              style: FlutterFlowTheme.of(context)
-                                  .headlineSmall
-                                  .override(
-                                    color: Colors.white,
-                                  ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Um adulto pode revisar horários e limites em Ajustes (ícone de engrenagem).',
-                              textAlign: TextAlign.center,
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    color: Colors.white70,
-                                  ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
+              ],
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: (i) async {
+                final prev = currentIndex;
+                if (i == 3) {
+                  final pinResult = await showPinDialog(context);
+                  if (!mounted) return;
+                  if (pinResult == PinDialogResult.forgotPin) {
+                    context.pushNamed(AlterarPinWidget.routeName);
+                    return;
+                  }
+                  if (pinResult != PinDialogResult.verified) return;
+                }
+                safeSetState(() {
+                  _currentPage = null;
+                  _currentPageName = keys[i];
+                });
+                if (i == 0 || (prev == 3 && i != 3)) {
+                  await _checkParentalLimits();
+                }
+              },
+              backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+              selectedItemColor: FlutterFlowTheme.of(context).tertiary,
+              unselectedItemColor: FlutterFlowTheme.of(context).secondaryText,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              type: BottomNavigationBarType.fixed,
+              selectedFontSize: 12,
+              unselectedFontSize: 11,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home_rounded),
+                  label: 'Home',
                 ),
-              ),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (i) async {
-            final prev = currentIndex;
-            if (i == 3) {
-              final ok = await showPinDialog(context);
-              if (!ok || !mounted) return;
-            }
-            safeSetState(() {
-              _currentPage = null;
-              _currentPageName = keys[i];
-            });
-            if (i == 0 || (prev == 3 && i != 3)) {
-              await _checkParentalLimits();
-            }
-          },
-          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-          selectedItemColor: FlutterFlowTheme.of(context).tertiary,
-          unselectedItemColor: FlutterFlowTheme.of(context).secondaryText,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          selectedFontSize: 12,
-          unselectedFontSize: 11,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.favorite_border_rounded),
+                  activeIcon: Icon(Icons.favorite_rounded),
+                  label: 'Favoritos',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.history_rounded),
+                  activeIcon: Icon(Icons.history_rounded),
+                  label: 'Histórico',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.settings_outlined),
+                  activeIcon: Icon(Icons.settings_rounded),
+                  label: 'Ajustes',
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border_rounded),
-              activeIcon: Icon(Icons.favorite_rounded),
-              label: 'Favoritos',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded),
-              activeIcon: Icon(Icons.history_rounded),
-              label: 'Histórico',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings_rounded),
-              label: 'Ajustes',
-            ),
-          ],
-        ),
-      ),
-    );
-      },
-    );
+          ),
+        );
   }
 }

@@ -1,4 +1,5 @@
 import '/features/parental/parental_service.dart';
+import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -82,20 +83,25 @@ class FavoritosWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    ParentalService.warnIfPlaybackBlocked(context)
-                        .then((blocked) {
-                      if (blocked || !context.mounted) return;
-                      context.pushNamed(
-                        DulangVideoWidget.routeName,
-                        queryParameters: {
-                          'url': serializeParam(
-                            v.youtubeVideoId,
-                            ParamType.String,
-                          ),
-                        }.withoutNulls,
-                      );
-                    });
+                  onTap: () async {
+                    if (await ParentalService.warnIfPlaybackBlocked(context)) {
+                      return;
+                    }
+                    if (!context.mounted) return;
+                    if (!SubscriptionService.instance.hasPremiumAccess) {
+                      await context.pushNamed(DulangPremiumWidget.routeName);
+                      return;
+                    }
+                    if (!context.mounted) return;
+                    context.pushNamed(
+                      DulangVideoWidget.routeName,
+                      queryParameters: {
+                        'url': serializeParam(
+                          v.youtubeVideoId,
+                          ParamType.String,
+                        ),
+                      }.withoutNulls,
+                    );
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(10),

@@ -1,10 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 class ParentalService {
+  /// Comprimento do PIN parental em todo o app (criação, alteração e teclado de desbloqueio).
+  static const int pinMinDigits = 4;
+  static const int pinMaxDigits = 6;
+
   static const String _legacyPinKey = 'parental_pin';
   static const String _onboardingKey = 'onboarding_done';
   static const String _securePinHashKey = 'parental_pin_hash_v1';
@@ -13,6 +20,33 @@ class ParentalService {
 
   // Sinaliza que o usuário está na tela de vídeo — resume lock não deve disparar.
   static bool isOnVideoScreen = false;
+
+  /// Confirma que um adulto está no aparelho (biometria ou PIN/senha do sistema).
+  /// Usado em “alterar PIN” e “esqueci o PIN”.
+  static Future<bool> authenticateDeviceAdult({
+    required String localizedReason,
+  }) async {
+    if (kIsWeb) return false;
+    if (defaultTargetPlatform != TargetPlatform.android &&
+        defaultTargetPlatform != TargetPlatform.iOS) {
+      return false;
+    }
+    try {
+      return await LocalAuthentication().authenticate(
+        localizedReason: localizedReason,
+        biometricOnly: false,
+        sensitiveTransaction: true,
+        persistAcrossBackgrounding: true,
+      );
+    } on LocalAuthException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+          'ParentalService.authenticateDeviceAdult: ${e.code} ${e.description}',
+        );
+      }
+      return false;
+    }
+  }
 
   static Future<bool> isOnboardingDone() async {
     final prefs = await SharedPreferences.getInstance();
@@ -68,6 +102,11 @@ class ParentalService {
     if (!ok) return false;
     await _savePinSecure(newPin);
     return true;
+  }
+
+  /// Define novo PIN após o adulto provar identidade no aparelho (biometria / PIN do sistema).
+  static Future<void> setPinAfterDeviceAuth(String newPin) async {
+    await _savePinSecure(newPin);
   }
 
   // --- Horário de acesso (mesmo dia, hora local) ---

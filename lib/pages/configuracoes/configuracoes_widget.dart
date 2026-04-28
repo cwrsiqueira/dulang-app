@@ -1,18 +1,17 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '/features/auth/login_widget.dart';
+import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/aparencia/aparencia_widget.dart';
 import '/pages/contato/contato_widget.dart';
 import '/pages/dulang_premium/dulang_premium_widget.dart';
+import '/pages/dulang_premium/dulang_subscription_manage_widget.dart';
 import '/pages/sobre_o_dulang/sobre_o_dulang_widget.dart';
 import '/pages/termos_de_uso_e_politica_de_privacidade/termos_de_uso_e_politica_de_privacidade_widget.dart';
 import '/pages/configuracoes/alterar_pin_widget.dart';
 import '/pages/configuracoes/horarios_acesso_widget.dart';
-import '/pages/configuracoes/perfis_gerenciar_widget.dart';
 import '/pages/selecionar_perfil/selecionar_perfil_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ConfiguracoesWidget extends StatelessWidget {
   const ConfiguracoesWidget({super.key});
@@ -35,65 +34,19 @@ class ConfiguracoesWidget extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _sectionTitle(context, 'Conta e família'),
-          Builder(
-            builder: (context) {
-              final email =
-                  Supabase.instance.client.auth.currentUser?.email;
-              if (email == null || email.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  leading: Icon(
-                    Icons.account_circle_outlined,
-                    color: FlutterFlowTheme.of(context).tertiary,
-                  ),
-                  title: Text(
-                    email,
-                    style: FlutterFlowTheme.of(context).bodyMedium,
-                  ),
-                  subtitle: Text(
-                    'Conta conectada',
-                    style: FlutterFlowTheme.of(context).bodySmall,
-                  ),
-                ),
-              );
-            },
-          ),
-          _tile(
-            context,
-            icon: Icons.logout_rounded,
-            title: 'Sair da conta',
-            subtitle: 'Encerra a sessão neste aparelho',
-            onTap: () async {
-              await Supabase.instance.client.auth.signOut();
-              if (context.mounted) {
-                context.go(LoginWidget.routePath);
-              }
-            },
-          ),
+          _sectionTitle(context, 'Família'),
           _tile(
             context,
             icon: Icons.switch_account_rounded,
             title: 'Quem está assistindo?',
-            subtitle: 'Escolher perfil antes de ver a Home',
+            subtitle: 'Escolher, criar, renomear ou remover perfil',
             onTap: () => context.pushNamed(SelecionarPerfilWidget.routeName),
-          ),
-          _tile(
-            context,
-            icon: Icons.people_outline_rounded,
-            title: 'Gerenciar perfis',
-            subtitle: 'Adicionar, remover e renomear',
-            onTap: () => context.pushNamed(PerfisGerenciarWidget.routeName),
           ),
           _tile(
             context,
             icon: Icons.lock_reset_rounded,
             title: 'Alterar PIN parental',
-            subtitle: 'Exige o PIN atual',
+            subtitle: 'Biometria ou PIN do aparelho ao salvar',
             onTap: () => context.pushNamed(AlterarPinWidget.routeName),
           ),
           _tile(
@@ -131,11 +84,20 @@ class ConfiguracoesWidget extends StatelessWidget {
             title: 'Contato',
             onTap: () => context.pushNamed(ContatoWidget.routeName),
           ),
-          _tile(
-            context,
-            icon: Icons.workspace_premium_outlined,
-            title: 'Dulang Premium',
-            onTap: () => context.pushNamed(DulangPremiumWidget.routeName),
+          Consumer<SubscriptionService>(
+            builder: (context, sub, _) {
+              final premium = sub.hasPremiumAccess;
+              return _tile(
+                context,
+                icon: Icons.workspace_premium_outlined,
+                title: premium ? 'Gerenciar assinatura' : 'Dulang Premium',
+                onTap: () => context.pushNamed(
+                  premium
+                      ? DulangSubscriptionManageWidget.routeName
+                      : DulangPremiumWidget.routeName,
+                ),
+              );
+            },
           ),
         ],
       ),

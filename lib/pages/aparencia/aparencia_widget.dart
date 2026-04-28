@@ -13,7 +13,7 @@ class AparenciaWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
-    final mode = FlutterFlowTheme.themeMode;
+    final mode = MyApp.of(context).themePreference;
 
     return Scaffold(
       backgroundColor: theme.primaryBackground,
@@ -38,31 +38,106 @@ class AparenciaWidget extends StatelessWidget {
             style: theme.titleMedium.override(color: theme.primaryText),
           ),
           const SizedBox(height: 12),
-          SegmentedButton<ThemeMode>(
-            key: ValueKey(mode),
-            segments: const [
-              ButtonSegment(
-                value: ThemeMode.light,
-                label: Text('Claro'),
-                icon: Icon(Icons.light_mode_outlined),
-              ),
-              ButtonSegment(
-                value: ThemeMode.dark,
-                label: Text('Escuro'),
-                icon: Icon(Icons.dark_mode_outlined),
-              ),
-              ButtonSegment(
-                value: ThemeMode.system,
-                label: Text('Sistema'),
-                icon: Icon(Icons.settings_suggest_outlined),
-              ),
-            ],
-            selected: {mode},
-            onSelectionChanged: (s) {
-              MyApp.of(context).setThemeMode(s.first);
-            },
+          _ThemeOptionTile(
+            icon: Icons.light_mode_outlined,
+            title: 'Claro',
+            subtitle: 'Sempre tema claro no app',
+            selected: mode == ThemeMode.light,
+            tertiary: theme.tertiary,
+            onTap: () => MyApp.of(context).setThemeMode(ThemeMode.light),
+          ),
+          _ThemeOptionTile(
+            icon: Icons.dark_mode_outlined,
+            title: 'Escuro',
+            subtitle: 'Sempre tema escuro no app',
+            selected: mode == ThemeMode.dark,
+            tertiary: theme.tertiary,
+            onTap: () => MyApp.of(context).setThemeMode(ThemeMode.dark),
+          ),
+          _ThemeOptionTile(
+            icon: Icons.settings_suggest_outlined,
+            title: 'Sistema',
+            subtitle: 'Segue o claro ou escuro configurado no aparelho',
+            selected: mode == ThemeMode.system,
+            tertiary: theme.tertiary,
+            onTap: () => MyApp.of(context).setThemeMode(ThemeMode.system),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ThemeOptionTile extends StatelessWidget {
+  const _ThemeOptionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.tertiary,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final Color tertiary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FlutterFlowTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: theme.secondaryBackground,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color:
+                    selected ? tertiary : theme.secondaryText.withValues(alpha: 0.2),
+                width: selected ? 2 : 1,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(icon, color: selected ? tertiary : theme.primaryText, size: 28),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.titleSmall.override(
+                          color: theme.primaryText,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: theme.bodySmall.override(color: theme.secondaryText),
+                      ),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  Icon(Icons.check_circle_rounded, color: tertiary, size: 26),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

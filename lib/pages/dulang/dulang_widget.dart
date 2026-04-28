@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '/features/parental/parental_service.dart';
+import '/features/subscription/subscription_service.dart';
 import '/features/profiles/child_profile_service.dart';
 import '/services/supabase_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -269,6 +270,11 @@ class _DulangWidgetState extends State<DulangWidget> {
   Future<void> _openVideo(BuildContext context, String youtubeId) async {
     if (await ParentalService.warnIfPlaybackBlocked(context)) return;
     if (!context.mounted) return;
+    if (!SubscriptionService.instance.hasPremiumAccess) {
+      await context.pushNamed(DulangPremiumWidget.routeName);
+      return;
+    }
+    if (!context.mounted) return;
     context.pushNamed(
       DulangVideoWidget.routeName,
       queryParameters: {
@@ -279,6 +285,11 @@ class _DulangWidgetState extends State<DulangWidget> {
 
   Future<void> _openCanalList(BuildContext context, String? channelName) async {
     if (await ParentalService.warnIfPlaybackBlocked(context)) return;
+    if (!context.mounted) return;
+    if (!SubscriptionService.instance.hasPremiumAccess) {
+      await context.pushNamed(DulangPremiumWidget.routeName);
+      return;
+    }
     if (!context.mounted) return;
     if (channelName == null || channelName.isEmpty) {
       context.pushNamed(CanalVideosWidget.routeName);

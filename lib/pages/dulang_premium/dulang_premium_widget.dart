@@ -1,7 +1,9 @@
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/pages/dulang_premium/dulang_subscription_manage_widget.dart';
 import '/pages/termos_de_uso_e_politica_de_privacidade/termos_de_uso_e_politica_de_privacidade_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'dulang_premium_model.dart';
 export 'dulang_premium_model.dart';
 
-/// Paywall em Flutter (sem UI nativa do RevenueCat). Preços vêm da loja via SDK.
+/// Paywall Flutter focada em conversão (RevenueCat: preços reais ou placeholders).
 class DulangPremiumWidget extends StatefulWidget {
   const DulangPremiumWidget({super.key});
 
@@ -33,19 +35,55 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   String? _offeringsError;
   bool _purchasing = false;
 
-  static const _benefits = <(IconData, String)>[
-    (Icons.shield_moon_rounded, 'Vídeos em inglês curados, sem navegação solta fora do app'),
-    (Icons.child_care_rounded, 'Ambiente pensado para crianças pequenas (0 a 5 anos)'),
-    (Icons.verified_user_rounded, 'Controle parental com PIN para áreas sensíveis'),
-    (Icons.favorite_rounded, 'Favoritos para guardar o que mais gostam'),
-    (Icons.history_rounded, 'Histórico do que já assistiram'),
-    (Icons.video_library_rounded, 'Catálogo em inglês sem anúncios no app'),
+  static const double _placeholderMonthlyBrl = 9.99;
+  static const double _placeholderAnnualBrl = 99.99;
+
+  static String _fmtBrl(num value) {
+    return NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: r'R$',
+      decimalDigits: 2,
+    ).format(value);
+  }
+
+  /// Rodapé fixo: texto de confiança conforme a loja do dispositivo.
+  static String _securePurchaseStoreLine() {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'Compra segura na Google Play Store';
+      case TargetPlatform.iOS:
+        return 'Compra segura na Apple App Store';
+      default:
+        return 'Compra segura na loja de aplicativos';
+    }
+  }
+
+  static const _valueBullets = <(IconData, String)>[
+    (Icons.translate_rounded, 'Aprendizado natural com inglês nativo'),
+    (Icons.psychology_outlined, 'Aumenta o desenvolvimento cognitivo'),
+    (Icons.school_outlined, 'Facilita o aprendizado no futuro'),
+    (Icons.savings_outlined, 'Evita gastos com cursos caros depois'),
+    (Icons.shield_outlined, 'Ambiente 100% seguro e sem anúncios'),
+  ];
+
+  static const _trustChips = <String>[
+    'Sem anúncios',
+    'Sem navegação externa',
+    'Conteúdo seguro para crianças',
   ];
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => DulangPremiumModel());
+    if (SubscriptionService.instance.hasPremiumAccess) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.safePop();
+        context.pushNamed(DulangSubscriptionManageWidget.routeName);
+      });
+      return;
+    }
     _loadOfferings();
   }
 
@@ -54,17 +92,35 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
       _loadingOfferings = true;
       _offeringsError = null;
     });
-    final o = await SubscriptionService.instance.getOfferings();
-    if (!mounted) return;
-    setState(() {
-      _offerings = o;
-      _loadingOfferings = false;
-      if (o?.current == null &&
-          SubscriptionService.instance.isConfigured) {
-        _offeringsError =
-            'Ofertas ainda não configuradas. Verifique o painel RevenueCat e as lojas.';
-      }
-    });
+    try {
+      final o = await SubscriptionService.instance.getOfferings();
+      if (!mounted) return;
+      setState(() {
+        _offerings = o;
+        _loadingOfferings = false;
+        _offeringsError = null;
+        _applyDefaultPlanSelection();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _offerings = null;
+        _loadingOfferings = false;
+        _offeringsError = 'Não foi possível carregar. Tente de novo.';
+      });
+    }
+  }
+
+  /// Anual como padrão quando existir pacote anual na oferta atual.
+  void _applyDefaultPlanSelection() {
+    final offering = _currentOffering;
+    final annual = SubscriptionService.annualPackage(offering);
+    final monthly = SubscriptionService.monthlyPackage(offering);
+    if (annual != null) {
+      _annualSelected = true;
+    } else if (monthly != null) {
+      _annualSelected = false;
+    }
   }
 
   @override
@@ -81,7 +137,15 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   Package? get _annual => SubscriptionService.annualPackage(_currentOffering);
 
   Package? get _selectedPackage =>
-      _annualSelected ? (_annual ?? _monthly) : (_monthly ?? _annual);
+      _annualSelected ? _annual : _monthly;
+
+  bool get _storePurchasesAvailable => SubscriptionService.instance.isConfigured;
+
+  String get _displayMonthlyPrice =>
+      _monthly?.storeProduct.priceString ?? _fmtBrl(_placeholderMonthlyBrl);
+
+  String get _displayAnnualPrice =>
+      _annual?.storeProduct.priceString ?? _fmtBrl(_placeholderAnnualBrl);
 
   Future<void> _onPurchase() async {
     final pkg = _selectedPackage;
@@ -155,8 +219,9 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
     final theme = FlutterFlowTheme.of(context);
     final tertiary = theme.tertiary;
     final onCard = theme.primaryText;
-    final onCardMuted = theme.secondaryText;
-    final sub = context.watch<SubscriptionService>();
+    final onMuted = theme.secondaryText;
+    final cardBg = theme.secondaryBackground;
+    context.watch<SubscriptionService>();
 
     return Scaffold(
       key: scaffoldKey,
@@ -165,170 +230,286 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
         backgroundColor: theme.secondaryBackground,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: theme.primaryText),
+          icon: Icon(Icons.arrow_back_rounded, color: onCard),
           onPressed: () => context.safePop(),
         ),
         title: Text(
-          'Dulang Premium',
+          'Premium',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w800,
-            fontSize: 20,
+            fontSize: 18,
             color: tertiary,
           ),
         ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 12, 22, 32),
+              children: [
+                Text(
+                  'Quanto mais cedo seu filho começa, mais fácil é aprender inglês',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    color: onCard,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Cada dia conta no desenvolvimento. Comece hoje com segurança.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    color: onMuted,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                ..._valueBullets.map(
+                  (b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(b.$1, color: tertiary, size: 24),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            b.$2,
+                            style: GoogleFonts.inter(
+                              color: onCard,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _trialBlock(context, tertiary, onCard, onMuted, cardBg),
+                const SizedBox(height: 28),
+                Text(
+                  'Escolha o plano',
+                  style: GoogleFonts.inter(
+                    color: onCard,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Anual recomendado para economizar',
+                  style: GoogleFonts.inter(
+                    color: onMuted,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _annualPlanCard(context, tertiary, onCard, onMuted, cardBg),
+                const SizedBox(height: 12),
+                _monthlyPlanCard(context, tertiary, onCard, onMuted, cardBg),
+                const SizedBox(height: 28),
+                _trustSection(context, tertiary, onCard, onMuted, cardBg),
+                const SizedBox(height: 28),
+                TextButton(
+                  onPressed: () => context.pushNamed(
+                    TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,
+                  ),
+                  child: Text(
+                    'Termos, privacidade e renovação automática',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: onMuted,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _purchasing ? null : _onRestore,
+                  child: Text(
+                    'Restaurar compras',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: tertiary,
+                    ),
+                  ),
+                ),
+                // Espaço extra para o último conteúdo não colar visualmente no rodapé fixo.
+                SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
+              ],
+            ),
+          ),
+          _stickyCta(context, tertiary, onCard, onMuted, theme.primaryBackground),
+        ],
+      ),
+    );
+  }
+
+  Widget _trialBlock(
+    BuildContext context,
+    Color tertiary,
+    Color onCard,
+    Color onMuted,
+    Color cardBg,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+      decoration: BoxDecoration(
+        color: tertiary.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: tertiary, width: 2),
+      ),
+      child: Column(
         children: [
           Text(
-            'Inglês de verdade, com segurança para quem você mais ama.',
+            '7 dias grátis para testar',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               color: onCard,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              height: 1.15,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            '7 dias grátis para experimentar. Cancele quando quiser antes de ser cobrado, nas regras da App Store ou Google Play.',
+            'Sem compromisso. Cancele quando quiser.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: onCardMuted,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Cancele quando quiser. Sem taxas escondidas.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: onCardMuted,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 22),
-          if (!sub.isConfigured)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                'Compras não estão ativas neste ambiente (sem chave RevenueCat ou plataforma não suportada).',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: theme.warning, fontSize: 13),
-              ),
-            ),
-          if (_loadingOfferings)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_offeringsError != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                _offeringsError!,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: theme.error, fontSize: 13),
-              ),
-            ),
-          _planToggle(context, tertiary, onCard, onCardMuted),
-          const SizedBox(height: 14),
-          _planDetailCard(context, tertiary, onCard, onCardMuted),
-          const SizedBox(height: 20),
-          Text(
-            'O que está incluído',
-            style: GoogleFonts.inter(
-              color: onCard,
-              fontWeight: FontWeight.w700,
+              color: onMuted,
               fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 12),
-          for (final b in _benefits)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(b.$1, color: tertiary, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      b.$2,
-                      style: GoogleFonts.inter(
-                        color: onCard,
-                        fontSize: 14,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => context.pushNamed(
-              TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,
-            ),
-            child: Text(
-              'Termos de uso, privacidade e renovação automática',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: onCardMuted,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: _purchasing ? null : _onRestore,
-            child: Text(
-              'Restaurar compras',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                color: tertiary,
-              ),
+              fontWeight: FontWeight.w600,
+              height: 1.35,
             ),
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+    );
+  }
+
+  Widget _annualPlanCard(
+    BuildContext context,
+    Color tertiary,
+    Color onCard,
+    Color onMuted,
+    Color cardBg,
+  ) {
+    final selected = _annualSelected;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _annualSelected = true),
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? tertiary : onMuted.withValues(alpha: 0.25),
+              width: selected ? 3 : 1,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: tertiary.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: tertiary,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(double.infinity, 54),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: tertiary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Melhor valor',
+                  style: GoogleFonts.inter(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
                   ),
                 ),
-                onPressed: (_purchasing ||
-                        _loadingOfferings ||
-                        !sub.isConfigured ||
-                        _selectedPackage == null)
-                    ? null
-                    : _onPurchase,
-                child: _purchasing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        'Começar teste grátis de 7 dias',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Plano anual',
+                style: GoogleFonts.inter(
+                  color: onCard,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '2 meses grátis',
+                style: GoogleFonts.inter(
+                  color: tertiary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Menor custo mensal e mais economia',
+                style: GoogleFonts.inter(
+                  color: onMuted,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _displayAnnualPrice,
+                    style: GoogleFonts.inter(
+                      color: onCard,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6, bottom: 4),
+                    child: Text(
+                      '/ano',
+                      style: GoogleFonts.inter(
+                        color: onMuted,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (selected)
+                    Icon(Icons.check_circle_rounded, color: tertiary, size: 32),
+                ],
               ),
             ],
           ),
@@ -337,217 +518,319 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
     );
   }
 
-  Widget _planToggle(
+  Widget _monthlyPlanCard(
     BuildContext context,
     Color tertiary,
     Color onCard,
-    Color onCardMuted,
+    Color onMuted,
+    Color cardBg,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _segment(
-              context,
-              label: 'Plano anual',
-              selected: _annualSelected,
-              tertiary: tertiary,
-              onCard: onCard,
-              onTap: () => setState(() => _annualSelected = true),
-            ),
-          ),
-          Expanded(
-            child: _segment(
-              context,
-              label: 'Plano mensal',
-              selected: !_annualSelected,
-              tertiary: tertiary,
-              onCard: onCard,
-              onTap: () => setState(() => _annualSelected = false),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _segment(
-    BuildContext context, {
-    required String label,
-    required bool selected,
-    required Color tertiary,
-    required Color onCard,
-    required VoidCallback onTap,
-  }) {
+    final selected = !_annualSelected;
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+        onTap: () => setState(() => _annualSelected = false),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
-            color: selected ? tertiary.withValues(alpha: 0.22) : null,
-            borderRadius: BorderRadius.circular(12),
+            color: cardBg,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? tertiary : Colors.transparent,
-              width: 2,
+              color: selected ? tertiary : onMuted.withValues(alpha: 0.2),
+              width: selected ? 2.5 : 1,
             ),
           ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: selected ? onCard : FlutterFlowTheme.of(context).secondaryText,
-              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              fontSize: 14,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tertiary.withValues(alpha: 0.28),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Mais flexível',
+                        style: GoogleFonts.inter(
+                          color: onCard,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Plano mensal',
+                      style: GoogleFonts.inter(
+                        color: onCard,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Cobrança mensal',
+                      style: GoogleFonts.inter(
+                        color: onMuted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _displayMonthlyPrice,
+                    style: GoogleFonts.inter(
+                      color: onCard,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    '/mês',
+                    style: GoogleFonts.inter(
+                      color: onMuted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (selected) ...[
+                    const SizedBox(height: 6),
+                    Icon(Icons.check_circle_rounded, color: tertiary, size: 24),
+                  ],
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _planDetailCard(
+  Widget _trustSection(
     BuildContext context,
     Color tertiary,
     Color onCard,
-    Color onCardMuted,
+    Color onMuted,
+    Color cardBg,
   ) {
-    final monthly = _monthly;
-    final annual = _annual;
-    final pkg = _selectedPackage;
-
-    if (pkg == null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: tertiary.withValues(alpha: 0.35)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Por que confiar no Dulang',
+          style: GoogleFonts.inter(
+            color: onCard,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        child: Text(
-          SubscriptionService.instance.isConfigured
-              ? 'Não encontramos pacotes mensal e anual na oferta atual do RevenueCat. Confira os tipos de pacote no painel (mensal e anual).'
-              : 'Ative a chave RevenueCat para ver preços e assinar.',
-          style: GoogleFonts.inter(color: onCardMuted, fontSize: 14),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _trustChips.map((t) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: tertiary.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                t,
+                style: GoogleFonts.inter(
+                  color: onCard,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _stickyCta(
+    BuildContext context,
+    Color tertiary,
+    Color onCard,
+    Color onMuted,
+    Color surfaceBg,
+  ) {
+    final bg = surfaceBg;
+    final borderTop = onMuted.withValues(alpha: 0.22);
+
+    final bool buttonBusy = _purchasing;
+    final bool buttonLoadingPlans = _loadingOfferings;
+    final bool buttonNoPlans = !_loadingOfferings &&
+        _offeringsError == null &&
+        _storePurchasesAvailable &&
+        _selectedPackage == null;
+    final bool buttonStoreOff = !_storePurchasesAvailable && !_loadingOfferings;
+
+    final bool showMainPurchaseFooter =
+        _offeringsError == null && !buttonStoreOff;
+
+    VoidCallback? onPressed;
+    if (!showMainPurchaseFooter) {
+      onPressed = null;
+    } else if (buttonBusy || buttonLoadingPlans) {
+      onPressed = null;
+    } else if (buttonNoPlans) {
+      onPressed = null;
+    } else {
+      onPressed = _onPurchase;
+    }
+
+    Widget buttonChild;
+    if (buttonLoadingPlans) {
+      buttonChild = SizedBox(
+        width: 26,
+        height: 26,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          color: Colors.black.withValues(alpha: 0.85),
+        ),
+      );
+    } else if (buttonBusy) {
+      buttonChild = const SizedBox(
+        width: 26,
+        height: 26,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          color: Colors.black,
+        ),
+      );
+    } else {
+      buttonChild = Text(
+        'Começar grátis',
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w900,
+          fontSize: 17,
         ),
       );
     }
 
-    final isAnnual = pkg == annual;
-    final priceLine = pkg.storeProduct.priceString;
-    final periodLabel = isAnnual ? '/ano' : '/mês';
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: tertiary, width: 2),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isAnnual) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: tertiary,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Melhor valor — 2 meses grátis',
-                style: GoogleFonts.inter(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11,
-                ),
-              ),
+    return Material(
+      color: bg,
+      elevation: 0,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border(top: BorderSide(color: borderTop, width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
             ),
-            const SizedBox(height: 12),
-          ] else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: tertiary.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Mais flexível',
-                style: GoogleFonts.inter(
-                  color: onCard,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          if (!isAnnual) const SizedBox(height: 12),
-          Text(
-            isAnnual ? 'Cobrança anual' : 'Cobrança mensal',
-            style: GoogleFonts.inter(
-              color: onCardMuted,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                priceLine,
-                style: GoogleFonts.inter(
-                  color: onCard,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4, left: 4),
-                child: Text(
-                  periodLabel,
-                  style: GoogleFonts.inter(
-                    color: onCardMuted,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          minimum: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 14, 22, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_offeringsError != null) ...[
+                  Text(
+                    _offeringsError!,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      color: onCard,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
                   ),
-                ),
-              ),
-              const Spacer(),
-              Icon(Icons.check_circle, color: tertiary, size: 32),
-            ],
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: _loadingOfferings || _purchasing
+                        ? null
+                        : _loadOfferings,
+                    child: Text(
+                      'Tentar novamente',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w800,
+                        color: tertiary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (buttonStoreOff) ...[
+                  Text(
+                    'Assinaturas não estão disponíveis neste dispositivo.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: onMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+                if (showMainPurchaseFooter) ...[
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: tertiary,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      disabledBackgroundColor: tertiary.withValues(alpha: 0.45),
+                      disabledForegroundColor: Colors.black54,
+                      minimumSize: const Size(double.infinity, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: onPressed,
+                    child: buttonChild,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '7 dias grátis • Cancele quando quiser',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      color: onMuted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${_securePurchaseStoreLine()}.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      color: onMuted.withValues(alpha: 0.92),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-          if (isAnnual && monthly != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Economize o equivalente a 2 mensalidades: o anual custa o mesmo que 10 meses do plano mensal (${monthly.storeProduct.priceString}/mês).',
-              style: GoogleFonts.inter(
-                color: onCardMuted,
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-          ],
-          if (!isAnnual && annual != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              'Quer pagar menos no ano? Veja o plano anual (${annual.storeProduct.priceString}/ano) com desconto de 2 meses.',
-              style: GoogleFonts.inter(
-                color: onCardMuted,
-                fontSize: 13,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

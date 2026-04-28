@@ -13,7 +13,8 @@ class HorariosAcessoWidget extends StatefulWidget {
   State<HorariosAcessoWidget> createState() => _HorariosAcessoWidgetState();
 }
 
-class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget> {
+class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
+    with WidgetsBindingObserver {
   bool _windowOn = false;
   bool _limitOn = false;
   int _start = 8;
@@ -25,7 +26,21 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -52,11 +67,12 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget> {
     await ParentalService.setDailyLimitEnabled(_limitOn);
     await ParentalService.setAccessWindowHours(_start, _end);
     await ParentalService.setDailyLimitMinutes(_limitMin);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preferências salvas.')),
-      );
-    }
+    if (!mounted) return;
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Preferências salvas.')),
+    );
   }
 
   @override

@@ -20,6 +20,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
   String _entered = '';
   bool _isConfirming = false;
   String? _errorMessage;
+  DateTime? _lastDigitPressAt;
 
   static const _introHeadlines = [
     'Conteúdo pensado para pequenos',
@@ -46,12 +47,23 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
       }
       return;
     }
-    if (_entered.length >= 4) return;
-    final next = _entered + key;
-    setState(() => _entered = next);
-    if (next.length == 4) {
-      Future.delayed(const Duration(milliseconds: 200), () => _onPinComplete(next));
+    final now = DateTime.now();
+    if (_lastDigitPressAt != null &&
+        now.difference(_lastDigitPressAt!) <
+            const Duration(milliseconds: 220)) {
+      return;
     }
+    _lastDigitPressAt = now;
+    if (_entered.length >= ParentalService.pinMaxDigits) return;
+    setState(() => _entered = _entered + key);
+  }
+
+  void _submitPinEntry() {
+    if (_entered.length < ParentalService.pinMinDigits ||
+        _entered.length > ParentalService.pinMaxDigits) {
+      return;
+    }
+    _onPinComplete(_entered);
   }
 
   void _onPinComplete(String pin) {
@@ -85,12 +97,12 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
   Widget _buildPinDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(4, (i) {
+      children: List.generate(ParentalService.pinMaxDigits, (i) {
         final filled = i < _entered.length;
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 10),
-          width: 18,
-          height: 18,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          width: 16,
+          height: 16,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: filled
@@ -118,25 +130,35 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: row.map((k) {
                 if (k.isEmpty) return const SizedBox(width: 80, height: 60);
-                return InkWell(
-                  onTap: () => _onKey(k),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 80,
-                    height: 60,
-                    alignment: Alignment.center,
-                    child: k == 'del'
-                        ? Icon(Icons.backspace_outlined,
-                            size: 24,
-                            color: FlutterFlowTheme.of(context).primaryText)
-                        : Text(
-                            k,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w500,
-                              color: FlutterFlowTheme.of(context).primaryText,
-                            ),
-                          ),
+                final accent = FlutterFlowTheme.of(context).tertiary;
+                return Material(
+                  key: ValueKey<String>('onboard_pin_$k'),
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    splashColor: accent.withValues(alpha: 0.35),
+                    highlightColor: accent.withValues(alpha: 0.14),
+                    onTap: () => _onKey(k),
+                    child: SizedBox(
+                      width: 80,
+                      height: 60,
+                      child: Center(
+                        child: k == 'del'
+                            ? Icon(Icons.backspace_outlined,
+                                size: 24,
+                                color:
+                                    FlutterFlowTheme.of(context).primaryText)
+                            : Text(
+                                k,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w500,
+                                  color: FlutterFlowTheme.of(context)
+                                      .primaryText,
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
                 );
               }).toList(),
@@ -318,7 +340,8 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
           Text(
             _isConfirming
                 ? 'Digite o mesmo PIN novamente para confirmar.'
-                : 'Este PIN será pedido para sair do app\nou acessar as configurações.',
+                : 'Use de ${ParentalService.pinMinDigits} a ${ParentalService.pinMaxDigits} dígitos. '
+                    'Será pedido para sair do app ou acessar as configurações.',
             style: FlutterFlowTheme.of(context).bodySmall.copyWith(
                   color: FlutterFlowTheme.of(context).secondaryText,
                 ),
@@ -334,7 +357,20 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
               textAlign: TextAlign.center,
             ),
           ],
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: (_entered.length >= ParentalService.pinMinDigits &&
+                    _entered.length <= ParentalService.pinMaxDigits)
+                ? _submitPinEntry
+                : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: FlutterFlowTheme.of(context).tertiary,
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 48),
+            ),
+            child: Text(_isConfirming ? 'Confirmar PIN' : 'Continuar'),
+          ),
+          const SizedBox(height: 16),
           _buildNumpad(),
           if (_isConfirming) ...[
             const SizedBox(height: 8),

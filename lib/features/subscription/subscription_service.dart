@@ -1,12 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '/environment_values.dart';
 import 'subscription_constants.dart';
 
-/// Estado global da assinatura (RevenueCat) + sincronização com usuário Supabase.
+/// Estado global da assinatura (RevenueCat). Identidade de compra = conta da loja; restaurar compras no mesmo ou outro aparelho.
 class SubscriptionService extends ChangeNotifier {
   SubscriptionService._();
 
@@ -80,28 +79,6 @@ class SubscriptionService extends ChangeNotifier {
     }
   }
 
-  /// Chamar após login/logout no Supabase (`Session?`).
-  Future<void> onAuthSession(Session? session) async {
-    if (!_configured) {
-      _customerInfo = null;
-      notifyListeners();
-      return;
-    }
-    try {
-      if (session?.user.id != null && session!.user.id.isNotEmpty) {
-        await Purchases.logIn(session.user.id);
-      } else {
-        await Purchases.logOut();
-      }
-      await refreshCustomerInfo();
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('SubscriptionService.onAuthSession: $e');
-      }
-    }
-    notifyListeners();
-  }
-
   Future<Offerings?> getOfferings() async {
     if (!_configured) return null;
     try {
@@ -132,8 +109,8 @@ class SubscriptionService extends ChangeNotifier {
 
   Future<void> purchasePackage(Package pkg) async {
     if (!_configured) return;
-    final result = await Purchases.purchasePackage(pkg);
-    _customerInfo = result.customerInfo;
+    final info = await Purchases.purchasePackage(pkg);
+    _customerInfo = info;
     notifyListeners();
   }
 

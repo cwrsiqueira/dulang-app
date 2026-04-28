@@ -11,6 +11,10 @@ class SelecionarPerfilWidget extends StatefulWidget {
   static const String routeName = 'SelecionarPerfil';
   static const String routePath = '/selecionarPerfil';
 
+  /// Rota antiga "Gerenciar perfis" (mesma tela; evita link quebrado).
+  static const String legacyPerfisGerenciarRouteName = 'PerfisGerenciar';
+  static const String legacyPerfisGerenciarRoutePath = '/perfisGerenciar';
+
   @override
   State<SelecionarPerfilWidget> createState() => _SelecionarPerfilWidgetState();
 }
@@ -50,6 +54,85 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
     await ChildProfileService.instance.setActiveProfileId(p.id);
     if (!mounted) return;
     context.safePop();
+  }
+
+  Future<void> _rename(ChildProfile p) async {
+    final controller = TextEditingController(text: p.name);
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: Text(
+            'Renomear perfil',
+            style: GoogleFonts.inter(color: Colors.white),
+          ),
+          content: TextField(
+            controller: controller,
+            style: GoogleFonts.inter(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Nome da criança',
+              labelStyle: TextStyle(color: Colors.white70),
+              border: OutlineInputBorder(),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white24),
+              ),
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Salvar'),
+            ),
+          ],
+        ),
+      );
+      if (ok == true && mounted) {
+        await ChildProfileService.instance.renameProfile(p.id, controller.text);
+        if (mounted) await _reload();
+      }
+    } finally {
+      controller.dispose();
+    }
+  }
+
+  Future<void> _remove(ChildProfile p) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(
+          'Remover perfil "${p.name}"?',
+          style: GoogleFonts.inter(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Remover', style: GoogleFonts.inter(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final removed = await ChildProfileService.instance.removeProfile(p.id);
+    if (!removed && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Crie outro perfil antes de excluir o único.'),
+        ),
+      );
+      return;
+    }
+    if (mounted) await _reload();
   }
 
   Future<void> _add() async {
@@ -200,7 +283,10 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
                             return _ProfileTile(
                               profile: p,
                               selected: active,
+                              canDelete: _list.length > 1,
                               onTap: () => _select(p),
+                              onRename: () => _rename(p),
+                              onRemove: () => _remove(p),
                             );
                           },
                         ),
@@ -371,97 +457,146 @@ class _ProfileTile extends StatelessWidget {
   const _ProfileTile({
     required this.profile,
     required this.selected,
+    required this.canDelete,
     required this.onTap,
+    required this.onRename,
+    required this.onRemove,
   });
 
   final ChildProfile profile;
   final bool selected;
+  final bool canDelete;
   final VoidCallback onTap;
+  final VoidCallback onRename;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
     final color = Color(profile.colorValue);
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: [
-            Expanded(
+      child: Column(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          color.withValues(alpha: 0.85),
-                          color.withValues(alpha: 0.45),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: selected
-                            ? FlutterFlowTheme.of(context).tertiary
-                            : Colors.white12,
-                        width: selected ? 3 : 1,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        profile.name.isNotEmpty
-                            ? profile.name[0].toUpperCase()
-                            : '?',
-                        style: GoogleFonts.inter(
-                          fontSize: 56,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onTap,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              color.withValues(alpha: 0.85),
+                              color.withValues(alpha: 0.45),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: selected
+                                ? FlutterFlowTheme.of(context).tertiary
+                                : Colors.white12,
+                            width: selected ? 3 : 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            profile.name.isNotEmpty
+                                ? profile.name[0].toUpperCase()
+                                : '?',
+                            style: GoogleFonts.inter(
+                              fontSize: 56,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A2A2A),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected ? Colors.greenAccent : Colors.white24,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      profile.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: PopupMenuButton<String>(
+                        tooltip: 'Opções do perfil',
+                        icon: const Icon(
+                          Icons.more_vert_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                        color: const Color(0xFF2A2A2A),
+                        onSelected: (value) {
+                          if (value == 'rename') onRename();
+                          if (value == 'remove') onRemove();
+                        },
+                        itemBuilder: (ctx) => [
+                          PopupMenuItem(
+                            value: 'rename',
+                            child: Text(
+                              'Renomear',
+                              style: GoogleFonts.inter(color: Colors.white),
+                            ),
+                          ),
+                          if (canDelete)
+                            PopupMenuItem(
+                              value: 'remove',
+                              child: Text(
+                                'Excluir',
+                                style: GoogleFonts.inter(color: Colors.redAccent),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A2A2A),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? Colors.greenAccent : Colors.white24,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    profile.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
