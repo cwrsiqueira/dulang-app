@@ -4,13 +4,13 @@ Use este checklist antes de testar compra/cancelamento/mudança de plano no Andr
 
 ## 1) Conta de teste habilitada
 
-- [ ] Em `Play Console > Testing > Internal testing`, o e-mail está na lista de testers.
-- [ ] Em `Play Console > Settings > License testing`, o mesmo e-mail está como licensed tester.
+- [x] Em `Play Console > Testing > Internal testing`, o e-mail está na lista de testers.
+- [x] Em `Play Console > Settings > License testing`, o mesmo e-mail está como licensed tester.
 
 ## 2) Instalação correta do app
 
-- [ ] Desinstalar versão atual do app.
-- [ ] Entrar no link de opt-in da track `Internal testing`.
+- [x] Desinstalar versão atual do app.
+- [x] Entrar no link de opt-in da track `Internal testing`.
 - [ ] Reinstalar pela Play Store (não usar APK/local build para esse teste).
 
 ## 3) Conta ativa no aparelho
