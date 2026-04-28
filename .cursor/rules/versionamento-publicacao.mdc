@@ -1,0 +1,15 @@
+---
+description: Versão do app no pubspec antes de deploy / push que gera build de loja
+globs:
+alwaysApply: true
+---
+
+# Versão Flutter / Play (`pubspec.yaml`)
+
+- **Fonte única:** o campo `version` em **`pubspec.yaml`** (formato `MAJOR.MINOR.PATCH+BUILD`). O Android usa `flutter.versionCode` / `flutter.versionName` gerados pelo Flutter — não editar números soltos só no Gradle, salvo exceção rara.
+
+- **Antes de `commit` + `push` que dispara** o workflow de upload para Play (ex.: **`deploy_android.yml`** na `master`) **ou** qualquer release de loja, **incrementar** `PATCH` e `BUILD` juntos na série em uso — modelo acordado:
+  - `1.0.31+31` → **`1.0.32+32`** → `1.0.33+33` …
+  - O inteiro depois do `+` (build / `versionCode`) **sobe sempre** quando se publica build novo para a Play entre essas versões nomeadas.
+
+- **Assistentes:** ao preparar push que vai gerar **AAB pelo CI** para Internal Test ou trilhas superiores, **verificar e sobrescrever** `version:` no `pubspec.yaml` para o próximo par **antes** do commit (não enviar dois builds com mesmo `versionCode`).

@@ -30,6 +30,12 @@
 - `.github/workflows/deploy_android.yml`
 - `pubspec.yaml` (dependency overrides and release-impacting changes)
 
+### Version / Play Store builds
+
+- **Single source of truth:** `pubspec.yaml` line `version: MAJOR.MINOR.PATCH+BUILD` (Flutter passes this to Android `versionCode` / `versionName` via Gradle).
+- **Before each commit/push that ships a release build** (e.g. GitHub Action upload to Internal testing), bump **both** PATCH and BUILD in step — convention in this repo on the current line: **`1.0.N+N`** → next **`1.0.(N+1)+(N+1)`** (example `1.0.31+31` → `1.0.32+32`). Never upload two artifacts with the same `versionCode`.
+- Cursor rule reminder: `.cursor/rules/versionamento-publicacao.mdc`.
+
 ### Operational rules
 
 - Prefer small, reviewable changes.
@@ -75,6 +81,12 @@
 - `android/key.properties` (gerado no CI, nao commitar)
 - `.github/workflows/deploy_android.yml`
 - `pubspec.yaml` (overrides e mudancas que impactam release)
+
+### Versao / build para a Play Store
+
+- **Fonte única:** `pubspec.yaml`, campo **`version`** no formato **`MAJOR.MINOR.PATCH+BUILD`** (o Android usa `versionCode` / `versionName` gerados pelo Flutter a partir dai).
+- **Antes de cada commit/push que gera artefato para a Play** (ex.: workflow mandando **AAB** para teste interno), **incrementar** patch e numero de build juntos, no padrao em uso neste repositorio: **`1.0.N+N`** → **`1.0.(N+1)+(N+1)`** (ex.: `1.0.31+31` → `1.0.32+32`). Nao repetir `versionCode` entre uploads.
+- Lembrete nas rules do Cursor: `.cursor/rules/versionamento-publicacao.mdc`.
 
 ### Idioma (texto em portugues)
 

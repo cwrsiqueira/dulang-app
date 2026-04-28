@@ -1,3 +1,5 @@
+# Antes de cada push que dispara este workflow: incrementar `version` no pubspec.yaml
+# (modelo acordado: 1.0.N+N → 1.0.(N+1)+(N+1)). Ver docs/ai-context/engineering-rules.md
 name: Deploy Android to Internal Test
 
 on:
