@@ -54,6 +54,41 @@ Resumo do fluxo (detalhe visual no checklist oficial do RevenueCat: *Creating Pl
 
 **Chave pública do RevenueCat (Android)** — é outra coisa: é a string **API Key** do *SDK* que o app usa no `Purchases.configure` (hoje: `REVENUECAT_ANDROID_KEY` em `environment_values` ou `--dart-define`). Ela **não** substitui o JSON da conta de serviço; são duas peças: **app fala com RC (chave pública)** e **servidores do RC falam com a Play (JSON)**.
 
+### Permissão `com.android.vending.BILLING`
+
+**Não precisa** colocar essa linha no `AndroidManifest.xml` do app à mão. O **Play Billing Library** (puxado pelo pacote `purchases_flutter`) declara a permissão no manifesto da biblioteca; o Gradle **mescla** tudo no AAB final. Na prática, a Play já enxerga billing no pacote que tem a biblioteca correta.
+
+---
+
+## Parte 2d — Deploy do AAB pela GitHub Actions (trilha Teste interno)
+
+No repositório existe o workflow **Deploy Android to Internal Test** (arquivo `.github/workflows/deploy_android.yml`).
+
+**Quando roda**
+
+- Automaticamente em cada **push** na branch **`master`**.
+- Ou **manual**: GitHub → **Actions** → **Deploy Android to Internal Test** → **Run workflow** (precisa da opção `workflow_dispatch` no YAML — está habilitada).
+
+**O que o job faz**
+
+- `flutter pub get`, ícones, `flutter build appbundle --release` com ofuscação e `--dart-define=YOUTUBE_API_KEY=…` (segredo do GitHub).
+- Envia o `.aab` para a Play na trilha **internal** (teste interno), pacote **`com.mycompany.dulang`**, usando a action `r0adkll/upload-google-play`.
+
+**Secrets obrigatórios no GitHub** (Settings → Secrets and variables → Actions)
+
+| Secret | Uso |
+|--------|-----|
+| `KEYSTORE_BASE64` | Keystore `.jks` codificado em Base64 (uma linha). |
+| `KEYSTORE_PASSWORD` | Senha do keystore. |
+| `KEY_PASSWORD` | Senha da chave de assinatura. |
+| `KEY_ALIAS` | Alias da chave. |
+| `YOUTUBE_API_KEY` | Passada no build; o `environment.json` versionado deixa essa chave vazia no repo. |
+| `PLAY_STORE_JSON_KEY` | JSON da **conta de serviço** com permissão na Play Console para **publicar** na trilha (API Google Play Android Developer). Pode ser o mesmo projeto/conta usada no RevenueCat **se** essa conta tiver também os papéis de upload — ou um JSON separado, conforme a organização. |
+
+Depois que o upload concluir, abra a **Play Console** → app Dulang → **Teste interno** (ou equivalente) e confira a nova versão. Com o app já publicado em uma trilha, a criação de **assinaturas** e IDs de produto costuma ficar estável (alinhado ao passo 4 da Parte 2b).
+
+Contexto técnico resumido também em `docs/ai-context/engineering-rules.md` (arquivo sensível: `deploy_android.yml`).
+
 ---
 
 ## Parte 2c — Avisos da Play que vocês citaram (Famílias, 16 KB, API 35)
@@ -125,4 +160,4 @@ Para atualizar vídeos e canais no servidor, use o outro passo a passo simples: 
 
 ---
 
-*Última revisão: incluídas Parte 2b (credenciais Play ↔ RevenueCat), Parte 2c (Famílias/WebView, 16 KB, API 35) e ajuste no troubleshooting (sem login obrigatório no app).*  
+*Última revisão: Parte 2d (GitHub Actions → teste interno), permissão BILLING via Play Billing, Parte 2b/2c, troubleshooting sem login obrigatório.*  
