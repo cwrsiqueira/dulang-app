@@ -2,7 +2,7 @@
 
 This folder is the canonical context for the Dulang project across tools, machines, and AI assistants.
 
-**Milestone (2026-04-27):** Phase 1 closed by operator sign-off. **Update (2026-04-30):** Phase 2 **app integration** (RevenueCat SDK, Flutter paywall with sticky CTA, direct paywall on premium taps, **Gerenciar assinatura** via store `managementURL`, entitlement gating, **no mandatory login**; parental PIN change via **device biometrics/PIN**) is in the repo; **store/RevenueCat dashboard + device QA** still open — see `current-status.md`.
+**Milestone (2026-04-27):** Phase 1 closed by operator sign-off. **Update (2026-04-28):** Phase 2 **app integration** (RevenueCat SDK, Flutter paywall with sticky CTA, direct paywall on premium taps, **Gerenciar assinatura** via store `managementURL`, entitlement gating, **no mandatory login**; parental PIN change via **device biometrics/PIN**) is in the repo; **manage subscription UX** refined; **Android root back** legacy PIN snackbar removed from main shell; **Play sandbox checklist** added at [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md); **store/RevenueCat dashboard + device QA** (cancel/change plan + sandbox on all QA accounts) still open — see `current-status.md`.
 
 ## How to use
 
@@ -22,7 +22,7 @@ For any Portuguese aimed at humans or assistant replies in Portuguese, use **Bra
 
 Texto em português para pessoas e respostas de assistente: use **somente pt-BR** (não pt-PT; ex.: **arquivo(s)**, não *ficheiro(s)*). Detalhes em `developer-profile.md`, `engineering-rules.md` e `.cursor/rules/portugues-brasil.mdc` (**rules**, não só guideline).
 
-**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador. **Atualização (2026-04-30):** **integração da Fase 2 no app** (SDK RevenueCat, paywall Flutter com CTA fixo, paywall direta em toques premium, **Gerenciar assinatura** com link da loja via `managementURL`, bloqueio por entitlement, **sem login obrigatório**; troca de PIN parental com **biometria/PIN do aparelho**); **lojas/RevenueCat + QA em aparelho** ainda em aberto — veja `current-status.md`.
+**Marco (2026-04-27):** Fase 1 encerrada por aceite do operador. **Atualização (2026-04-28):** **integração da Fase 2 no app** (SDK RevenueCat, paywall Flutter com CTA fixo, paywall direta em toques premium, **Gerenciar assinatura** com link da loja via `managementURL`, bloqueio por entitlement, **sem login obrigatório**; troca de PIN parental com **biometria/PIN do aparelho**); **UX de Gerenciar assinatura** revisada; **voltar (Android) na casca principal** sem banner legado de PIN; **checklist sandbox Play** em [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md); **lojas/RevenueCat + QA em aparelho** (cancelar/mudar plano + sandbox em todas as contas de QA) ainda em aberto — veja `current-status.md`.
 
 1. Comece por este arquivo.
 2. Leia `project-overview.md` para produto e missão.

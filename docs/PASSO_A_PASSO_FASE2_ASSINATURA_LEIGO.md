@@ -87,6 +87,12 @@ No repositório existe o workflow **Deploy Android to Internal Test** (arquivo `
 
 Depois que o upload concluir, abra a **Play Console** → app Dulang → **Teste interno** (ou equivalente) e confira a nova versão. Com o app já publicado em uma trilha, a criação de **assinaturas** e IDs de produto costuma ficar estável (alinhado ao passo 4 da Parte 2b).
 
+### Opt-in do teste interno e erro “Item not found” na Play Store
+
+- Use o link copiado de **Teste interno → Testadores** (opt-in). Instale/atualize **pela Play Store** após aceitar.
+- Em **Configurações → Teste de licença**, a lista de e-mails precisa estar **marcada (checkbox) + Salvar alterações** — senão a compra tende a não entrar no fluxo de licensed tester.
+- Se uma conta Google listada cair em **Item not found** mesmo com release **Disponível para testers**, veja o roteiro em [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](CHECKLIST_TESTE_SANDBOX_PLAY.md) (seção 8).
+
 Contexto técnico resumido também em `docs/ai-context/engineering-rules.md` (arquivo sensível: `deploy_android.yml`).
 
 ---
@@ -160,4 +166,4 @@ Para atualizar vídeos e canais no servidor, use o outro passo a passo simples: 
 
 ---
 
-*Última revisão: entitlement RevenueCat `dulang_premium_entitlement`; Parte 2d (GitHub Actions → teste interno); BILLING; Parte 2b/2c; troubleshooting sem login obrigatório.*  
+*Última revisão: entitlement RevenueCat `dulang_premium_entitlement`; Parte 2d (GitHub Actions → teste interno); checklist sandbox Play (`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`); opt-in interno + “Item not found”; BILLING; Parte 2b/2c; troubleshooting sem login obrigatório.*  

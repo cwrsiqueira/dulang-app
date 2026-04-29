@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-04-30
+Last updated: 2026-04-28
 
 ## Phase 1 closure / Encerramento da Fase 1
 
@@ -8,14 +8,14 @@ Last updated: 2026-04-30
 
 **PT-BR:** A **Fase 1** permanece **encerrada com aceite do operador em 2026-04-27** (sem mudança).
 
-## Phase 2 progress / Andamento da Fase 2 (2026-04-30)
+## Phase 2 progress / Andamento da Fase 2 (2026-04-28)
 
-**EN:** **App-side Phase 2 (updated 2026-04-30):** **No mandatory app login** — catalog and paywall are open after onboarding; purchases restore via **store account** + RevenueCat; RevenueCat SDK via **`SubscriptionService`** with entitlement **`dulang_premium_entitlement`** (anonymous RC user per install; no Supabase `logIn` coupling); **custom Flutter paywall** (`DulangPremiumWidget`, sticky CTA); **direct paywall** when tapping premium content without entitlement; **subscription management** (`DulangSubscriptionManageWidget` + `managementURL`) for subscribers; **parental PIN** still gates settings; **change parental PIN** uses **device biometrics / device PIN** (`local_auth`) before saving. **Still required outside the repo / on consoles:** RevenueCat + Play/App Store products (7-day trial, monthly + annual pricing rule), default offering package types, `REVENUECAT_IOS_KEY` (or dart-define), and **device QA** for purchase/restore on Android (Windows) and iOS (Mac mini). Supabase remains for data APIs as configured; Auth optional.
+**EN:** **App-side Phase 2 (updated 2026-04-28):** **No mandatory app login** — catalog and paywall are open after onboarding; purchases restore via **store account** + RevenueCat; RevenueCat SDK via **`SubscriptionService`** with entitlement **`dulang_premium_entitlement`** (anonymous RC user per install; no Supabase `logIn` coupling); **custom Flutter paywall** (`DulangPremiumWidget`, sticky CTA); **direct paywall** when tapping premium content without entitlement; **subscription management** (`DulangSubscriptionManageWidget` + `managementURL`) for subscribers; **parental PIN** still gates settings; **change parental PIN** uses **device biometrics / device PIN** (`local_auth`) before saving. **Manage subscription UX (2026-04-28):** friendlier plan labels + clearer recurring price line; store copy conditional (**Google Play** vs **App Store**); **Restore purchases** removed from manage screen (kept on paywall). **Root Android back:** removed legacy snackbar PIN gate on hardware back from the main shell (`NavBarPage`); normal back behavior resumes when the router cannot pop. **Play Console ops:** 7-day trial offers created per plan; **License testing** must have the tester email list **selected** (checkbox) + **Save** — otherwise purchases behave like production. **Internal testing caveat (operator 2026-04-28):** a second Google account can show **Play Store “Item not found”** on the opt-in download even when the release is “Available to testers”; workaround is to keep QA on the known-good tester account until Play propagation/account eligibility stabilizes, or retry later. **Still required outside the repo / on consoles:** default offering package wiring sanity-check, `REVENUECAT_IOS_KEY` (or dart-define), and **device QA** for cancel/change-plan + sandbox confirmation on Android (Windows) and iOS (Mac mini). Supabase remains for data APIs as configured; Auth optional. **Repo version for latest Play upload:** `pubspec.yaml` **`1.0.37+37`**.
 
 **Plain-language ops guide (stores + subscription + parental PIN limits):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md).
 **Play sandbox QA checklist:** [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md).
 
-**PT-BR:** **Fase 2 no app (atualizado em 2026-04-30):** **sem login obrigatório no app** — catálogo e assinatura após onboarding; compras na **conta da loja** + restaurar compras; SDK RevenueCat em **`SubscriptionService`** com entitlement **`dulang_premium_entitlement`** (usuário anônimo RC por instalação); **paywall Flutter** (`DulangPremiumWidget`, CTA fixo); **paywall direta** ao tocar conteúdo premium sem direito; **Gerenciar assinatura** (`DulangSubscriptionManageWidget` + `managementURL`) para quem já tem Premium; **PIN parental** protege Ajustes; **alterar PIN parental** com **`local_auth`**. **Ainda falta fora do repositório:** produtos nas lojas + RevenueCat, oferta padrão, **`REVENUECAT_IOS_KEY`**, **QA em aparelho**. Supabase para APIs de dados; Auth opcional.
+**PT-BR:** **Fase 2 no app (atualizado em 2026-04-28):** **sem login obrigatório no app** — catálogo e assinatura após onboarding; compras na **conta da loja** + restaurar compras; SDK RevenueCat em **`SubscriptionService`** com entitlement **`dulang_premium_entitlement`** (usuário anônimo RC por instalação); **paywall Flutter** (`DulangPremiumWidget`, CTA fixo); **paywall direta** ao tocar conteúdo premium sem direito; **Gerenciar assinatura** (`DulangSubscriptionManageWidget` + `managementURL`) para quem já tem Premium; **PIN parental** protege Ajustes; **alterar PIN parental** com **`local_auth`**. **UX Gerenciar assinatura (2026-04-28):** rótulos de plano mais amigáveis + linha de preço/recorrência mais clara; texto da loja condicional (**Google Play** vs **App Store**); **Restaurar compras** removido da tela de gestão (permanece no paywall). **Botão voltar (Android) na casca principal:** removido o fluxo legado de banner/PIN ao voltar na raiz (`NavBarPage`); o back volta ao comportamento normal quando o router não pode dar pop. **Operação Play Console:** ofertas de trial de 7 dias criadas por plano; em **Teste de licença** a lista de e-mails precisa estar **marcada** + **Salvar alterações** — senão a compra tende a ser tratada como produção. **Observação de teste interno (operador 2026-04-28):** uma segunda conta Google pode cair em **“Item not found”** ao baixar pelo link de opt-in mesmo com release **Disponível para testers**; seguir QA com a conta que já funciona até estabilizar propagação/elegibilidade, ou tentar de novo depois. **Ainda falta fora do repositório:** conferência fina de oferta padrão/pacotes no RevenueCat, **`REVENUECAT_IOS_KEY`**, **QA em aparelho** (cancelar/mudar plano + confirmar sandbox). Supabase para APIs de dados; Auth opcional. **Versão no repo para upload Play mais recente:** `pubspec.yaml` **`1.0.37+37`**.
 
 **Guia operacional em linguagem simples (lojas + assinatura + PIN):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md) — inclui **Parte 2b** (conta de serviço Google + JSON no RevenueCat, AAB em teste interno) e **Parte 2c** (Famílias/WebView, 16 KB, API 35 / `targetSdk`).
 **Checklist sandbox Play (compra/cancelamento/restore em teste):** [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md).
@@ -40,7 +40,7 @@ Last updated: 2026-04-30
 | Player hardening | Stable for Phase 1 | Restrictions in place; periodic policy re-check on store updates |
 | Video navigation from list | Fixed | Player state keyed by video id; device QA as needed per release |
 | Video back navigation | Fixed | safePop + fullscreen overlay reset |
-| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall (`DulangPremiumWidget`, CTA fixo) + **Gerenciar assinatura** (`DulangSubscriptionManageWidget`, `CustomerInfo.managementURL` → loja); dashboard/store + iOS key + QA em aparelho ainda em aberto |
+| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall (`DulangPremiumWidget`, CTA fixo) + **Gerenciar assinatura** (`DulangSubscriptionManageWidget`, `CustomerInfo.managementURL` → loja) + UX de gestão revisada; trial Play por plano criado; falta QA de cancelamento/mudança de plano + confirmação sandbox estável em todas as contas de teste; iOS key + QA iPhone ainda em aberto |
 | Channel sync automation | Stable for Phase 1 | Daily Edge path + contract; operator confirms prod/cron |
 | Home channel grid visuals | Done | Thumbnail from most recent active video per channel + gradient overlay (`dulang_widget`) |
 | Child profiles UX | Done | Single screen “Quem está assistindo?”: select + add + rename/delete via menu; legacy `/perfisGerenciar` opens same screen |
@@ -68,7 +68,7 @@ Last updated: 2026-04-30
 
 ### Priority gaps
 
-- **Phase 2 (operations):** finish RevenueCat + store product setup, default offering (monthly + annual packages), iOS public SDK key, then validate trial → paid → restore on real devices.
+- **Phase 2 (operations):** finish RevenueCat + store product setup, default offering (monthly + annual packages), iOS public SDK key, then validate trial → paid → restore on real devices; unblock/verify **Internal testing** install for all QA Google accounts (see [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md)).
 - **Phase 2 (product follow-up):** social login (Google / Apple) if replacing email-only — not implemented yet.
 - Advanced parental features are pending:
   - Screen-time limits
@@ -118,7 +118,7 @@ Last updated: 2026-04-30
 
 ### Gaps prioritarios
 
-- **Fase 2 (operacao):** fechar produtos nas lojas + RevenueCat (oferta padrão, trial 7 dias, preço anual = 10 mensais), chave pública iOS, QA de compra/restauração em aparelho.
+- **Fase 2 (operacao):** fechar produtos nas lojas + RevenueCat (oferta padrão, trial 7 dias, preço anual = 10 mensais), chave pública iOS, QA de compra/restauração/cancelamento/mudanca de plano em aparelho; desbloquear/validar instalacao do **Teste interno** para todas as contas Google de QA (ver [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md)).
 - **Fase 2 (produto depois):** login social (Google/Apple), se quiser sair só de e-mail — ainda nao implementado.
 - Features parentais avancadas pendentes:
   - Limite de tempo de tela

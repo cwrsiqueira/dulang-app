@@ -13,7 +13,7 @@ Baseline delivered: parental PIN/onboarding, player isolation work, Supabase-fir
 3. Build parent-focused paywall narrative.
 4. Subscriber path to **store subscription management** (`managementURL` / native screens), not the acquisition paywall.
 
-**Status 2026-04-30:** items 1–4 are **implemented in app code** (custom Flutter paywall with sticky CTA, SDK, entitlement `dulang_premium_entitlement` gate, `DulangSubscriptionManageWidget`); **complete store + RevenueCat dashboard wiring and real-device purchase QA** to close the phase operationally. Use [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md) before validating purchase/cancel/restore on Android.
+**Status 2026-04-28:** items 1–4 are **implemented in app code** (custom Flutter paywall with sticky CTA, SDK, entitlement `dulang_premium_entitlement` gate, `DulangSubscriptionManageWidget`); **complete store + RevenueCat dashboard wiring and real-device purchase QA** to close the phase operationally. Use [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md) before validating purchase/cancel/restore on Android. **Operator note:** Internal testing opt-in can show **Play Store “Item not found”** for some Google accounts even when the release is **Available to testers** — keep primary QA on a known-good account until Play-side propagation/eligibility stabilizes.
 
 ### Phase 3 - Parent value features
 
@@ -35,7 +35,7 @@ Entregas: protecao parental basica, trabalho de isolamento do player, catalogo S
 3. Construir narrativa de paywall orientada a pais.
 4. Caminho do assinante para **gestão na loja** (`managementURL` / telas nativas), sem reexibir a paywall de aquisição.
 
-**Status em 2026-04-30:** itens 1 a 4 **no código do app** (paywall Flutter com CTA fixo, SDK, bloqueio por entitlement `dulang_premium_entitlement`, tela **Gerenciar assinatura**); falta **fechar lojas + painel RevenueCat e validar compra/restauração em aparelho real** para encerrar a fase na operação. Use [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md) antes de validar compra/cancelamento/restauração no Android.
+**Status em 2026-04-28:** itens 1 a 4 **no código do app** (paywall Flutter com CTA fixo, SDK, bloqueio por entitlement `dulang_premium_entitlement`, tela **Gerenciar assinatura**); falta **fechar lojas + painel RevenueCat e validar compra/restauração/cancelamento/mudança de plano em aparelho real** para encerrar a fase na operação. Use [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md) antes de validar compra/cancelamento/restauração no Android. **Nota de operação:** o opt-in do **Teste interno** pode cair em **“Item not found”** na Play Store para algumas contas Google mesmo com release **Disponível para testers** — manter QA principal numa conta que já instala até a Play estabilizar propagação/elegibilidade.
 
 ### Fase 3 - Features de valor para os pais
 
