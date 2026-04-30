@@ -2,6 +2,12 @@
 
 ## EN
 
+### 2026-03-02 (Play policy) - Families Policy Requirements: WebViews (rejection context)
+
+- Fact: Google Play **rejected an update** under **Families Policy Requirements: WebViews**. Stated reason (Play Console policy text): apps that **primarily aggregate content that does not belong to the developer** are not allowed in this configuration.
+- Play guidance to fix: remove violating presentation; and/or provide **proof of ownership** (official logo/icon, developer name, professional support email); and/or add **substantial first-party product value** beyond being a thin wrapper around third‑party video browsing.
+- Product/engineering stance for Dulang: treat the app as **curated English exposure** with **no open web for children**, minimal player surface, and parent gates; keep store listing and in‑app reality aligned; maintain operator evidence pack (brand, curation workflow, privacy/support) for appeals/reviews.
+
 ### 2026-04-30 - Subscription management screen; store `managementURL`; paywall UX refinements
 
 - Decision: subscribers open **Gerenciar assinatura** (`DulangSubscriptionManageWidget`) from Settings (and paywall redirects away if already entitled); screen shows current entitlement/product summary and **Abrir na loja** using RevenueCat **`CustomerInfo.managementURL`** (native Apple/Google subscription UI). Non-subscribers still use **`DulangPremiumWidget`** (sticky CTA, placeholders when offerings missing). Removed in-app Premium debug overrides earlier in the same initiative cycle.
@@ -121,6 +127,12 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-03-02 (politica Play) - Requisitos da Politica para familias: WebViews (contexto de recusa)
+
+- Fato: a Google Play **recusou uma atualizacao** sob **Requisitos da Politica para familias: WebViews**. Motivo declarado (texto do painel): **nao sao permitidos apps que coletam principalmente conteudo que nao pertence ao desenvolvedor**.
+- Orientacao da Play para corrigir: remover o conteudo/apresentacao violadores; e/ou apresentar **prova de titularidade** (icone/logo oficiais, nome do desenvolvedor, e-mail profissional de suporte); e/ou acrescentar **funcionalidades e valor de produto** para o app nao ser apenas um “invólucro” de navegacao/consumo de video de terceiros.
+- Posicao produto/engenharia no Dulang: posicionar como **curadoria de ingles para criancas** com **sem web aberta para a crianca**, superficie minima de player e portais parentais; manter **ficha da loja + experiencia real** alinhadas; manter pacote de evidencias (marca, curadoria, privacidade/suporte) para revisao/contestacao quando necessario.
 
 ### 2026-04-30 - Tela Gerenciar assinatura; `managementURL` da loja; refinamentos de UX do paywall
 

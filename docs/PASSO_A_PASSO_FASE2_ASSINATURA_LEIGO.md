@@ -108,6 +108,8 @@ A mensagem costuma aparecer quando a Play classifica o app como **agregador** de
 - **Propriedade / valor agregado:** se a Play pedir comprovante, juntar **marca** (ícone, nome), **política de privacidade** atualizada e **capturas de tela** do fluxo (PIN parental, player sem sair para o browser, etc.).
 - **Técnico:** o app já restringe navegação no player (YouTube iframe); evitem qualquer WebView genérica com URL aberta. Manter dependências do player atualizadas ajuda em auditoria.
 
+**Texto real da última reprovação (Play Console, 2026-03-02):** a Play aplicou **Requisitos da Política para famílias: WebViews** com a justificativa de que **não são permitidos apps que coletam principalmente conteúdo que não pertence ao desenvolvedor**, e pede remoção e/ou **prova de titularidade** (marca + contato profissional) e/ou **mais funcionalidades** para não ser apenas um invólucro de vídeo de terceiros. Registro canônico no repositório: `docs/ai-context/decisions-log.md` (entrada **2026-03-02**).
+
 ### API 35 (Android 15) — nível desejado da API
 
 No repositório, o módulo Android do app já está com **`targetSdkVersion` 36** em `android/app/build.gradle` (acima do mínimo 35). O que importa na prática é **subir um AAB novo** gerado deste projeto para a faixa de produção (o aviso some quando a versão ativa deixa de ser um pacote antigo com `targetSdk` 34).
@@ -166,4 +168,4 @@ Para atualizar vídeos e canais no servidor, use o outro passo a passo simples: 
 
 ---
 
-*Última revisão: entitlement RevenueCat `dulang_premium_entitlement`; Parte 2d (GitHub Actions → teste interno); checklist sandbox Play (`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`); opt-in interno + “Item not found”; BILLING; Parte 2b/2c; troubleshooting sem login obrigatório.*  
+*Última revisão: entitlement RevenueCat `dulang_premium_entitlement`; Parte 2d (GitHub Actions → teste interno); checklist sandbox Play (`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`); opt-in interno + “Item not found”; recusa Play **Famílias/WebViews** (2026-03-02) registrada em `docs/ai-context/decisions-log.md`; BILLING; Parte 2b/2c; troubleshooting sem login obrigatório.*  
