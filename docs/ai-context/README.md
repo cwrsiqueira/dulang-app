@@ -82,6 +82,7 @@ These files can add useful operational context, but they do **not** replace the 
 
 - `PLAYSTORE_CONTEXT.md`: store-facing notes and compliance support context.
 - `.cursor/rules/ai-context.mdc`: adapter rule that points assistants to this hub.
+- `.cursor/rules/versionamento-publicacao.mdc`: mandatory release/version rule (bump `pubspec.yaml` `version` before authorized commit/push that can trigger store CI).
 - `.cursor/rules/portugues-brasil.mdc`: language enforcement for assistant replies in Portuguese (pt-BR only).
 - `.claude/settings.local.json`: local tool configuration; treat as environment-specific, not canonical project context.
 - `docs/ai-context/channel-sync-operational.md`: operational spec for daily channel-to-video sync.
@@ -101,6 +102,7 @@ Estes arquivos podem acrescentar contexto operacional, mas **não** substituem a
 
 - `PLAYSTORE_CONTEXT.md`: notas voltadas para loja e apoio de compliance.
 - `.cursor/rules/ai-context.mdc`: regra adaptadora que aponta assistentes para este hub.
+- `.cursor/rules/versionamento-publicacao.mdc`: regra obrigatoria de versionamento/release (incrementar `version` do `pubspec.yaml` antes de commit/push autorizado que possa disparar CI de loja).
 - `.cursor/rules/portugues-brasil.mdc`: reforço de idioma para respostas em português (somente pt-BR).
 - `.claude/settings.local.json`: configuração local de ferramenta; trate como algo de ambiente, não como contexto canônico do projeto.
 - `docs/ai-context/channel-sync-operational.md`: especificação operacional do sync diário de canais para vídeos.

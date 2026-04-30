@@ -17,6 +17,7 @@ Priority reading order:
 8) `docs/CHECKLIST_TESTE_SANDBOX_PLAY.md` (Android Play sandbox / internal test QA)
 9) `docs/play-store-listing-dulang.md` (Play Store listing copy — policy-aligned)
 10) `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` (ops: lojas + assinatura + PIN)
+11) `.cursor/rules/versionamento-publicacao.mdc` (bump obrigatório de `pubspec.yaml` antes de commit/push autorizado que possa gerar build de loja)
 
 Do not create a parallel source of truth in tool-specific files.
 Tool-specific guidance should remain minimal and point back to `docs/ai-context/`.
