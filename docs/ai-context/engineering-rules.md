@@ -41,6 +41,8 @@
 - Prefer small, reviewable changes.
 - Validate with analysis/tests when changing behavior.
 - Avoid credential leakage in commits and logs.
+- **Git / CI (assistants):** do **not** run `git commit` or `git push` to the remote on **any branch** unless the operator **explicitly authorized** publishing changes to the repository. `push`—including branches other than `master`—can still trigger CI builds or other automation; the intent is to avoid unintended builds on **any** edit (code, config, docs, etc.). Keep work in the working tree and summarize what would be committed when the operator asks to sync.
+- **Play deploy:** `push` to **`master`** can trigger Android deploy workflows (AAB upload). When the operator **authorizes** a push meant to ship a new Play artifact, bump `pubspec.yaml` `version` first (see **Version / Play Store builds** and `.cursor/rules/versionamento-publicacao.mdc`).
 
 ### Security baseline
 
@@ -99,6 +101,8 @@
 - Preferir mudancas pequenas e revisaveis.
 - Validar com analise/testes quando alterar comportamento.
 - Evitar vazamento de credenciais em commits e logs.
+- **Git / CI (assistentes):** **nao** executar `git commit` nem `git push` para o remoto em **nenhuma branch** sem **autorizacao explicita** do operador para publicar mudancas no repositorio. `push` — inclusive fora da `master` — ainda pode disparar builds de CI ou outra automacao; o objetivo e evitar build nao intencional a cada ajuste (**qualquer** tipo: codigo, config, documentacao, etc.). Manter alteracoes no working tree e descrever o que commitar quando o operador pedir para sincronizar.
+- **Deploy Play:** `push` na **`master`** pode disparar deploy Android (AAB). Quando o operador **autorizar** um `push` destinado a publicar artefato novo na Play, incrementar antes o `version` do `pubspec.yaml` (veja **Versao / build para a Play Store** e `.cursor/rules/versionamento-publicacao.mdc`).
 
 ### Baseline de seguranca
 

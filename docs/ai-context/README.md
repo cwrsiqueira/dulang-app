@@ -15,8 +15,11 @@ For any Portuguese aimed at humans or assistant replies in Portuguese, use **Bra
 5. Read `engineering-rules.md` for technical and safety constraints.
 6. Read `developer-profile.md` for working style and constraints.
 7. Read `decisions-log.md` for stable decisions and rationale.
-8. Read `security-checklist.md`, `security-strategy.md`, and `security-incidents.md`.
-9. Read `.cursor/rules/portugues-brasil.mdc` for assistant language enforcement (pt-BR only).
+8. Read `../CHECKLIST_TESTE_SANDBOX_PLAY.md` for Android Play sandbox/internal testing QA.
+9. Read `../play-store-listing-dulang.md` for Play Store listing copy aligned to policy constraints.
+10. Read `../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` for non-technical store + subscription ops.
+11. Read `security-checklist.md`, `security-strategy.md`, and `security-incidents.md`.
+12. Read `.cursor/rules/portugues-brasil.mdc` for assistant language enforcement (pt-BR only).
 
 ## Como usar (PT-BR)
 
@@ -31,8 +34,11 @@ Texto em português para pessoas e respostas de assistente: use **somente pt-BR*
 5. Leia `engineering-rules.md` para regras técnicas e de segurança.
 6. Leia `developer-profile.md` para perfil e modo de trabalho.
 7. Leia `decisions-log.md` para decisões e justificativas.
-8. Leia `security-checklist.md`, `security-strategy.md` e `security-incidents.md`.
-9. Leia `.cursor/rules/portugues-brasil.mdc` para reforço de idioma do assistente (somente pt-BR).
+8. Leia `../CHECKLIST_TESTE_SANDBOX_PLAY.md` para QA de sandbox/teste interno no Android (Play).
+9. Leia `../play-store-listing-dulang.md` para textos da ficha na Play Store alinhados a políticas.
+10. Leia `../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` para operação de lojas + assinatura em linguagem simples.
+11. Leia `security-checklist.md`, `security-strategy.md` e `security-incidents.md`.
+12. Leia `.cursor/rules/portugues-brasil.mdc` para reforço de idioma do assistente (somente pt-BR).
 
 ## Session Aliases / Aliases de Sessao
 
@@ -43,6 +49,9 @@ Texto em português para pessoas e respostas de assistente: use **somente pt-BR*
 - `CTX-STATUS`: `current-status.md`.
 - `CTX-ROADMAP`: `roadmap-priorities.md`.
 - `CTX-RULES`: `engineering-rules.md`.
+- `CTX-PLAY-SANDBOX-CHECKLIST`: `../CHECKLIST_TESTE_SANDBOX_PLAY.md`.
+- `CTX-PLAY-LISTING`: `../play-store-listing-dulang.md`.
+- `CTX-OPS-SUBSCRIPTIONS`: `../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`.
 - `CTX-PROFILE`: `developer-profile.md`.
 - `CTX-DECISIONS`: `decisions-log.md`.
 - `SEC-CHECKLIST`: `security-checklist.md`.

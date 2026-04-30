@@ -27,6 +27,7 @@
 - Prioritize child safety, compliance, and release risk reduction.
 - Prefer clear next steps over generic advice.
 - **Language:** for any Portuguese text aimed at the team or product (and for assistant replies when the user uses Portuguese), use **Brazilian Portuguese (pt-BR)** only—not European Portuguese (pt-PT). Prefer vocabulary and phrasing from Brazil (e.g. *celular*, *tela*, *arquivo*, *baixar*; avoid *telemóvel*, *ecrã*, *ficheiro*, *tu* as default). The Cursor rule **`.cursor/rules/portugues-brasil.mdc`** repeats this so tooling and canonical docs stay aligned.
+- **Git / releases:** AI assistants must **not** run `git commit` or `git push` to the remote on **any branch** unless the operator **explicitly authorized** syncing—avoids unintended CI/builds on every change (not limited to docs). This repo’s CI may upload a Play build from **`master`** when pushed; version bump rules apply when that path is authorized.
 
 ## PT-BR
 
@@ -55,3 +56,4 @@
 - Priorizar seguranca infantil, compliance e reducao de risco de release.
 - Preferir proximos passos claros em vez de orientacao generica.
 - **Idioma:** em portugues, usar **somente português do Brasil (pt-BR)** em respostas ao time, em documentação humana **e nas respostas de assistentes**, **não** português de Portugal (pt-PT). Mesma linha nas **rules** `.cursor/rules/portugues-brasil.mdc` e em `engineering-rules.md`. Vocabulário: *arquivo(s)* (nao *ficheiro(s)*), *celular*, *tela*, *você*; evitar *telemóvel*, *ecrã*, *tu*.
+- **Git / releases:** assistentes de IA **nao** devem executar `git commit` nem `git push` para o remoto em **nenhuma branch** sem **autorizacao explicita** do operador — evita disparar build/CI a cada ajuste (nao se limita a documentacao). O CI deste repo pode subir AAB a partir da **`master`** quando houver `push`; regras de bump de `version` valem quando esse caminho for autorizado.

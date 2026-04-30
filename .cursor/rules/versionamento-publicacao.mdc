@@ -13,3 +13,6 @@ alwaysApply: true
   - O inteiro depois do `+` (build / `versionCode`) **sobe sempre** quando se publica build novo para a Play entre essas versões nomeadas.
 
 - **Assistentes:** ao preparar push que vai gerar **AAB pelo CI** para Internal Test ou trilhas superiores, **verificar e sobrescrever** `version:` no `pubspec.yaml` para o próximo par **antes** do commit (não enviar dois builds com mesmo `versionCode`).
+
+- **Assistentes (Cursor e similares):** **não** executar `git commit` nem `git push` para o remoto em **nenhuma branch** sem **autorização explícita** do operador — `push` em qualquer branch pode acionar CI/build; o objetivo é não disparar pipeline por ajustes feitos sem pedido de publicação (código, config, docs, etc.). Manter mudanças locais até o operador autorizar.
+- **Contexto Play:** `push` na **`master`** pode disparar upload de AAB (`deploy_android.yml`). Só após autorização explícita para publicar; antes disso, incrementar `version` no `pubspec.yaml` conforme os itens acima.

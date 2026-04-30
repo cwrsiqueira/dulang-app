@@ -14,8 +14,13 @@ Priority reading order:
 5) `docs/ai-context/engineering-rules.md`
 6) `docs/ai-context/developer-profile.md`
 7) `docs/ai-context/decisions-log.md`
+8) `docs/CHECKLIST_TESTE_SANDBOX_PLAY.md` (Android Play sandbox / internal test QA)
+9) `docs/play-store-listing-dulang.md` (Play Store listing copy — policy-aligned)
+10) `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` (ops: lojas + assinatura + PIN)
 
 Do not create a parallel source of truth in tool-specific files.
 Tool-specific guidance should remain minimal and point back to `docs/ai-context/`.
+
+**Git:** assistants must not `git commit` or `git push` without explicit operator authorization (any branch; see `docs/ai-context/engineering-rules.md`).
 
 When the user or project material is in Portuguese, write **Brazilian Portuguese (pt-BR)** only—not European Portuguese (pt-PT). This is enforced in **`portugues-brasil.mdc`** (this folder) **and** in `docs/ai-context/developer-profile.md` / `engineering-rules.md`: same premise in **rules** and **canonical docs**.
