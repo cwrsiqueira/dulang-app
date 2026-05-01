@@ -1,7 +1,12 @@
 import '/features/parental/parental_service.dart';
+import '/features/subscription/freemium_service.dart';
+import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/pages/dulang_premium/dulang_premium_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class HorariosAcessoWidget extends StatefulWidget {
   const HorariosAcessoWidget({super.key});
@@ -83,6 +88,79 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
         body: const Center(child: CircularProgressIndicator()),
       );
     }
+
+    final premium = context.watch<SubscriptionService>().hasPremiumAccess;
+    final freemium = context.watch<FreemiumService>().isEnrolled && !premium;
+
+    if (freemium) {
+      final theme = FlutterFlowTheme.of(context);
+      return Scaffold(
+        backgroundColor: theme.primaryBackground,
+        appBar: AppBar(
+          backgroundColor: theme.secondaryBackground,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_rounded, color: theme.primaryText),
+            onPressed: () => context.safePop(),
+          ),
+          title: Text('Horários e tempo de uso',
+              style: theme.headlineSmall),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 36),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.schedule_rounded,
+                    size: 60,
+                    color: theme.tertiary.withValues(alpha: 0.5)),
+                const SizedBox(height: 20),
+                Text(
+                  'Plano gratuito: 1 hora por dia',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: theme.primaryText,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'No plano gratuito o limite de 1h/dia é fixo. Assine o Premium para configurar horários e limites personalizados.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: theme.secondaryText,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: theme.tertiary,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () =>
+                      context.pushNamed(DulangPremiumWidget.routeName),
+                  child: Text(
+                    'Ver planos Premium',
+                    style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
       appBar: AppBar(

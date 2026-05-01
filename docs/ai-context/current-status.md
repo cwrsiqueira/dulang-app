@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-04-29
+Last updated: 2026-04-30
 
 ## Phase 1 closure / Encerramento da Fase 1
 
@@ -21,6 +21,12 @@ Last updated: 2026-04-29
 **Guia operacional em linguagem simples (lojas + assinatura + PIN):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md) — inclui **Parte 2b** (conta de serviço Google + JSON no RevenueCat, AAB em teste interno) e **Parte 2c** (Famílias/WebView, 16 KB, API 35 / `targetSdk`).
 **Checklist sandbox Play (compra/cancelamento/restore em teste):** [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md).
 **Textos da ficha (Play Store, pt-BR):** [`docs/play-store-listing-dulang.md`](../play-store-listing-dulang.md).
+
+## Freemium plan + security (2026-04-30)
+
+**EN:** Three-tier model implemented: **Free** (1h/day, lifetime, email capture) / **Monthly** / **Annual**. `FreemiumService` singleton (`lib/features/subscription/freemium_service.dart`) — `isEnrolled`, `enroll(email)`, `addUsedMinutes`, `isUnderDailyLimit`, `reset()`. Email captured via `FreePlanEmailSheet` bottom sheet (LGPD consent + Brevo integration). Brevo API key kept server-side: Supabase Edge Function `register-free-plan` (`supabase/functions/register-free-plan/index.ts`) — receives email, calls Brevo API using `BREVO_API_KEY` / `BREVO_LIST_ID` secrets. Router gate post-onboarding: no plan (not enrolled + no premium) → `DulangPremiumWidget(isGate: true)` (no back button, router auto-redirects on enroll/purchase). `FreemiumService` added to router `refreshListenable`. Feature gates for free tier: Favoritos → `PremiumGateScreen`; Histórico → `PremiumGateScreen`; Aparência → light theme only (dark/system locked); Horários → locked screen with upgrade CTA; Perfis → rename allowed, add/delete blocked. NavBar usage ticker also accrues to `FreemiumService` when free plan active; `_checkParentalLimits` checks freemium daily limit separately, shows distinct overlay with upgrade CTA when 1h reached. Security: `environment.json` gitignored + removed from git tracking (`git rm --cached`); Brevo key never in client. Debug panel in Configurações (`kDebugMode` only, tree-shaken in release): bypass premium toggle (`SubscriptionService.debugToggleBypass`) + reset freemium state (`FreemiumService.reset()`). **Repo version: `1.0.40+40`.**
+
+**PT-BR:** Modelo de 3 tiers implementado: **Gratuito** (1h/dia, vitalício, email obrigatório) / **Mensal** / **Anual**. `FreemiumService` singleton — rastreia enroll e uso diário separado do `ParentalService`. Email via bottom sheet `FreePlanEmailSheet` (consentimento LGPD + Brevo). Chave Brevo fica só no servidor: Edge Function Supabase `register-free-plan` recebe o email e chama a API Brevo com secrets `BREVO_API_KEY` / `BREVO_LIST_ID`. Gate pós-onboarding: sem plano → paywall com `isGate: true` (sem back button; router redireciona ao enroll/compra). Bloqueios free: Favoritos e Histórico → `PremiumGateScreen`; Aparência → somente tema claro; Horários → tela bloqueada com CTA; Perfis → renomear liberado, add/delete bloqueado. NavBar ticker também credita minutos no `FreemiumService` quando plano free ativo; overlay distinto ao atingir 1h com CTA de upgrade. Segurança: `environment.json` no .gitignore e removido do rastreamento git; chave Brevo nunca no cliente. Painel debug em Ajustes (somente `kDebugMode`, removido em release): bypass premium + reset freemium. **Versão no repo: `1.0.40+40`.**
 
 ## Play policy / reprovação recente (contexto operacional)
 

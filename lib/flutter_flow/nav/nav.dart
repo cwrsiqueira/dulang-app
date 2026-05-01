@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '/backend/schema/structs/index.dart';
 
 import '/features/parental/onboarding_widget.dart';
+import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/main.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -42,10 +43,27 @@ class AppStateNotifier extends ChangeNotifier {
   }
 }
 
+Widget _resolveInitialWidget(AppStateNotifier appStateNotifier) {
+  if (appStateNotifier.showSplashImage) {
+    return Builder(
+      builder: (context) => Container(
+        color: Colors.transparent,
+        child: Image.asset('assets/images/dulang.webp', fit: BoxFit.cover),
+      ),
+    );
+  }
+  if (!appStateNotifier.onboardingDone) return const OnboardingWidget();
+  final hasPlan = FreemiumService.instance.isEnrolled ||
+      SubscriptionService.instance.hasPremiumAccess;
+  if (!hasPlan) return const DulangPremiumWidget(isGate: true);
+  return NavBarPage();
+}
+
 GoRouter createRouter(AppStateNotifier appStateNotifier) {
   final refresh = Listenable.merge([
     appStateNotifier,
     SubscriptionService.instance,
+    FreemiumService.instance,
   ]);
 
   return GoRouter(
@@ -53,36 +71,12 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
     debugLogDiagnostics: true,
     refreshListenable: refresh,
     navigatorKey: appNavigatorKey,
-    errorBuilder: (context, state) => appStateNotifier.showSplashImage
-        ? Builder(
-            builder: (context) => Container(
-              color: Colors.transparent,
-              child: Image.asset(
-                'assets/images/dulang.webp',
-                fit: BoxFit.cover,
-              ),
-            ),
-          )
-        : appStateNotifier.onboardingDone
-            ? NavBarPage()
-            : const OnboardingWidget(),
+    errorBuilder: (context, state) => _resolveInitialWidget(appStateNotifier),
     routes: [
       FFRoute(
         name: '_initialize',
         path: '/',
-        builder: (context, _) => appStateNotifier.showSplashImage
-            ? Builder(
-                builder: (context) => Container(
-                  color: Colors.transparent,
-                  child: Image.asset(
-                    'assets/images/dulang.webp',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              )
-            : appStateNotifier.onboardingDone
-                ? NavBarPage()
-                : const OnboardingWidget(),
+        builder: (context, _) => _resolveInitialWidget(appStateNotifier),
       ),
       FFRoute(
         name: TermosDeUsoEPoliticaDePrivacidadeWidget.routeName,

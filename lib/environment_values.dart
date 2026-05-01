@@ -51,4 +51,9 @@ class FFDevEnvironmentValues {
     }
     return _values['REVENUECAT_IOS_KEY'] ?? '';
   }
+
+  String get brevoApiKey => _values['BREVO_API_KEY'] ?? '';
+
+  int get brevoListId =>
+      int.tryParse(_values['BREVO_LIST_ID']?.toString() ?? '') ?? 2;
 }

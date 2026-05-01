@@ -12,6 +12,7 @@ import '/features/parental/parental_service.dart';
 import '/features/parental/pin_dialog.dart';
 import '/pages/configuracoes/alterar_pin_widget.dart';
 import '/features/profiles/child_profile_service.dart';
+import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
@@ -46,6 +47,7 @@ void main() async {
     anonKey: environmentValues.supabaseAnonKey,
   );
 
+  await FreemiumService.instance.init();
   await SubscriptionService.instance.initRevenueCat(environmentValues);
 
   await FlutterFlowTheme.initialize();
@@ -61,6 +63,7 @@ void main() async {
     providers: [
       ChangeNotifierProvider(create: (_) => appState),
       ChangeNotifierProvider.value(value: SubscriptionService.instance),
+      ChangeNotifierProvider.value(value: FreemiumService.instance),
     ],
     child: MyApp(),
   ));
@@ -189,6 +192,7 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   DateTime? _lastUsageAccountedAt;
   Timer? _foregroundUsageTicker;
   bool _playbackLocked = false;
+  bool _freemiumLimitReached = false;
 
   @override
   void initState() {
@@ -242,7 +246,12 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
 
   Future<void> _tickForegroundUsageMinute() async {
     await ParentalService.addUsedMinutes(1);
+    if (FreemiumService.instance.isEnrolled &&
+        !SubscriptionService.instance.hasPremiumAccess) {
+      await FreemiumService.instance.addUsedMinutes(1);
+    }
     _lastUsageAccountedAt = DateTime.now();
+    await _checkParentalLimits();
   }
 
   /// Sobra desde o último tick de 1 minuto (ex.: usuário minimizou o app no meio do minuto).
@@ -252,6 +261,10 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     final mins = secs ~/ 60;
     if (mins > 0) {
       await ParentalService.addUsedMinutes(mins);
+      if (FreemiumService.instance.isEnrolled &&
+          !SubscriptionService.instance.hasPremiumAccess) {
+        await FreemiumService.instance.addUsedMinutes(mins);
+      }
     }
     _lastUsageAccountedAt = null;
   }
@@ -270,52 +283,72 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
 
   Future<void> _checkParentalLimits() async {
     if (!mounted) return;
-    final inWindow = await ParentalService.isWithinAllowedAccessHours();
-    final underDaily = await ParentalService.isUnderDailyLimit();
-    final locked = !inWindow || !underDaily;
-    final wasLocked = _playbackLocked;
+    if (ParentalService.isOnVideoScreen) return;
 
-    if (ParentalService.isOnVideoScreen) {
-      return;
-    }
+    final inWindow = await ParentalService.isWithinAllowedAccessHours();
+    final underParental = await ParentalService.isUnderDailyLimit();
+    final parentalLocked = !inWindow || !underParental;
+
+    final isFreemiumOnly = FreemiumService.instance.isEnrolled &&
+        !SubscriptionService.instance.hasPremiumAccess;
+    final underFreemium = isFreemiumOnly
+        ? await FreemiumService.instance.isUnderDailyLimit()
+        : true;
+    final freemiumLimitReached = isFreemiumOnly && !underFreemium;
+
+    final wasParentalLocked = _playbackLocked;
+    final wasFreemiumLocked = _freemiumLimitReached;
 
     if (!mounted) return;
-    setState(() => _playbackLocked = locked);
+    setState(() {
+      _playbackLocked = parentalLocked;
+      _freemiumLimitReached = freemiumLimitReached;
+    });
 
-    if (locked && !wasLocked) {
-      if (!inWindow) {
-        await showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Horário de uso'),
-            content: const Text(
-              'Está fora da janela permitida pelos pais. Os vídeos ficam bloqueados até o horário configurado em Ajustes.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
+    if (parentalLocked && !wasParentalLocked) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(!inWindow ? 'Horário de uso' : 'Tempo do dia'),
+          content: Text(
+            !inWindow
+                ? 'Está fora da janela permitida pelos pais. Os vídeos ficam bloqueados até o horário configurado em Ajustes.'
+                : 'O tempo de uso diário configurado pelos pais foi atingido. Os vídeos ficam bloqueados até amanhã ou até um adulto ajustar em Ajustes.',
           ),
-        );
-      } else {
-        await showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Tempo do dia'),
-            content: const Text(
-              'O tempo de uso diário configurado pelos pais foi atingido. Os vídeos ficam bloqueados até amanhã ou até um adulto ajustar em Ajustes.',
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
+          ],
+        ),
+      );
+    }
+
+    if (freemiumLimitReached && !wasFreemiumLocked) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Sua hora acabou por hoje'),
+          content: const Text(
+            'Você usou 1 hora de Dulang hoje. O acesso volta automaticamente amanhã. Para uso ilimitado, assine o Premium.',
           ),
-        );
-      }
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Entendi'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.pushNamed('DulangPremium');
+              },
+              child: const Text('Ver planos'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -337,6 +370,7 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
         keys.indexOf(_currentPageName).clamp(0, keys.length - 1);
     final tabBody = _currentPage ?? tabs[_currentPageName]!;
     final showPlaybackLock = _playbackLocked && currentIndex != 3;
+    final showFreemiumLock = _freemiumLimitReached && currentIndex != 3;
 
     return PopScope(
           canPop: false,
@@ -394,6 +428,64 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
                                 ),
                               ],
                             ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (showFreemiumLock)
+                  Positioned.fill(
+                    child: Material(
+                      color: Colors.black.withValues(alpha: 0.92),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.hourglass_bottom_rounded,
+                                size: 56,
+                                color: FlutterFlowTheme.of(context).tertiary,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Sua hora acabou por hoje',
+                                textAlign: TextAlign.center,
+                                style: FlutterFlowTheme.of(context)
+                                    .headlineSmall
+                                    .override(color: Colors.white),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'O acesso volta automaticamente amanhã. Para uso ilimitado, assine o Premium.',
+                                textAlign: TextAlign.center,
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(color: Colors.white70),
+                              ),
+                              const SizedBox(height: 24),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor:
+                                      FlutterFlowTheme.of(context).tertiary,
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  minimumSize: const Size(200, 48),
+                                ),
+                                onPressed: () =>
+                                    context.pushNamed('DulangPremium'),
+                                child: const Text(
+                                  'Ver planos Premium',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

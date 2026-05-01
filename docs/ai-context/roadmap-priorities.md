@@ -12,8 +12,9 @@ Baseline delivered: parental PIN/onboarding, player isolation work, Supabase-fir
 2. Gate content by active entitlement.
 3. Build parent-focused paywall narrative.
 4. Subscriber path to **store subscription management** (`managementURL` / native screens), not the acquisition paywall.
+5. **Freemium plan (1h/day, lifetime, email required)** — resolves Play reviewer access without backdoor.
 
-**Status 2026-04-28:** items 1–4 are **implemented in app code** (custom Flutter paywall with sticky CTA, SDK, entitlement `dulang_premium_entitlement` gate, `DulangSubscriptionManageWidget`); **complete store + RevenueCat dashboard wiring and real-device purchase QA** to close the phase operationally. Use [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md) before validating purchase/cancel/restore on Android. **Operator note:** Internal testing opt-in can show **Play Store “Item not found”** for some Google accounts even when the release is **Available to testers** — keep primary QA on a known-good account until Play-side propagation/eligibility stabilizes.
+**Status 2026-04-30:** items 1–5 implemented in app code. Three-tier model: **Free** (1h/day, email capture → Brevo via Supabase Edge Function `register-free-plan`; gates Favorites, History, multi-profile add/delete, dark themes, custom time controls) / **Monthly** / **Annual**. Router gate post-onboarding: no plan → paywall with `isGate: true` (no back button). `FreemiumService` singleton tracks daily usage independently from `ParentalService`. `environment.json` removed from git tracking (now gitignored); Brevo API key stays server-side only. Debug panel in Configurações (kDebugMode only): bypass premium + reset freemium state. **Pending: device QA of full freemium + premium flows with debug panel.**
 
 ### Phase 3 - Parent value features
 
@@ -34,8 +35,9 @@ Entregas: protecao parental basica, trabalho de isolamento do player, catalogo S
 2. Bloquear conteudo por entitlement ativo.
 3. Construir narrativa de paywall orientada a pais.
 4. Caminho do assinante para **gestão na loja** (`managementURL` / telas nativas), sem reexibir a paywall de aquisição.
+5. **Plano freemium (1h/dia, vitalício, email obrigatório)** — resolve acesso do revisor da Play sem backdoor.
 
-**Status em 2026-04-28:** itens 1 a 4 **no código do app** (paywall Flutter com CTA fixo, SDK, bloqueio por entitlement `dulang_premium_entitlement`, tela **Gerenciar assinatura**); falta **fechar lojas + painel RevenueCat e validar compra/restauração/cancelamento/mudança de plano em aparelho real** para encerrar a fase na operação. Use [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md) antes de validar compra/cancelamento/restauração no Android. **Nota de operação:** o opt-in do **Teste interno** pode cair em **“Item not found”** na Play Store para algumas contas Google mesmo com release **Disponível para testers** — manter QA principal numa conta que já instala até a Play estabilizar propagação/elegibilidade.
+**Status em 2026-04-30:** itens 1 a 5 implementados no app. Modelo de 3 tiers: **Gratuito** (1h/dia, captura de email → Brevo via Edge Function Supabase `register-free-plan`; bloqueia Favoritos, Histórico, add/delete de perfis, temas escuro/sistema, controles de horário) / **Mensal** / **Anual**. Gate de rota pós-onboarding: sem plano → paywall com `isGate: true` (sem botão voltar). `FreemiumService` rastreia uso diário separado do `ParentalService`. `environment.json` removido do rastreamento git (agora no .gitignore); chave Brevo fica só no servidor. Painel debug em Ajustes (somente `kDebugMode`): bypass premium + reset freemium. **Pendente: QA em aparelho dos fluxos freemium e premium com o painel debug.**
 
 ### Fase 3 - Features de valor para os pais
 

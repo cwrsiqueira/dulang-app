@@ -8,6 +8,15 @@
 - Play guidance to fix: remove violating presentation; and/or provide **proof of ownership** (official logo/icon, developer name, professional support email); and/or add **substantial first-party product value** beyond being a thin wrapper around third‑party video browsing.
 - Product/engineering stance for Dulang: treat the app as **curated English exposure** with **no open web for children**, minimal player surface, and parent gates; keep store listing and in‑app reality aligned; maintain operator evidence pack (brand, curation workflow, privacy/support) for appeals/reviews.
 
+### 2026-04-30 - Freemium plan (1h/day); security hardening; Play reviewer access
+
+- Decision: add **freemium tier** (1h/day, lifetime, email required) as a third plan alongside Monthly and Annual. Resolves Play Store reviewer access without backdoor: reviewer chooses Free, enters a provided email, experiences the app exactly as any real user would.
+- Feature gates for free tier: Favoritos/Histórico blocked (`PremiumGateScreen`); Aparência light-only; Horários locked; Perfis add/delete blocked (rename allowed). `FreemiumService` tracks daily usage independently from `ParentalService` to avoid mixing business logic with parental controls.
+- Email registration: `FreePlanEmailSheet` bottom sheet with LGPD consent. Brevo API key kept **server-side only** via Supabase Edge Function `register-free-plan` (secrets `BREVO_API_KEY`, `BREVO_LIST_ID`). `environment.json` removed from git tracking and added to `.gitignore`.
+- Router gate: post-onboarding, no plan selected → `DulangPremiumWidget(isGate: true)` (no back button); enrolling/purchasing triggers router refresh to `NavBarPage`.
+- Debug: `kDebugMode`-only panel in Configurações (tree-shaken in release) — bypass premium toggle + freemium reset.
+- Impact: new files `freemium_service.dart`, `free_plan_email_sheet.dart`, `premium_gate_screen.dart`, `supabase/functions/register-free-plan/index.ts`; updated `nav.dart`, `main.dart`, `dulang_premium_widget.dart`, `configuracoes_widget.dart`, `favoritos_widget.dart`, `historico_widget.dart`, `selecionar_perfil_widget.dart`, `aparencia_widget.dart`, `horarios_acesso_widget.dart`, `subscription_service.dart`, `.gitignore`. Version bump `1.0.40+40`.
+
 ### 2026-04-30 - Subscription management screen; store `managementURL`; paywall UX refinements
 
 - Decision: subscribers open **Gerenciar assinatura** (`DulangSubscriptionManageWidget`) from Settings (and paywall redirects away if already entitled); screen shows current entitlement/product summary and **Abrir na loja** using RevenueCat **`CustomerInfo.managementURL`** (native Apple/Google subscription UI). Non-subscribers still use **`DulangPremiumWidget`** (sticky CTA, placeholders when offerings missing). Removed in-app Premium debug overrides earlier in the same initiative cycle.

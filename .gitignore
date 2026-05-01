@@ -35,3 +35,6 @@ migrate_working_dir/
 
 # Generated files (keep pubspec.lock)
 doc/api/
+
+# Chaves e credenciais locais (nunca commitar)
+assets/environment_values/environment.json

@@ -1,8 +1,11 @@
 import '/features/profiles/child_profile_service.dart';
+import '/features/subscription/freemium_service.dart';
+import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 /// Tela estilo streaming: "Quem está assistindo?".
 class SelecionarPerfilWidget extends StatefulWidget {
@@ -179,6 +182,8 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final premium = context.watch<SubscriptionService>().hasPremiumAccess;
+    final canManage = premium || !context.watch<FreemiumService>().isEnrolled;
     final tertiary = FlutterFlowTheme.of(context).tertiary;
     final isEmpty = _list.isEmpty;
     // Enquanto [isEmpty] (incl. carregando), bloquear voltar: evita Home sem perfil.
@@ -214,7 +219,7 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
           Padding(
             padding: const EdgeInsets.only(right: 4),
             child: TextButton.icon(
-              onPressed: _loading ? null : _add,
+              onPressed: (!canManage || _loading) ? null : _add,
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white38,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -271,9 +276,9 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
                             crossAxisSpacing: 20,
                             childAspectRatio: 0.72,
                           ),
-                          itemCount: _list.length + 1,
+                          itemCount: _list.length + (canManage ? 1 : 0),
                           itemBuilder: (context, i) {
-                            if (i == _list.length) {
+                            if (canManage && i == _list.length) {
                               return _AddProfileSquareInGrid(
                                 onTap: _add,
                               );
@@ -283,7 +288,7 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
                             return _ProfileTile(
                               profile: p,
                               selected: active,
-                              canDelete: _list.length > 1,
+                              canDelete: canManage && _list.length > 1,
                               onTap: () => _select(p),
                               onRename: () => _rename(p),
                               onRemove: () => _remove(p),
