@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-04-30
+Last updated: 2026-05-01
 
 ## Phase 1 closure / Encerramento da Fase 1
 
@@ -21,6 +21,10 @@ Last updated: 2026-04-30
 **Guia operacional em linguagem simples (lojas + assinatura + PIN):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md) — inclui **Parte 2b** (conta de serviço Google + JSON no RevenueCat, AAB em teste interno) e **Parte 2c** (Famílias/WebView, 16 KB, API 35 / `targetSdk`).
 **Checklist sandbox Play (compra/cancelamento/restore em teste):** [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md).
 **Textos da ficha (Play Store, pt-BR):** [`docs/play-store-listing-dulang.md`](../play-store-listing-dulang.md).
+
+## Freemium QA em progresso (2026-05-01)
+
+**PT-BR:** Bugs corrigidos em sessão de QA: gates de conteúdo (vídeo/canal/home) não permitiam acesso freemium → corrigido (`dulang_widget`, `dulang_video_widget`, `canal_videos_widget`); paywall mostrava card free para usuário já enrolled → corrigido; spinner eterno no bottom sheet → corrigido (Brevo chamado antes do pop); email não chegava no Brevo → slug da Edge Function era `hyper-function` (não `register-free-plan`) + toggle JWT desativado. Fluxo de onboarding corrigido: perfil criado durante o onboarding antes de `setOnboardingDone()` → paywall → enroll → home. **Pendentes:** tema escuro ativo mas Aparência mostra claro; crash ao tocar no tema claro; botão voltar invisível na tela Sobre. Prints de debug temporários em `free_plan_email_sheet.dart` — remover antes do release.
 
 ## Freemium plan + security (2026-04-30)
 

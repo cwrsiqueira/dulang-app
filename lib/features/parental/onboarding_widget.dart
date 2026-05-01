@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '/features/parental/parental_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/nav/nav.dart';
+import '/pages/selecionar_perfil/selecionar_perfil_widget.dart';
 
 class OnboardingWidget extends StatefulWidget {
   const OnboardingWidget({super.key});
@@ -89,7 +90,8 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
 
   Future<void> _finish(String pin) async {
     await ParentalService.completeOnboarding(pin);
-    await ParentalService.requestProfilePickerAfterOnboarding();
+    if (!mounted) return;
+    await context.pushNamed(SelecionarPerfilWidget.routeName);
     if (!mounted) return;
     AppStateNotifier.instance.setOnboardingDone();
   }

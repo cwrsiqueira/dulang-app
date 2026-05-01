@@ -1,3 +1,4 @@
+import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/pages/dulang_premium/free_plan_email_sheet.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -335,10 +336,12 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
                 _annualPlanCard(context, tertiary, onCard, onMuted, cardBg),
                 const SizedBox(height: 12),
                 _monthlyPlanCard(context, tertiary, onCard, onMuted, cardBg),
-                const SizedBox(height: 24),
-                _freePlanDivider(onMuted),
-                const SizedBox(height: 20),
-                _freePlanCard(context, tertiary, onCard, onMuted, cardBg),
+                if (!FreemiumService.instance.isEnrolled) ...[
+                  const SizedBox(height: 24),
+                  _freePlanDivider(onMuted),
+                  const SizedBox(height: 20),
+                  _freePlanCard(context, tertiary, onCard, onMuted, cardBg),
+                ],
                 const SizedBox(height: 28),
                 _trustSection(context, tertiary, onCard, onMuted, cardBg),
                 const SizedBox(height: 28),
