@@ -8,6 +8,13 @@
 - Play guidance to fix: remove violating presentation; and/or provide **proof of ownership** (official logo/icon, developer name, professional support email); and/or add **substantial first-party product value** beyond being a thin wrapper around third‑party video browsing.
 - Product/engineering stance for Dulang: treat the app as **curated English exposure** with **no open web for children**, minimal player surface, and parent gates; keep store listing and in‑app reality aligned; maintain operator evidence pack (brand, curation workflow, privacy/support) for appeals/reviews.
 
+### 2026-05-02 - Play Store production submission; environment.json CI fix; parental reset fix
+
+- **Play Store submitted:** version `1.0.43+43` sent to production review. Reviewer access via freemium plan (no backdoor); instructions in Play Console: title "Free Plan Access — No Login Required", email `review@dulang.com`. Premium-gated screens (Favorites, History, custom themes/schedules) documented as intentional behavior.
+- **`environment.json` in CI (root cause fix):** file is gitignored — the release build had empty Supabase URL/key and RevenueCat key, causing spinner forever (no content), Brevo email failure, and "Subscriptions not available". Fix: `ENVIRONMENT_JSON` GitHub Secret (base64 of the file) decoded in both `deploy_android.yml` and `deploy_ios.yml` before `flutter pub get`. No code changes required.
+- **Parental controls reset on premium loss:** time window and daily limit set during premium persisted to freemium, bypassing the 1h/day enforcement. Fix: `main()` now calls `ParentalService.setAccessWindowEnabled(false)` and `setDailyLimitEnabled(false)` when `!hasPremiumAccess` — identical pattern to theme reset. Auto-renewing subscribers unaffected (`hasPremiumAccess` stays `true` continuously). Impact: `lib/main.dart`, bump `1.0.42+42 → 1.0.43+43`.
+- **iOS setup planned 2026-05-03:** Apple certificate export, provisioning profile, and GitHub Secrets setup; then run `deploy_ios.yml` and submit to App Store.
+
 ### 2026-05-01 - iOS CI/CD workflow; freemium QA completed on Android
 
 - Decision: create `.github/workflows/deploy_ios.yml` (`workflow_dispatch` only; `macos-latest`; Flutter 3.41.7; manual code signing via certificate + provisioning profile installed in ephemeral keychain; `flutter build ipa --release --obfuscate`; TestFlight upload via `xcrun altool` with App Store Connect API key). `ios/ExportOptions.plist` added with bundle ID `com.carlosdev.dulangfree` and `signingStyle: manual`. Team ID injected at build time via `sed` (plist does not expand env vars natively).

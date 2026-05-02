@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-01 (QA Android aprovado; iOS CI/CD criado; Internal Test pendente)
+Last updated: 2026-05-02 (app enviado para revisão Play Store; iOS pendente para amanhã)
 
 ## Phase 1 closure / Encerramento da Fase 1
 
@@ -21,6 +21,15 @@ Last updated: 2026-05-01 (QA Android aprovado; iOS CI/CD criado; Internal Test p
 **Guia operacional em linguagem simples (lojas + assinatura + PIN):** [`docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`](../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md) — inclui **Parte 2b** (conta de serviço Google + JSON no RevenueCat, AAB em teste interno) e **Parte 2c** (Famílias/WebView, 16 KB, API 35 / `targetSdk`).
 **Checklist sandbox Play (compra/cancelamento/restore em teste):** [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md).
 **Textos da ficha (Play Store, pt-BR):** [`docs/play-store-listing-dulang.md`](../play-store-listing-dulang.md).
+
+## Play Store enviado para revisão (2026-05-02)
+
+**PT-BR:** Versão `1.0.43+43` enviada para revisão de produção na Play Store. Bugs do Internal Test corrigidos antes do envio:
+
+- **`environment.json` ausente no CI** → causa raiz de 3 bugs simultâneos (spinner eterno no conteúdo, email não chegava ao Brevo, "Assinaturas não disponíveis"): arquivo está no `.gitignore` e não era incluído no build de release. Correção: secret `ENVIRONMENT_JSON` (base64 do arquivo) adicionado ao GitHub e decodificado em ambos os workflows (`deploy_android.yml` e `deploy_ios.yml`) antes do `flutter pub get`.
+- **Controles parentais herdados do premium** → ao perder o premium, janela de horário e limite diário configurados durante o trial persistiam para o freemium, liberando restrições além do 1h/dia. Correção: `main()` agora chama `ParentalService.setAccessWindowEnabled(false)` e `setDailyLimitEnabled(false)` ao detectar `!hasPremiumAccess` — mesma lógica do reset de tema. Renovação automática não é afetada (`hasPremiumAccess` permanece `true` sem interrupção).
+
+Instruções ao revisor submetidas no Play Console: título "Free Plan Access — No Login Required", email `review@dulang.com`, passos para acessar via plano gratuito. Funcionalidades premium bloqueadas descritas como comportamento intencional.
 
 ## Freemium + Premium QA aprovado em Android (2026-05-01)
 
