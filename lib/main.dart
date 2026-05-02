@@ -54,10 +54,14 @@ void main() async {
 
   await FlutterFlowTheme.initialize();
 
-  // Tema claro como padrão para não-premium. Usuários premium mantêm a preferência salva.
-  if (!SubscriptionService.instance.hasPremiumAccess &&
-      FlutterFlowTheme.themeMode != ThemeMode.light) {
-    FlutterFlowTheme.saveThemeMode(ThemeMode.light);
+  // Defaults para não-premium: tema claro + controles parentais desativados.
+  // Controles parentais são exclusivos do premium; freemium só usa o 1h/dia do FreemiumService.
+  if (!SubscriptionService.instance.hasPremiumAccess) {
+    if (FlutterFlowTheme.themeMode != ThemeMode.light) {
+      FlutterFlowTheme.saveThemeMode(ThemeMode.light);
+    }
+    await ParentalService.setAccessWindowEnabled(false);
+    await ParentalService.setDailyLimitEnabled(false);
   }
 
   final appState = FFAppState(); // Initialize FFAppState
