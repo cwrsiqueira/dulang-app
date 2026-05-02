@@ -32,6 +32,11 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create environment.json
+        run: |
+          mkdir -p assets/environment_values
+          echo "${{ secrets.ENVIRONMENT_JSON }}" | base64 --decode > assets/environment_values/environment.json
+
       - name: Get dependencies
         run: flutter pub get
 
