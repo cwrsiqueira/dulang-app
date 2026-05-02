@@ -12,6 +12,8 @@ import '/features/parental/parental_service.dart';
 import '/features/parental/pin_dialog.dart';
 import '/pages/configuracoes/alterar_pin_widget.dart';
 import '/features/profiles/child_profile_service.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+
 import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -51,6 +53,12 @@ void main() async {
   await SubscriptionService.instance.initRevenueCat(environmentValues);
 
   await FlutterFlowTheme.initialize();
+
+  // Tema claro como padrão para não-premium. Usuários premium mantêm a preferência salva.
+  if (!SubscriptionService.instance.hasPremiumAccess &&
+      FlutterFlowTheme.themeMode != ThemeMode.light) {
+    FlutterFlowTheme.saveThemeMode(ThemeMode.light);
+  }
 
   final appState = FFAppState(); // Initialize FFAppState
   await appState.initializePersistedState();
@@ -201,10 +209,27 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _enforceFreemiumTheme();
       _startForegroundUsageAccounting();
       await _checkParentalLimits();
       await _openProfileSelectionIfNeeded();
     });
+  }
+
+  void _enforceFreemiumTheme() {
+    if (!SubscriptionService.instance.hasPremiumAccess &&
+        MyApp.of(context).themePreference != ThemeMode.light) {
+      MyApp.of(context).setThemeMode(ThemeMode.light);
+    }
+  }
+
+  Future<void> _showInAppMessagesIfNeeded() async {
+    if (!SubscriptionService.instance.isConfigured) return;
+    try {
+      await Purchases.showInAppMessages();
+    } catch (_) {
+      // Silencioso — o dialog do sistema é opcional.
+    }
   }
 
   /// Abre a seleção de perfil se não houver criança definida (ou pós-onboarding) e
@@ -275,6 +300,7 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
       _startForegroundUsageAccounting();
       unawaited(_checkParentalLimits());
       unawaited(_openProfileSelectionIfNeeded());
+      unawaited(_showInAppMessagesIfNeeded());
     } else if (state == AppLifecycleState.paused) {
       _stopForegroundUsageAccounting();
       unawaited(_flushPartialForegroundUsage());

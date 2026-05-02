@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-01
+Last updated: 2026-05-01 (QA Android aprovado; iOS CI/CD criado; Internal Test pendente)
 
 ## Phase 1 closure / Encerramento da Fase 1
 
@@ -22,9 +22,11 @@ Last updated: 2026-05-01
 **Checklist sandbox Play (compra/cancelamento/restore em teste):** [`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`](../CHECKLIST_TESTE_SANDBOX_PLAY.md).
 **Textos da ficha (Play Store, pt-BR):** [`docs/play-store-listing-dulang.md`](../play-store-listing-dulang.md).
 
-## Freemium QA em progresso (2026-05-01)
+## Freemium + Premium QA aprovado em Android (2026-05-01)
 
-**PT-BR:** Bugs corrigidos em sessão de QA: gates de conteúdo (vídeo/canal/home) não permitiam acesso freemium → corrigido (`dulang_widget`, `dulang_video_widget`, `canal_videos_widget`); paywall mostrava card free para usuário já enrolled → corrigido; spinner eterno no bottom sheet → corrigido (Brevo chamado antes do pop); email não chegava no Brevo → slug da Edge Function era `hyper-function` (não `register-free-plan`) + toggle JWT desativado. Fluxo de onboarding corrigido: perfil criado durante o onboarding antes de `setOnboardingDone()` → paywall → enroll → home. **Pendentes:** tema escuro ativo mas Aparência mostra claro; crash ao tocar no tema claro; botão voltar invisível na tela Sobre. Prints de debug temporários em `free_plan_email_sheet.dart` — remover antes do release.
+**PT-BR:** QA completo em dispositivo Android real cobrindo modo freemium e modo premium. Todos os fluxos testados: onboarding → paywall → enroll free (email + Brevo) → conteúdo 1h/dia → gates de features; paywall → compra premium → acesso total. Debug panel (Configurações) validado: `debugForcePremium` e `debugBypassPremium` funcionando. Pronto para subir ao Internal Test da Play Store. **Versão no repo para este upload: `1.0.41+41`.**
+
+**Bugs resolvidos no ciclo de QA (2026-05-01):** gates de conteúdo (vídeo/canal/home) não permitiam acesso freemium → corrigido; paywall mostrava card free para usuário já enrolled → corrigido; spinner eterno no bottom sheet → corrigido (Brevo chamado antes do pop); email não chegava no Brevo → slug da Edge Function era `hyper-function` (não `register-free-plan`) + toggle JWT desativado; crash `TextEditingController was used after being disposed` no onboarding → corrigido (perfil criado inline no onboarding como Phase 2, sem navegação cruzada); tema escuro iniciando para usuários freemium → corrigido (light theme forçado em `main()` antes de `runApp` e em `_enforceFreemiumTheme()`); botão voltar invisível na tela Sobre → corrigido.
 
 ## Freemium plan + security (2026-04-30)
 
@@ -48,6 +50,15 @@ Last updated: 2026-05-01
 
 **PT-BR:** O QA manual principal no aparelho é no **Android** a partir do Windows (basta `flutter run` com USB). **iOS** (compilar e rodar no **iPhone** físico) exige **macOS**, **Xcode** e assinatura Apple; **não dá** para fazer isso só no Windows. Testes no iPhone ficam para o **Mac mini** quando essa máquina estiver em uso; é o mesmo projeto, no Mac: `flutter run` com o dispositivo iOS escolhido.
 
+## iOS CI/CD — criado, pendente de credenciais (2026-05-01)
+
+**PT-BR:** Workflow `.github/workflows/deploy_ios.yml` criado (`workflow_dispatch` only, `macos-latest`, Flutter 3.41.7, signing manual, upload TestFlight via `xcrun altool` com App Store Connect API key). `ios/ExportOptions.plist` criado com `com.carlosdev.dulangfree` (bundle ID real do Xcode). Para rodar pela primeira vez, faltam:
+
+1. **Certificado**: exportar "Apple Distribution" do Keychain como `.p12` → `base64` → secret `APPLE_CERTIFICATE_P12_BASE64` + `APPLE_CERTIFICATE_PASSWORD`.
+2. **App Store já criado** — bundle ID `com.carlosdev.dulangfree` e nome já configurados no App Store Connect. Confirmar nome atual ao setar o provisioning profile.
+3. **Provisioning profile**: criar App Store Distribution profile para `com.carlosdev.dulangfree` no Developer Portal → baixar → `base64` → secret `APPLE_PROVISIONING_PROFILE_BASE64`. Nomear como `dulang_appstore` no portal (ou atualizar `ExportOptions.plist`).
+4. **Secrets restantes**: `KEYCHAIN_PASSWORD` (qualquer string), `APPLE_TEAM_ID`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_API_PRIVATE_KEY` (conteúdo do `.p8`), `REVENUECAT_IOS_KEY`.
+
 ## Snapshot Matrix / Matriz de Snapshot
 
 | Area | Status | Notes |
@@ -58,7 +69,7 @@ Last updated: 2026-05-01
 | Player hardening | Stable for Phase 1 | Restrictions in place; periodic policy re-check on store updates; **Families/WebViews policy rejection (2026-03-02)** must stay mitigated via curation story + no open web + evidence pack |
 | Video navigation from list | Fixed | Player state keyed by video id; device QA as needed per release |
 | Video back navigation | Fixed | safePop + fullscreen overlay reset |
-| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall (`DulangPremiumWidget`, CTA fixo) + **Gerenciar assinatura** (`DulangSubscriptionManageWidget`, `CustomerInfo.managementURL` → loja) + UX de gestão revisada; trial Play por plano criado; falta QA de cancelamento/mudança de plano + confirmação sandbox estável em todas as contas de teste; iOS key + QA iPhone ainda em aberto |
+| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall + freemium 1h/dia; QA Android aprovado (premium + freemium); iOS key + QA iPhone ainda em aberto |
 | Channel sync automation | Stable for Phase 1 | Daily Edge path + contract; operator confirms prod/cron |
 | Home channel grid visuals | Done | Thumbnail from most recent active video per channel + gradient overlay (`dulang_widget`) |
 | Child profiles UX | Done | Single screen “Quem está assistindo?”: select + add + rename/delete via menu; legacy `/perfisGerenciar` opens same screen |

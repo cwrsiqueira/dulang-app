@@ -16,17 +16,29 @@ class SubscriptionService extends ChangeNotifier {
 
   bool get isConfigured => _configured;
 
-  /// Só em debug: força [hasPremiumAccess] a retornar `false` para testar o paywall.
+  /// Só em debug: força [hasPremiumAccess] a retornar `false` (simula sem premium).
   static bool debugBypassPremium = false;
+
+  /// Só em debug: força [hasPremiumAccess] a retornar `true` (simula premium).
+  static bool debugForcePremium = false;
 
   void debugToggleBypass() {
     if (!kDebugMode) return;
     debugBypassPremium = !debugBypassPremium;
+    if (debugBypassPremium) debugForcePremium = false;
+    notifyListeners();
+  }
+
+  void debugToggleForcePremium() {
+    if (!kDebugMode) return;
+    debugForcePremium = !debugForcePremium;
+    if (debugForcePremium) debugBypassPremium = false;
     notifyListeners();
   }
 
   /// Assinatura paga ou período de teste/introdução ativo para o entitlement premium.
   bool get hasPremiumAccess {
+    if (kDebugMode && debugForcePremium) return true;
     if (kDebugMode && debugBypassPremium) return false;
     final id = SubscriptionConstants.premiumEntitlementId;
     final e = _customerInfo?.entitlements.all[id];

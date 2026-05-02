@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '/features/parental/parental_service.dart';
+import '/features/profiles/child_profile_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/nav/nav.dart';
-import '/pages/selecionar_perfil/selecionar_perfil_widget.dart';
 
 class OnboardingWidget extends StatefulWidget {
   const OnboardingWidget({super.key});
@@ -12,16 +12,21 @@ class OnboardingWidget extends StatefulWidget {
 }
 
 class _OnboardingWidgetState extends State<OnboardingWidget> {
-  /// 0 = carrossel de boas-vindas; 1 = fluxo PIN parental.
+  /// 0 = carrossel; 1 = PIN parental; 2 = criar primeiro perfil.
   int _phase = 0;
   final PageController _introController = PageController();
   int _introPage = 0;
 
+  // Fase 1 — PIN
   String _pin = '';
   String _entered = '';
   bool _isConfirming = false;
   String? _errorMessage;
   DateTime? _lastDigitPressAt;
+
+  // Fase 2 — perfil
+  final _profileController = TextEditingController();
+  bool _savingProfile = false;
 
   static const _introHeadlines = [
     'Conteúdo pensado para pequenos',
@@ -37,8 +42,11 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
   @override
   void dispose() {
     _introController.dispose();
+    _profileController.dispose();
     super.dispose();
   }
+
+  // ── Fase 1: PIN ──────────────────────────────────────────────
 
   void _onKey(String key) {
     setState(() => _errorMessage = null);
@@ -61,9 +69,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
 
   void _submitPinEntry() {
     if (_entered.length < ParentalService.pinMinDigits ||
-        _entered.length > ParentalService.pinMaxDigits) {
-      return;
-    }
+        _entered.length > ParentalService.pinMaxDigits) return;
     _onPinComplete(_entered);
   }
 
@@ -76,7 +82,7 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
       });
     } else {
       if (pin == _pin) {
-        _finish(pin);
+        _finishPin(pin);
       } else {
         setState(() {
           _entered = '';
@@ -88,13 +94,26 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     }
   }
 
-  Future<void> _finish(String pin) async {
+  Future<void> _finishPin(String pin) async {
     await ParentalService.completeOnboarding(pin);
     if (!mounted) return;
-    await context.pushNamed(SelecionarPerfilWidget.routeName);
+    setState(() => _phase = 2);
+  }
+
+  // ── Fase 2: perfil ───────────────────────────────────────────
+
+  Future<void> _createProfileAndFinish() async {
+    final name = _profileController.text.trim();
+    if (name.isEmpty) return;
+    setState(() => _savingProfile = true);
+    await ChildProfileService.instance.addProfile(name, 0xFF36B4FF);
     if (!mounted) return;
+    // Tudo feito no mesmo widget — sem navegação cross-route.
+    // O router assume o controle após setOnboardingDone().
     AppStateNotifier.instance.setOnboardingDone();
   }
+
+  // ── Build helpers ─────────────────────────────────────────────
 
   Widget _buildPinDots() {
     return Row(
@@ -155,8 +174,8 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w500,
-                                  color: FlutterFlowTheme.of(context)
-                                      .primaryText,
+                                  color:
+                                      FlutterFlowTheme.of(context).primaryText,
                                 ),
                               ),
                       ),
@@ -394,6 +413,67 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
     );
   }
 
+  Widget _buildCreateProfile() {
+    final theme = FlutterFlowTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.child_care_rounded, size: 56, color: theme.primary),
+          const SizedBox(height: 20),
+          Text(
+            'Quem vai usar o Dulang?',
+            style: theme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Crie o primeiro perfil infantil para começar.',
+            style: theme.bodySmall
+                .copyWith(color: theme.secondaryText),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          TextField(
+            controller: _profileController,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _createProfileAndFinish(),
+            decoration: InputDecoration(
+              labelText: 'Nome da criança',
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+            ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _savingProfile ? null : _createProfileAndFinish,
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.tertiary,
+              foregroundColor: Colors.black,
+              minimumSize: const Size(double.infinity, 52),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+            child: _savingProfile
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.5, color: Colors.black),
+                  )
+                : const Text(
+                    'Continuar',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -403,14 +483,18 @@ class _OnboardingWidgetState extends State<OnboardingWidget> {
             ? Colors.black
             : FlutterFlowTheme.of(context).primaryBackground,
         body: SafeArea(
-          child: _phase == 0 ? _buildIntro() : _buildSetPin(),
+          child: _phase == 0
+              ? _buildIntro()
+              : _phase == 1
+                  ? _buildSetPin()
+                  : _buildCreateProfile(),
         ),
       ),
     );
   }
 }
 
-/// Grade de “posters” com leve rotação, inspirada em apps de streaming.
+/// Grade de "posters" com leve rotação, inspirada em apps de streaming.
 class _IntroCollage extends StatelessWidget {
   const _IntroCollage();
 

@@ -8,6 +8,14 @@
 - Play guidance to fix: remove violating presentation; and/or provide **proof of ownership** (official logo/icon, developer name, professional support email); and/or add **substantial first-party product value** beyond being a thin wrapper around third‑party video browsing.
 - Product/engineering stance for Dulang: treat the app as **curated English exposure** with **no open web for children**, minimal player surface, and parent gates; keep store listing and in‑app reality aligned; maintain operator evidence pack (brand, curation workflow, privacy/support) for appeals/reviews.
 
+### 2026-05-01 - iOS CI/CD workflow; freemium QA completed on Android
+
+- Decision: create `.github/workflows/deploy_ios.yml` (`workflow_dispatch` only; `macos-latest`; Flutter 3.41.7; manual code signing via certificate + provisioning profile installed in ephemeral keychain; `flutter build ipa --release --obfuscate`; TestFlight upload via `xcrun altool` with App Store Connect API key). `ios/ExportOptions.plist` added with bundle ID `com.carlosdev.dulangfree` and `signingStyle: manual`. Team ID injected at build time via `sed` (plist does not expand env vars natively).
+- iOS app already exists in App Store Connect (bundle ID `com.carlosdev.dulangfree`); provisioning profile name in `ExportOptions.plist` must match the portal name — update if renamed.
+- `workflow_dispatch` only (no auto-trigger on push) because iOS builds are less frequent and TestFlight uploads require deliberate version bumps; Android keeps auto-trigger on `master` push.
+- Freemium + premium QA approved on physical Android device (2026-05-01); all flows validated including debug panel, daily limit overlay, Brevo email registration, content gates, and theme enforcement.
+- Impact: `.github/workflows/deploy_ios.yml` (new), `ios/ExportOptions.plist` (new); `current-status.md` and `roadmap-priorities.md` updated. Version bump to `1.0.41+41` for Internal Test upload.
+
 ### 2026-04-30 - Freemium plan (1h/day); security hardening; Play reviewer access
 
 - Decision: add **freemium tier** (1h/day, lifetime, email required) as a third plan alongside Monthly and Annual. Resolves Play Store reviewer access without backdoor: reviewer chooses Free, enters a provided email, experiences the app exactly as any real user would.

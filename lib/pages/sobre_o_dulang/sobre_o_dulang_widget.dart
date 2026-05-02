@@ -55,8 +55,8 @@ class _SobreODulangWidgetState extends State<SobreODulangWidget> {
                 backgroundColor: FlutterFlowTheme.of(context).primaryText,
                 automaticallyImplyLeading: false,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded,
-                      color: Colors.white70),
+                  icon: Icon(Icons.arrow_back_rounded,
+                      color: FlutterFlowTheme.of(context).primaryBackground),
                   onPressed: () => context.safePop(),
                 ),
                 title: Text(

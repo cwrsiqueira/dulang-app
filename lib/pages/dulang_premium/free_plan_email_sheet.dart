@@ -31,7 +31,6 @@ class _FreePlanEmailSheetState extends State<FreePlanEmailSheet> {
   }
 
   Future<void> _submit() async {
-    print('[DEBUG] _submit chamado');
     if (!_formKey.currentState!.validate()) return;
     if (!_agreed) {
       setState(() => _error = 'Aceite os termos para continuar.');
@@ -44,33 +43,25 @@ class _FreePlanEmailSheetState extends State<FreePlanEmailSheet> {
     });
 
     final email = _emailController.text.trim().toLowerCase();
-    print('[DEBUG] email: $email');
 
     try {
       await FreemiumService.instance.enroll(email);
-      print('[DEBUG] enroll ok');
       _sendToBrevo(email);
-      print('[DEBUG] sendToBrevo chamado');
       if (mounted) Navigator.of(context).pop(true);
-    } catch (e, stack) {
-      print('[DEBUG] ERRO em _submit: $e\n$stack');
+    } catch (e) {
       if (mounted) setState(() { _loading = false; });
     }
   }
 
   Future<void> _sendToBrevo(String email) async {
-    print('[Brevo] 1 - iniciando para $email');
     try {
-      print('[Brevo] 2 - chamando invoke');
-      final res = await Supabase.instance.client.functions.invoke(
+      await Supabase.instance.client.functions.invoke(
         'hyper-function',
         body: {'email': email},
       );
-      print('[Brevo] 3 - status=${res.status} data=${res.data}');
-    } catch (e) {
-      print('[Brevo] erro: $e');
+    } catch (_) {
+      // Falha silenciosa: enroll local já foi salvo.
     }
-    print('[Brevo] 4 - fim');
   }
 
   @override

@@ -118,6 +118,17 @@ class ConfiguracoesWidget extends StatelessWidget {
                 _sectionTitle(context, '🛠 Debug'),
                 _debugTile(
                   context,
+                  title: SubscriptionService.debugForcePremium
+                      ? 'PREMIUM FORÇADO — toque para desativar'
+                      : 'Simular premium',
+                  color: SubscriptionService.debugForcePremium
+                      ? Colors.green
+                      : Colors.grey,
+                  onTap: () =>
+                      SubscriptionService.instance.debugToggleForcePremium(),
+                ),
+                _debugTile(
+                  context,
                   title: SubscriptionService.debugBypassPremium
                       ? 'Premium: BYPASSADO — toque para restaurar'
                       : 'Simular sem premium',

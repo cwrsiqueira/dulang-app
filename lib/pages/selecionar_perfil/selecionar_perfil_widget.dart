@@ -26,10 +26,13 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
   List<ChildProfile> _list = [];
   String? _activeId;
   bool _loading = true;
+  late bool _canManage;
 
   @override
   void initState() {
     super.initState();
+    final premium = context.read<SubscriptionService>().hasPremiumAccess;
+    _canManage = premium || !context.read<FreemiumService>().isEnrolled;
     ChildProfileService.instance.setProfilePickerRouteOpen(true);
     _reload();
   }
@@ -182,8 +185,7 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final premium = context.watch<SubscriptionService>().hasPremiumAccess;
-    final canManage = premium || !context.watch<FreemiumService>().isEnrolled;
+    final canManage = _canManage;
     final tertiary = FlutterFlowTheme.of(context).tertiary;
     final isEmpty = _list.isEmpty;
     // Enquanto [isEmpty] (incl. carregando), bloquear voltar: evita Home sem perfil.
