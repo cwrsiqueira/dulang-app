@@ -2,6 +2,13 @@
 
 ## EN
 
+### 2026-05-09 - Access-code UX hardening validated; ready for release build `1.0.46+46`
+
+- **UX:** Access-code dialog now disables submit while processing, shows loading spinner, and blocks repeated taps.
+- **Stability:** Removed transient `TextEditingController` disposal race in paywall dialog; prevents red-screen assertions (`_dependents.isEmpty`) after code redemption.
+- **Resilience:** `AccessCodeService.redeem` now has timeout + dedicated `FunctionException` handling for clearer operator diagnostics.
+- **Ops:** Reviewer instructions finalized with explicit **no login / no payment** guidance and numbered redemption steps.
+
 ### 2026-05-09 - Access-code work on `feature/access-codes-supabase`; “network error” = invoke failure
 
 - **Git:** access-code work pushed on branch **`feature/access-codes-supabase`** (no merge to `master` yet) to avoid triggering **Android deploy** until release is intended.
@@ -173,6 +180,13 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-09 - Endurecimento de UX dos codigos validado; pronto para build `1.0.46+46`
+
+- **UX:** dialogo de codigo com botao de confirmar desabilitado durante envio + spinner, evitando clique repetido.
+- **Estabilidade:** removida corrida de descarte de `TextEditingController` no dialogo da paywall; evita tela vermelha com assert (`_dependents.isEmpty`) apos resgate.
+- **Resiliencia:** `AccessCodeService.redeem` com timeout e tratamento dedicado de `FunctionException` para diagnostico mais claro.
+- **Operacao:** instrucoes ao revisor fechadas com **sem login / sem pagamento** e passos numerados de resgate.
 
 ### 2026-05-09 - Checkpoint branch codigos + documentar falha invoke ("erro de rede")
 

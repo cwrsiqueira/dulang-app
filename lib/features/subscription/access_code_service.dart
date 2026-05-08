@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -43,10 +45,12 @@ class AccessCodeService extends ChangeNotifier {
     }
 
     try {
-      final res = await Supabase.instance.client.functions.invoke(
-        'validate-access-code',
-        body: {'code': normalized},
-      );
+      final res = await Supabase.instance.client.functions
+          .invoke(
+            'validate-access-code',
+            body: {'code': normalized},
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (res.status != 200) {
         final d = res.data;
@@ -62,6 +66,19 @@ class AccessCodeService extends ChangeNotifier {
       // Notifique com [notifyAfterDialogClosed] depois do Navigator.pop do diálogo —
       // nunca aqui, senão o GoRouter troca a rota com o overlay do AlertDialog ainda ativo.
       return null;
+    } on TimeoutException {
+      return 'A validação demorou para responder. Tente novamente.';
+    } on FunctionException catch (e) {
+      if (kDebugMode) {
+        debugPrint(
+            'AccessCodeService.redeem FunctionException: ${e.details ?? e.reasonPhrase ?? e.status}');
+      }
+      final details = e.details;
+      if (details is Map && details['error'] != null) {
+        return details['error'].toString();
+      }
+      return e.reasonPhrase ??
+          'Não foi possível validar o código agora.';
     } catch (e) {
       if (kDebugMode) {
         debugPrint('AccessCodeService.redeem: $e');

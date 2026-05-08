@@ -252,50 +252,69 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   }
 
   Future<void> _onAccessCode() async {
-    final controller = TextEditingController();
     var redeemSucceeded = false;
+    var codeInput = '';
     await showDialog<void>(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text(
-            'Código de acesso',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w800),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            decoration: const InputDecoration(
-              labelText: 'Digite o código',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final msg =
-                    await AccessCodeService.instance.redeem(controller.text);
-                if (!ctx.mounted) return;
-                if (msg != null) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(msg)),
-                  );
-                  return;
-                }
-                redeemSucceeded = true;
-                Navigator.pop(ctx);
-              },
-              child: const Text('Confirmar'),
-            ),
-          ],
+        var submitting = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final canSubmit = !submitting && codeInput.trim().isNotEmpty;
+            return AlertDialog(
+              title: Text(
+                'Código de acesso',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w800),
+              ),
+              content: TextField(
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                onChanged: (v) {
+                  codeInput = v;
+                  setDialogState(() {});
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Digite o código',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting ? null : () => Navigator.pop(ctx),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: canSubmit
+                      ? () async {
+                          FocusScope.of(ctx).unfocus();
+                          setDialogState(() => submitting = true);
+                          final msg = await AccessCodeService.instance
+                              .redeem(codeInput);
+                          if (!ctx.mounted) return;
+                          if (msg != null) {
+                            setDialogState(() => submitting = false);
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(content: Text(msg)),
+                            );
+                            return;
+                          }
+                          redeemSucceeded = true;
+                          Navigator.pop(ctx);
+                        }
+                      : null,
+                  child: submitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Confirmar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
-    controller.dispose();
     if (redeemSucceeded) {
       AccessCodeService.instance.notifyAfterDialogClosed();
     }

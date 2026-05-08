@@ -1,12 +1,12 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-09 (checkpoint codigos + erro rede invoke; branch `feature/access-codes-supabase`)
+Last updated: 2026-05-09 (access codes validados; release candidate 1.0.46+46)
 
 ## Checkpoint / Onde paramos (2026-05-09)
 
-**PT-BR:** Trabalho de **códigos de acesso Premium (Supabase + Edge + app)** está no remoto na branch **`feature/access-codes-supabase`** (push sem merge em `master` → **não dispara** o workflow `deploy_android.yml`). Próximo passo operacional: corrigir **“Erro de rede…”** ao resgatar código — é falha na **`invoke`** da função (ver checklist em [`docs/ACCESS_CODES_SUPABASE.md`](../ACCESS_CODES_SUPABASE.md) seção 6: URL/anon key do mesmo projeto, função deployada, rede). Opcional: log temporário no `catch` de `access_code_service.dart` para ver `$e`. Depois: QA do fluxo completo, texto revisor Play, **merge em `master` só quando quiser novo AAB/CI** (lá o bump de `pubspec` já está em `1.0.45+45`).
+**PT-BR:** Fluxo de **código de acesso Premium** validado em aparelho após ajustes de UX/estabilidade: botão `Confirmar` com loading + desabilitado durante envio, prevenção de clique duplo, remoção do erro de `TextEditingController` descartado e tratamento de timeout/`FunctionException` no `redeem`. Texto final para revisor atualizado para **“No login / No payment”** com passos numerados. Próximo passo: push na `master` para gerar AAB de revisão com **`1.0.46+46`**.
 
-**EN:** Access-code work is pushed on **`feature/access-codes-supabase`** (no merge to `master` → Android deploy workflow not triggered). Next: fix **`invoke`** failures for `validate-access-code` (see `docs/ACCESS_CODES_SUPABASE.md` §6). Then full QA; merge to `master` only when a Play build is intended (`version` already `1.0.45+45`).
+**EN:** Premium access-code flow validated on device after UX/stability fixes (submit loading state, double-click prevention, disposed controller fix, timeout/`FunctionException` handling). Reviewer instructions finalized (“No login / No payment”, numbered steps). Next action: push to `master` to generate review build with **`1.0.46+46`**.
 
 ## Phase 1 closure / Encerramento da Fase 1
 
