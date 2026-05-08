@@ -8,6 +8,14 @@
 - Play guidance to fix: remove violating presentation; and/or provide **proof of ownership** (official logo/icon, developer name, professional support email); and/or add **substantial first-party product value** beyond being a thin wrapper around third‑party video browsing.
 - Product/engineering stance for Dulang: treat the app as **curated English exposure** with **no open web for children**, minimal player surface, and parent gates; keep store listing and in‑app reality aligned; maintain operator evidence pack (brand, curation workflow, privacy/support) for appeals/reviews.
 
+### 2026-05-07 - Paywall purchase hardening; RevenueCat `$rc_*` package mapping; billing QA on Play-installed builds
+
+- **Code:** `SubscriptionService` resolves monthly vs annual `Package`s when RevenueCat emits non-standard `PackageType` (includes `CUSTOM`) using `StoreProduct.subscriptionPeriod` and product-id keywords; purchase uses **120s** timeout; `userMessageForPurchaseError` maps Play-style errors (including item unavailable / English “could not be found”) to **pt-BR**, steering users and reviewers toward **Plano gratuito → Continuar**. `DulangPremiumWidget` handles `TimeoutException`; purchase errors use mapped messages.
+- **RevenueCat (dashboard):** **`$rc_monthly`** / **`$rc_annual`** must reference **exactly one** corresponding Play subscription product each; mixing monthly SKU into the annual slot (or duplicates) reproduced **billing item not found** for testers/reviewers.
+- **Operational QA:** Valid purchase testing expects the app **installed from Google Play** (internal/closed/production). **`flutter run` USB installs** may still query prices but commonly **fail or flake on purchase** — not sufficient alone for billing sign-off.
+- **Play reviewer instructions:** Document **free plan** entry (**Continuar** on **Plano gratuito**) alongside optional Premium trial copy.
+- Impact: `lib/features/subscription/subscription_service.dart`, `lib/pages/dulang_premium/dulang_premium_widget.dart`, `docs/ai-context/`; version **`1.0.44+44`** for CI Android deploy.
+
 ### 2026-05-02 - Play Store production submission; environment.json CI fix; parental reset fix
 
 - **Play Store submitted:** version `1.0.43+43` sent to production review. Reviewer access via freemium plan (no backdoor); instructions in Play Console: title "Free Plan Access — No Login Required", email `review@dulang.com`. Premium-gated screens (Favorites, History, custom themes/schedules) documented as intentional behavior.
@@ -151,6 +159,14 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-07 - Paywall, mapeamento `$rc_*` no RevenueCat e QA de compra na Play
+
+- **Código:** `SubscriptionService` deduz pacotes mensal/anual quando o RC não tipa como `monthly`/`annual` (período ISO + palavras-chave no id); timeout de **120s** na compra; mensagens em **pt-BR** para erros da loja (item indisponível / não encontrado), com caminho do **plano gratuito** (`DulangPremiumWidget` trata timeout e usa o mapeamento).
+- **RevenueCat:** cada um de **`$rc_monthly`** e **`$rc_annual`** deve apontar para **um único** produto da Play coerente com o período; mapeamento incorreto gerou **item não encontrado** na compra em testes.
+- **QA:** compra confiável só com app **instalado pela Play Store**; **`flutter run`** não substitui esse teste para billing.
+- **Revisor Play:** instruções devem incluir **Continuar** no **Plano gratuito**, não apenas **Começar grátis** do Premium.
+- Impacto: `subscription_service.dart`, `dulang_premium_widget.dart`, docs em `docs/ai-context/`; versão **`1.0.44+44`** para deploy Android no CI.
 
 ### 2026-03-02 (politica Play) - Requisitos da Politica para familias: WebViews (contexto de recusa)
 

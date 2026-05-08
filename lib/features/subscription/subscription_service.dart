@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -113,27 +115,114 @@ class SubscriptionService extends ChangeNotifier {
     }
   }
 
-  static Package? monthlyPackage(Offering? offering) {
-    if (offering == null) return null;
+  /// Ordena [PackageType.monthly] / [PackageType.annual] primeiro; se a oferta
+  /// usar pacotes `CUSTOM` no RevenueCat, infere por [StoreProduct.subscriptionPeriod],
+  /// depois por palavras-chave no id do pacote/produto.
+  static (Package?, Package?) _monthlyAndAnnualFromOffering(Offering? offering) {
+    if (offering == null) return (null, null);
+    Package? monthly;
+    Package? annual;
     for (final p in offering.availablePackages) {
-      if (p.packageType == PackageType.monthly) return p;
+      if (p.packageType == PackageType.monthly) monthly ??= p;
+      if (p.packageType == PackageType.annual) annual ??= p;
     }
+    if (monthly != null && annual != null) {
+      return (monthly, annual);
+    }
+
+    final ranked = <(Package, int)>[];
+    for (final p in offering.availablePackages) {
+      final d = _approxDaysFromSubscriptionPeriod(p.storeProduct.subscriptionPeriod);
+      if (d != null) ranked.add((p, d));
+    }
+    ranked.sort((a, b) => a.$2.compareTo(b.$2));
+    if (ranked.length >= 2) {
+      monthly ??= ranked.first.$1;
+      annual ??= ranked.last.$1;
+    } else if (ranked.length == 1) {
+      final single = ranked.first;
+      if (monthly == null && annual == null) {
+        if (single.$2 >= 280) {
+          annual = single.$1;
+        } else {
+          monthly = single.$1;
+        }
+      } else if (monthly == null && single.$1 != annual) {
+        monthly = single.$1;
+      } else if (annual == null && single.$1 != monthly) {
+        annual = single.$1;
+      }
+    }
+
+    for (final p in offering.availablePackages) {
+      final bundle = '${p.identifier} ${p.storeProduct.identifier}'.toLowerCase();
+      final looksAnnual =
+          bundle.contains('annual') || bundle.contains('year') || bundle.contains('anual');
+      final looksMonthly = bundle.contains('month') || bundle.contains('mensal');
+      if (looksAnnual) annual ??= p;
+      if (looksMonthly) monthly ??= p;
+    }
+    return (monthly, annual);
+  }
+
+  static int? _approxDaysFromSubscriptionPeriod(String? period) {
+    if (period == null || period.isEmpty) return null;
+    final u = period.toUpperCase();
+    final year = RegExp(r'P(\d+)Y').firstMatch(u)?.group(1);
+    if (year != null) return (int.tryParse(year) ?? 1) * 365;
+    final month = RegExp(r'P(\d+)M').firstMatch(u)?.group(1);
+    if (month != null && !u.contains('T')) {
+      return (int.tryParse(month) ?? 1) * 30;
+    }
+    final week = RegExp(r'P(\d+)W').firstMatch(u)?.group(1);
+    if (week != null) return (int.tryParse(week) ?? 1) * 7;
+    final day = RegExp(r'P(\d+)D').firstMatch(u)?.group(1);
+    if (day != null) return int.tryParse(day);
     return null;
   }
 
-  static Package? annualPackage(Offering? offering) {
-    if (offering == null) return null;
-    for (final p in offering.availablePackages) {
-      if (p.packageType == PackageType.annual) return p;
-    }
-    return null;
-  }
+  static Package? monthlyPackage(Offering? offering) =>
+      _monthlyAndAnnualFromOffering(offering).$1;
+
+  static Package? annualPackage(Offering? offering) =>
+      _monthlyAndAnnualFromOffering(offering).$2;
+
+  static const Duration _purchaseTimeout = Duration(seconds: 120);
 
   Future<void> purchasePackage(Package pkg) async {
     if (!_configured) return;
-    final info = await Purchases.purchasePackage(pkg);
+    final info = await Purchases.purchasePackage(pkg).timeout(_purchaseTimeout);
     _customerInfo = info;
     notifyListeners();
+  }
+
+  /// Texto para exibir ao usuário (SnackBar) a partir de [PlatformException] da loja/RC.
+  static String userMessageForPurchaseError(PlatformException e) {
+    final code = PurchasesErrorHelper.getErrorCode(e);
+    switch (code) {
+      case PurchasesErrorCode.purchaseCancelledError:
+        return 'Compra cancelada.';
+      case PurchasesErrorCode.productNotAvailableForPurchaseError:
+        return 'Este plano não está disponível para esta conta ou região da loja no momento. Você pode usar o plano gratuito (card “Plano gratuito”, botão Continuar) ou tentar outra conta Google Play.';
+      case PurchasesErrorCode.storeProblemError:
+        return 'A Google Play respondeu com erro. Tente de novo em alguns minutos ou use o plano gratuito no card acima.';
+      case PurchasesErrorCode.purchaseNotAllowedError:
+        return 'Esta conta ou aparelho não pode comprar agora (restrição da loja).';
+      case PurchasesErrorCode.networkError:
+        return 'Sem conexão estável. Verifique a internet e tente de novo.';
+      case PurchasesErrorCode.purchaseInvalidError:
+        return 'A loja não aceitou o pedido. Atualize o app e a Play Store e tente de novo.';
+      default:
+        final raw = e.message ?? '';
+        final lower = raw.toLowerCase();
+        if (lower.contains('could not be found') ||
+            lower.contains('item you were attempting') ||
+            lower.contains('item unavailable')) {
+          return 'A loja não encontrou este produto (publicação, conta ou região). Use o plano gratuito no card “Plano gratuito” ou tente outra conta Google Play.';
+        }
+        if (raw.isNotEmpty) return raw;
+        return 'Não foi possível concluir a compra. Tente de novo.';
+    }
   }
 
   /// Compra cancelada pela loja ou pelo usuário.

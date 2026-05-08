@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/pages/dulang_premium/free_plan_email_sheet.dart';
@@ -175,13 +177,24 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
         );
         context.safePop();
       }
+    } on TimeoutException catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'A loja demorou demais para responder. Tente de novo ou use o plano gratuito (botão Continuar no card Plano gratuito).',
+          ),
+        ),
+      );
     } on PlatformException catch (e) {
       if (!mounted) return;
       if (SubscriptionService.instance.isUserCancelled(e)) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Compra não concluída.')),
+        SnackBar(
+          content: Text(SubscriptionService.userMessageForPurchaseError(e)),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
