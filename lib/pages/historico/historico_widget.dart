@@ -1,5 +1,4 @@
 import '/features/parental/parental_service.dart';
-import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/widgets/premium_gate_screen.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -20,8 +19,7 @@ class HistoricoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final premium = context.watch<SubscriptionService>().hasPremiumAccess;
-    final freemium = context.watch<FreemiumService>().isEnrolled && !premium;
-    if (freemium) {
+    if (!premium) {
       return const PremiumGateScreen(
         featureName: 'Histórico',
         featureIcon: Icons.history_rounded,

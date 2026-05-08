@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '/features/subscription/freemium_service.dart';
+import '/features/subscription/access_code_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -34,10 +34,9 @@ class ConfiguracoesWidget extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Consumer2<SubscriptionService, FreemiumService>(
-        builder: (context, sub, free, _) {
+      body: Consumer<SubscriptionService>(
+        builder: (context, sub, _) {
           final premium = sub.hasPremiumAccess;
-          final freemium = free.isEnrolled && !premium;
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -47,9 +46,7 @@ class ConfiguracoesWidget extends StatelessWidget {
                 context,
                 icon: Icons.switch_account_rounded,
                 title: 'Quem está assistindo?',
-                subtitle: freemium
-                    ? 'Editar nome do perfil (Premium para múltiplos)'
-                    : 'Escolher, criar, renomear ou remover perfil',
+                subtitle: 'Escolher, criar, renomear ou remover perfil',
                 onTap: () => context.pushNamed(SelecionarPerfilWidget.routeName),
               ),
               _tile(
@@ -63,19 +60,15 @@ class ConfiguracoesWidget extends StatelessWidget {
                 context,
                 icon: Icons.schedule_rounded,
                 title: 'Horários e tempo de uso',
-                subtitle: freemium
-                    ? '1h/dia (plano gratuito) — Premium para personalizar'
-                    : 'Janela do dia e limite diário',
-                locked: freemium,
+                subtitle: 'Janela do dia e limite diário',
+                locked: false,
                 onTap: () => context.pushNamed(HorariosAcessoWidget.routeName),
               ),
               _tile(
                 context,
                 icon: Icons.palette_outlined,
                 title: 'Aparência',
-                subtitle: freemium
-                    ? 'Tema claro (Premium para outros temas)'
-                    : 'Claro, escuro ou sistema',
+                subtitle: 'Claro, escuro ou sistema',
                 onTap: () => context.pushNamed(AparenciaWidget.routeName),
               ),
               const SizedBox(height: 24),
@@ -102,11 +95,7 @@ class ConfiguracoesWidget extends StatelessWidget {
               _tile(
                 context,
                 icon: Icons.workspace_premium_outlined,
-                title: premium
-                    ? 'Gerenciar assinatura'
-                    : freemium
-                        ? 'Upgrade para Premium'
-                        : 'Dulang Premium',
+                title: premium ? 'Gerenciar assinatura' : 'Dulang Premium',
                 onTap: () => context.pushNamed(
                   premium
                       ? DulangSubscriptionManageWidget.routeName
@@ -140,9 +129,9 @@ class ConfiguracoesWidget extends StatelessWidget {
                 ),
                 _debugTile(
                   context,
-                  title: 'Resetar plano free (volta ao paywall)',
+                  title: 'Limpar flag local do código de acesso (debug)',
                   color: Colors.redAccent,
-                  onTap: () => FreemiumService.instance.reset(),
+                  onTap: () => AccessCodeService.instance.debugClearLocal(),
                 ),
               ],
             ],

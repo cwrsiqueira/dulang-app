@@ -1,4 +1,3 @@
-import '/features/subscription/freemium_service.dart';
 import '/features/subscription/premium_paywall_redirect.dart';
 import '/features/subscription/subscription_service.dart';
 import '/services/supabase_service.dart';
@@ -42,7 +41,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
     if (videoId.isEmpty) return;
     if (await ParentalService.warnIfPlaybackBlocked(context)) return;
     if (!mounted) return;
-    if (!SubscriptionService.instance.hasPremiumAccess && !FreemiumService.instance.isEnrolled) {
+    if (!SubscriptionService.instance.hasPremiumAccess) {
       await context.pushNamed(DulangPremiumWidget.routeName);
       return;
     }
@@ -152,7 +151,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
                     return;
                   }
                   if (!context.mounted) return;
-                  if (!SubscriptionService.instance.hasPremiumAccess && !FreemiumService.instance.isEnrolled) {
+                  if (!SubscriptionService.instance.hasPremiumAccess) {
                     await context.pushNamed(DulangPremiumWidget.routeName);
                     return;
                   }
@@ -182,7 +181,7 @@ class _DulangVideoWidgetState extends State<DulangVideoWidget>
 
   @override
   Widget build(BuildContext context) {
-    if (!SubscriptionService.instance.hasPremiumAccess && !FreemiumService.instance.isEnrolled) {
+    if (!SubscriptionService.instance.hasPremiumAccess) {
       return const PremiumPaywallRedirectScaffold();
     }
 

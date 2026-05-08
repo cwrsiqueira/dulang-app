@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '/features/subscription/access_code_service.dart';
 import '/features/subscription/subscription_constants.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -25,6 +26,7 @@ class _DulangSubscriptionManageWidgetState
     extends State<DulangSubscriptionManageWidget> {
   bool _opening = false;
   Package? _activePackage;
+  bool _initializationComplete = false;
 
   static String? _formatExpirationPt(String? iso) {
     if (iso == null || iso.isEmpty) return null;
@@ -176,8 +178,9 @@ class _DulangSubscriptionManageWidgetState
           info?.entitlements.all[SubscriptionConstants.premiumEntitlementId];
       if (entitlement != null) {
         await _loadCurrentPlanInfo(entitlement.productIdentifier);
-      } else {
-        setState(() {});
+      }
+      if (mounted) {
+        setState(() => _initializationComplete = true);
       }
     });
   }
@@ -186,11 +189,14 @@ class _DulangSubscriptionManageWidgetState
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
     context.watch<SubscriptionService>();
+    context.watch<AccessCodeService>();
 
     final info = SubscriptionService.instance.customerInfo;
     final id = SubscriptionConstants.premiumEntitlementId;
     final ent = info?.entitlements.all[id];
     final hasAccess = SubscriptionService.instance.hasPremiumAccess;
+    final accessViaCode =
+        hasAccess && AccessCodeService.instance.isGranted && ent == null;
     final planName = ent == null
         ? null
         : _friendlyPlanName(ent.productIdentifier, _activePackage?.packageType);
@@ -222,7 +228,7 @@ class _DulangSubscriptionManageWidgetState
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          if (!hasAccess || ent == null)
+          if (!_initializationComplete)
             Padding(
               padding: const EdgeInsets.only(top: 24),
               child: Center(
@@ -239,7 +245,32 @@ class _DulangSubscriptionManageWidgetState
                 ),
               ),
             )
-          else ...[
+          else if (accessViaCode) ...[
+            Text(
+              'Premium por código de acesso',
+              style: theme.titleMedium.override(color: theme.primaryText),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Seu Premium está ativo por um código. Não há cobrança na loja para gerenciar ou cancelar por aqui — o acesso não renova sozinho pela Google Play.',
+              style: theme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () =>
+                  context.pushNamed(DulangPremiumWidget.routeName),
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.tertiary,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(double.infinity, 48),
+              ),
+              child: Text(
+                'Ver planos e assinatura',
+                style: theme.titleSmall.override(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ]
+          else if (ent != null) ...[
             Text(
               'Plano atual',
               style: theme.titleMedium.override(color: theme.primaryText),
@@ -328,7 +359,17 @@ class _DulangSubscriptionManageWidgetState
                 minimumSize: const Size(double.infinity, 48),
               ),
             ),
-          ],
+          ]
+          else if (hasAccess && ent == null)
+            Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: Text(
+                'Não foi possível carregar os detalhes da assinatura na loja. '
+                'Toque em Voltar e tente de novo em instantes.',
+                style: theme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+            ),
         ],
       ),
     );

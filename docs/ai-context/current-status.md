@@ -1,12 +1,24 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-07 (paywall + RC; deploy 1.0.44+44)
+Last updated: 2026-05-09 (access codes validados; release candidate 1.0.46+46)
+
+## Checkpoint / Onde paramos (2026-05-09)
+
+**PT-BR:** Fluxo de **código de acesso Premium** validado em aparelho após ajustes de UX/estabilidade: botão `Confirmar` com loading + desabilitado durante envio, prevenção de clique duplo, remoção do erro de `TextEditingController` descartado e tratamento de timeout/`FunctionException` no `redeem`. Texto final para revisor atualizado para **“No login / No payment”** com passos numerados. Próximo passo: push na `master` para gerar AAB de revisão com **`1.0.46+46`**.
+
+**EN:** Premium access-code flow validated on device after UX/stability fixes (submit loading state, double-click prevention, disposed controller fix, timeout/`FunctionException` handling). Reviewer instructions finalized (“No login / No payment”, numbered steps). Next action: push to `master` to generate review build with **`1.0.46+46`**.
 
 ## Phase 1 closure / Encerramento da Fase 1
 
 **EN:** Phase 1 (store readiness + compliance baseline) remains **closed by operator sign-off on 2026-04-27** (unchanged).
 
 **PT-BR:** A **Fase 1** permanece **encerrada com aceite do operador em 2026-04-27** (sem mudança).
+
+## Codigos de acesso premium e fim do freemium (2026-05-08)
+
+**EN:** **`1.0.45+45`:** Freemium (1h/day + email) **removed**. Premium access is **RevenueCat entitlement** **or** a **one-time access code** redeemed on the paywall (**Tenho um código de acesso**). Codes are stored in Supabase **`access_codes`**, consumed by Edge Function **`validate-access-code`** (`--no-verify-jwt`). Local grant in **`SharedPreferences`** — **uninstall loses access**; the server-side code row stays **used** and **cannot be reused**. Operator doc: [`docs/ACCESS_CODES_SUPABASE.md`](../ACCESS_CODES_SUPABASE.md).
+
+**PT-BR:** **`1.0.45+45`:** Removido o **freemium** (1h/dia + email). Acesso premium = **assinatura RevenueCat** **ou** **código de uso único** na paywall. Tabela **`access_codes`**, função **`validate-access-code`**. Flag local em **`SharedPreferences`** — **desinstalar perde o acesso** no aparelho; no servidor o código **já foi consumido** e **não serve de novo**. Guia: [`docs/ACCESS_CODES_SUPABASE.md`](../ACCESS_CODES_SUPABASE.md).
 
 ## Phase 2 progress / Andamento da Fase 2 (2026-04-28)
 
@@ -84,7 +96,7 @@ Instruções ao revisor submetidas no Play Console: título "Free Plan Access �
 | Player hardening | Stable for Phase 1 | Restrictions in place; periodic policy re-check on store updates; **Families/WebViews policy rejection (2026-03-02)** must stay mitigated via curation story + no open web + evidence pack |
 | Video navigation from list | Fixed | Player state keyed by video id; device QA as needed per release |
 | Video back navigation | Fixed | safePop + fullscreen overlay reset |
-| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall + freemium 1h/dia; QA Android aprovado (premium + freemium); iOS key + QA iPhone ainda em aberto |
+| RevenueCat monetization | **In progress** | SDK + entitlement gate + paywall; **access codes** (Supabase one-time) for reviewers/ops; iOS key + QA iPhone ainda em aberto |
 | Channel sync automation | Stable for Phase 1 | Daily Edge path + contract; operator confirms prod/cron |
 | Home channel grid visuals | Done | Thumbnail from most recent active video per channel + gradient overlay (`dulang_widget`) |
 | Child profiles UX | Done | Single screen “Quem está assistindo?”: select + add + rename/delete via menu; legacy `/perfisGerenciar` opens same screen |

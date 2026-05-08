@@ -1,5 +1,4 @@
 import '/features/subscription/premium_paywall_redirect.dart';
-import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/features/parental/parental_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -36,7 +35,7 @@ class _CanalVideosWidgetState extends State<CanalVideosWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!SubscriptionService.instance.hasPremiumAccess && !FreemiumService.instance.isEnrolled) {
+    if (!SubscriptionService.instance.hasPremiumAccess) {
       return const PremiumPaywallRedirectScaffold();
     }
 
@@ -91,7 +90,7 @@ class _CanalVideosWidgetState extends State<CanalVideosWidget> {
                       return;
                     }
                     if (!context.mounted) return;
-                    if (!SubscriptionService.instance.hasPremiumAccess && !FreemiumService.instance.isEnrolled) {
+                    if (!SubscriptionService.instance.hasPremiumAccess) {
                       await context.pushNamed(DulangPremiumWidget.routeName);
                       return;
                     }

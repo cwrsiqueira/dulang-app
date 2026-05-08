@@ -20,6 +20,12 @@ No projeto Supabase, configure:
 - `SUPABASE_URL` (normalmente já disponível no runtime)
 - `SUPABASE_SERVICE_ROLE_KEY` (normalmente já disponível no runtime)
 
+## `validate-access-code` (códigos de acesso premium)
+
+1. Rode a migration `supabase/migrations/20260508120000_access_codes.sql` no SQL Editor (ou use o arquivo como referência).
+2. `supabase functions deploy validate-access-code --no-verify-jwt`
+3. Insira códigos na tabela `access_codes` (ver [`docs/ACCESS_CODES_SUPABASE.md`](../../docs/ACCESS_CODES_SUPABASE.md)).
+
 ## Deploy (exemplo via CLI)
 
 ```bash

@@ -1,5 +1,4 @@
 import '/features/profiles/child_profile_service.dart';
-import '/features/subscription/freemium_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -31,8 +30,7 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
   @override
   void initState() {
     super.initState();
-    final premium = context.read<SubscriptionService>().hasPremiumAccess;
-    _canManage = premium || !context.read<FreemiumService>().isEnrolled;
+    _canManage = context.read<SubscriptionService>().hasPremiumAccess;
     ChildProfileService.instance.setProfilePickerRouteOpen(true);
     _reload();
   }
