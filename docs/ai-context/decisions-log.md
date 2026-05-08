@@ -2,6 +2,20 @@
 
 ## EN
 
+### 2026-05-09 - Access-code work on `feature/access-codes-supabase`; “network error” = invoke failure
+
+- **Git:** access-code work pushed on branch **`feature/access-codes-supabase`** (no merge to `master` yet) to avoid triggering **Android deploy** until release is intended.
+- **Ops:** In-app **“Erro de rede…”** maps to an **exception** calling **`functions.invoke('validate-access-code')`** — verify Edge deploy, same-project `SUPABASE_URL` / anon key in `environment.json`, and network; see **`docs/ACCESS_CODES_SUPABASE.md`** §6.
+- **Repo:** **`supabase/.temp/`** added to **`.gitignore`**.
+
+### 2026-05-08 - Premium access codes (one-time) via Supabase; freemium tier removed
+
+- **Product:** A **one-time alphanumeric access code** unlocks Premium for that **install**. The code is validated by Edge Function **`validate-access-code`**; Postgres table **`public.access_codes`** marks **`used = true`** after the first successful redemption — **no reuse** of the same row.
+- **Client:** `AccessCodeService` persists grant in **`SharedPreferences`** (not tied to store account). Uninstall clears local state; user must **purchase**, **restore**, or **redeem a new code** from ops — the burned code cannot be entered again.
+- **Ops:** Run migration `supabase/migrations/20260508120000_access_codes.sql`; deploy `supabase functions deploy validate-access-code --no-verify-jwt`; insert codes via SQL. Play Console reviewer instructions should describe **Premium screen → “Tenho um código de acesso”** + the issued code. Doc: `docs/ACCESS_CODES_SUPABASE.md`.
+- **Removed:** `FreemiumService`, 1h/day freemium UI, `FreePlanEmailSheet`, NavBar freemium overlay/timer. **`hasPremiumAccess`** includes RevenueCat entitlement + local access-code grant (after debug flags).
+- **Version:** **`1.0.45+45`** (expected next Android CI upload).
+
 ### 2026-03-02 (Play policy) - Families Policy Requirements: WebViews (rejection context)
 
 - Fact: Google Play **rejected an update** under **Families Policy Requirements: WebViews**. Stated reason (Play Console policy text): apps that **primarily aggregate content that does not belong to the developer** are not allowed in this configuration.
@@ -159,6 +173,20 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-09 - Checkpoint branch codigos + documentar falha invoke ("erro de rede")
+
+- **Git:** alteracoes de codigos de acesso commitadas na branch **`feature/access-codes-supabase`** e `push` sem merge em `master` para **nao disparar** `deploy_android.yml` ate decisao de release.
+- **Produto:** mensagem **"Erro de rede..."** em `AccessCodeService.redeem` = excecao na **Edge Function** (invoke), nao codigo invalido; checklist em **`docs/ACCESS_CODES_SUPABASE.md`** secao 6 (URL/anon key projeto certo, função deployada `--no-verify-jwt`, rede).
+- **Higiene:** `supabase/.temp/` no **`.gitignore`** (cache da CLI).
+
+### 2026-05-08 - Codigos de acesso premium (uso unico) com Supabase; fim do freemium
+
+- **Produto:** um **codigo alfanumerico de uso unico** libera o Premium na **instalacao atual**. A Edge Function **`validate-access-code`** valida; a tabela **`public.access_codes`** marca **`used = true`** no primeiro resgate bem-sucedido — **nao da para reusar** a mesma linha.
+- **Cliente:** `AccessCodeService` grava o direito em **`SharedPreferences`** (nao e conta da loja). Ao desinstalar, some o estado local; para voltar a ter Premium precisa **comprar**, **restaurar compras** ou **um codigo novo** inserido pela operacao — o codigo ja consumido **nao entra de novo**.
+- **Operacao:** aplicar migration `supabase/migrations/20260508120000_access_codes.sql`; `supabase functions deploy validate-access-code --no-verify-jwt`; inserir codigos via SQL. No Play Console, instrucoes ao revisor: **Premium → “Tenho um codigo de acesso”** + o codigo emitido. Guia: `docs/ACCESS_CODES_SUPABASE.md`.
+- **Removido:** `FreemiumService`, limite 1h/dia, sheet de email do plano gratuito, overlay/timer do freemium na NavBar. **`hasPremiumAccess`** = RevenueCat + flag local do codigo (apos flags de debug).
+- **Versao:** **`1.0.45+45`** (proximo upload Android pelo CI esperado).
 
 ### 2026-05-07 - Paywall, mapeamento `$rc_*` no RevenueCat e QA de compra na Play
 

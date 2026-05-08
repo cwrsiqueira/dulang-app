@@ -1,10 +1,7 @@
-import '/features/subscription/freemium_service.dart';
-import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/main.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 String _savedThemeLabel(ThemeMode mode) => switch (mode) {
       ThemeMode.light => 'Claro',
@@ -23,17 +20,6 @@ class AparenciaWidget extends StatefulWidget {
 }
 
 class _AparenciaWidgetState extends State<AparenciaWidget> {
-  // Lido uma vez no init para evitar subscriptions reativas que conflitam
-  // com setThemeMode e causam o assert renderObject.child == child.
-  late bool _freemium;
-
-  @override
-  void initState() {
-    super.initState();
-    final premium = context.read<SubscriptionService>().hasPremiumAccess;
-    _freemium = context.read<FreemiumService>().isEnrolled && !premium;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = FlutterFlowTheme.of(context);
@@ -63,10 +49,8 @@ class _AparenciaWidgetState extends State<AparenciaWidget> {
           ),
           const SizedBox(height: 4),
           Text(
-            _freemium
-                ? 'Plano gratuito: tema claro fixo. Assine o Premium para personalizar.'
-                : 'Salvo: ${_savedThemeLabel(mode)} — pode coincidir com o visual '
-                    'quando "Sistema" e o aparelho já estão no mesmo claro ou escuro.',
+            'Salvo: ${_savedThemeLabel(mode)} — pode coincidir com o visual '
+            'quando "Sistema" e o aparelho já estão no mesmo claro ou escuro.',
             style: theme.bodySmall.override(color: theme.secondaryText),
           ),
           const SizedBox(height: 12),
@@ -84,31 +68,18 @@ class _AparenciaWidgetState extends State<AparenciaWidget> {
             title: 'Escuro',
             subtitle: 'Sempre tema escuro no app',
             selected: mode == ThemeMode.dark,
-            locked: _freemium,
+            locked: false,
             tertiary: theme.tertiary,
-            onTap: _freemium
-                ? () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tema escuro é exclusivo do Premium.'),
-                      ),
-                    )
-                : () => MyApp.of(context).setThemeMode(ThemeMode.dark),
+            onTap: () => MyApp.of(context).setThemeMode(ThemeMode.dark),
           ),
           _ThemeOptionTile(
             icon: Icons.settings_suggest_outlined,
             title: 'Sistema',
             subtitle: 'Segue o claro ou escuro configurado no aparelho',
             selected: mode == ThemeMode.system,
-            locked: _freemium,
+            locked: false,
             tertiary: theme.tertiary,
-            onTap: _freemium
-                ? () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('Tema automático é exclusivo do Premium.'),
-                      ),
-                    )
-                : () => MyApp.of(context).setThemeMode(ThemeMode.system),
+            onTap: () => MyApp.of(context).setThemeMode(ThemeMode.system),
           ),
         ],
       ),

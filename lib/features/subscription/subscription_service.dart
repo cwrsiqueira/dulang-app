@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '/environment_values.dart';
+import 'access_code_service.dart';
 import 'subscription_constants.dart';
 
 /// Estado global da assinatura (RevenueCat). Identidade de compra = conta da loja; restaurar compras no mesmo ou outro aparelho.
@@ -42,6 +43,7 @@ class SubscriptionService extends ChangeNotifier {
   bool get hasPremiumAccess {
     if (kDebugMode && debugForcePremium) return true;
     if (kDebugMode && debugBypassPremium) return false;
+    if (AccessCodeService.instance.isGranted) return true;
     final id = SubscriptionConstants.premiumEntitlementId;
     final e = _customerInfo?.entitlements.all[id];
     return e?.isActive == true;

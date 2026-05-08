@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import '/features/subscription/freemium_service.dart';
+import '/features/subscription/access_code_service.dart';
 import '/features/subscription/subscription_service.dart';
-import '/pages/dulang_premium/free_plan_email_sheet.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/dulang_premium/dulang_subscription_manage_widget.dart';
@@ -92,10 +91,17 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
           context.pushNamed(DulangSubscriptionManageWidget.routeName);
         });
       }
+      // Sem _loadOfferings(): não deixar `_loadingOfferings` preso em true (spinner eterno no CTA).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _loadingOfferings = false);
+      });
       return;
     }
     _loadOfferings();
   }
+
+  static const Duration _offeringsLoadTimeout = Duration(seconds: 30);
 
   Future<void> _loadOfferings() async {
     setState(() {
@@ -103,13 +109,23 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
       _offeringsError = null;
     });
     try {
-      final o = await SubscriptionService.instance.getOfferings();
+      final o = await SubscriptionService.instance
+          .getOfferings()
+          .timeout(_offeringsLoadTimeout);
       if (!mounted) return;
       setState(() {
         _offerings = o;
         _loadingOfferings = false;
         _offeringsError = null;
         _applyDefaultPlanSelection();
+      });
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        _offerings = null;
+        _loadingOfferings = false;
+        _offeringsError =
+            'A loja demorou demais para responder. Toque em Tentar novamente.';
       });
     } catch (_) {
       if (!mounted) return;
@@ -235,9 +251,60 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
     }
   }
 
-  Future<void> _onFreePlan() async {
-    final enrolled = await showFreePlanEmailSheet(context);
-    if (enrolled && mounted && !widget.isGate) {
+  Future<void> _onAccessCode() async {
+    final controller = TextEditingController();
+    var redeemSucceeded = false;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text(
+            'Código de acesso',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w800),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Digite o código',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final msg =
+                    await AccessCodeService.instance.redeem(controller.text);
+                if (!ctx.mounted) return;
+                if (msg != null) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(content: Text(msg)),
+                  );
+                  return;
+                }
+                redeemSucceeded = true;
+                Navigator.pop(ctx);
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+    if (redeemSucceeded) {
+      AccessCodeService.instance.notifyAfterDialogClosed();
+    }
+    if (!mounted) return;
+    if (!SubscriptionService.instance.hasPremiumAccess) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Acesso liberado.')),
+    );
+    if (!widget.isGate) {
       context.safePop();
     }
   }
@@ -250,6 +317,7 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
     final onMuted = theme.secondaryText;
     final cardBg = theme.secondaryBackground;
     context.watch<SubscriptionService>();
+    context.watch<AccessCodeService>();
 
     return Scaffold(
       key: scaffoldKey,
@@ -349,12 +417,6 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
                 _annualPlanCard(context, tertiary, onCard, onMuted, cardBg),
                 const SizedBox(height: 12),
                 _monthlyPlanCard(context, tertiary, onCard, onMuted, cardBg),
-                if (!FreemiumService.instance.isEnrolled) ...[
-                  const SizedBox(height: 24),
-                  _freePlanDivider(onMuted),
-                  const SizedBox(height: 20),
-                  _freePlanCard(context, tertiary, onCard, onMuted, cardBg),
-                ],
                 const SizedBox(height: 28),
                 _trustSection(context, tertiary, onCard, onMuted, cardBg),
                 const SizedBox(height: 28),
@@ -381,6 +443,18 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                       color: tertiary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _purchasing ? null : _onAccessCode,
+                  child: Text(
+                    'Tenho um código de acesso',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: onMuted,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
@@ -654,92 +728,6 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _freePlanDivider(Color onMuted) {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: onMuted.withValues(alpha: 0.25))),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            'ou comece grátis',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: onMuted.withValues(alpha: 0.7),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: onMuted.withValues(alpha: 0.25))),
-      ],
-    );
-  }
-
-  Widget _freePlanCard(
-    BuildContext context,
-    Color tertiary,
-    Color onCard,
-    Color onMuted,
-    Color cardBg,
-  ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: onMuted.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Plano gratuito',
-                  style: GoogleFonts.inter(
-                    color: onCard,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '1 hora por dia • Todo o conteúdo • Vitalício',
-                  style: GoogleFonts.inter(
-                    color: onMuted,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          TextButton(
-            onPressed: _purchasing ? null : _onFreePlan,
-            style: TextButton.styleFrom(
-              foregroundColor: tertiary,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: tertiary.withValues(alpha: 0.6)),
-              ),
-            ),
-            child: Text(
-              'Continuar',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
