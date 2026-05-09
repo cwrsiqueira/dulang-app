@@ -2,6 +2,13 @@
 
 ## EN
 
+### 2026-05-10 - Android Internal Test build `1.0.48+48` (coupon info screen, in-app review, paywall fix)
+
+- **Versioning:** `pubspec.yaml` **`1.0.48+48`**; `app_build_metadata` **1.0.48** / **10/05/2026**.
+- **Coupon UX:** `DulangPremiumCodigoInfoWidget` — settings “Dulang Premium” with access code opens **info + share** (store listing URLs placeholders until operator fills constants); no paywall for coupon-only.
+- **Stability:** `DulangPremiumWidget` auto-redirect to **Manage subscription** only when `hasActiveStorePremiumEntitlement` (fixes navigation loop / freeze with coupon + manage guard).
+- **In-app review:** `ParentReviewPrompt` from **Configuracoes** only; **5 days** after first `NavBarPage` marker (`AppInstallMarkers`); **5 minutes** in `kDebugMode` for local testing; `in_app_review` + `share_plus` deps. **Note:** Play/App Store may throttle visible review UI—avoid spamming `requestReview` in QA.
+
 ### 2026-05-09 - Android Internal Test build `1.0.47+47` (merge to `master`, CI deploy)
 
 - **Versioning:** `pubspec.yaml` **`1.0.47+47`**; `lib/app_build_metadata.dart` **`marketingVersion` 1.0.47**, **`lastContentUpdate` 09/05/2026** (legal footnote on Sobre / Termos / Contato).
@@ -194,6 +201,13 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-10 - Build Android `1.0.48+48` para Internal Test (tela cupom, review, fix paywall)
+
+- **Versionamento:** `pubspec.yaml` **`1.0.48+48`**; `app_build_metadata` **1.0.48** / **10/05/2026**.
+- **Cupom:** `DulangPremiumCodigoInfoWidget` — em Ajustes, **Dulang Premium** com código abre **informações + compartilhar** (URLs da ficha na loja ainda `null` até preencher constantes); **sem** paywall para quem só tem cupom.
+- **Estabilidade:** `DulangPremiumWidget` só redireciona a **Gerenciar assinatura** com `hasActiveStorePremiumEntitlement` (evita **loop/travamento** com cupom + guarda da tela de gerenciar).
+- **Avaliação na loja:** `ParentReviewPrompt` só na **aba Ajustes**; **5 dias** após marca em `AppInstallMarkers` (primeira `NavBarPage`); **5 minutos** em `kDebugMode` para teste local; deps `in_app_review` e `share_plus`. **Cuidado:** lojas podem **não mostrar** o diálogo se `requestReview` for chamado em excesso no QA.
 
 ### 2026-05-09 - Build Android `1.0.47+47` para Internal Test (merge na `master`, CI)
 

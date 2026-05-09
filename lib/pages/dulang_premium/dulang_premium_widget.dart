@@ -83,7 +83,10 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => DulangPremiumModel());
-    if (SubscriptionService.instance.hasPremiumAccess) {
+    // Só assinatura de **loja** ativa deve abrir Gerenciar assinatura. Cupom dá
+    // `hasPremiumAccess` mas não `hasActiveStorePremiumEntitlement` — redirecionar
+    // gerava loop com a guarda da tela de gerenciar e travava o app.
+    if (SubscriptionService.instance.hasActiveStorePremiumEntitlement) {
       if (!widget.isGate) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -92,6 +95,14 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
         });
       }
       // Sem _loadOfferings(): não deixar `_loadingOfferings` preso em true (spinner eterno no CTA).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _loadingOfferings = false);
+      });
+      return;
+    }
+    if (SubscriptionService.instance.hasPremiumAccess) {
+      // Premium só por cupom (ou debug): permanece na paywall informativa; não empilhar Gerenciar.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         setState(() => _loadingOfferings = false);

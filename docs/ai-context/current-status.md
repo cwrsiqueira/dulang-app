@@ -1,12 +1,12 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-09 (build **1.0.47+47** → Internal Test; QA Play antes de revisão)
+Last updated: 2026-05-10 (build **1.0.48+48** → Internal Test final; QA Play antes de revisão)
 
-## Checkpoint / Build Android `1.0.47+47` — Internal Test (2026-05-09)
+## Checkpoint / Build Android `1.0.48+48` — Internal Test (2026-05-10)
 
-**PT-BR:** **`pubspec.yaml`** em **`1.0.47+47`** e **`lib/app_build_metadata.dart`** alinhados (`marketingVersion` **1.0.47**, `lastContentUpdate` **09/05/2026**). Merge na **`master`** dispara **`deploy_android.yml`** (AAB para **teste interno**). **Próximo passo operacional:** instalar a build **pela Play Store** (trilha de teste), percorrer **`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`**, fluxos **cupom + assinatura + horários** e só então **promover** / **enviar para revisão** na Play Console — o assistente **não** substitui esse QA em aparelho nem aprovação de políticas da loja.
+**PT-BR:** **`pubspec.yaml`** **`1.0.48+48`** e **`app_build_metadata`** (`marketingVersion` **1.0.48**, `lastContentUpdate` **10/05/2026**). **`master` push** → **`deploy_android.yml`** (AAB **teste interno**). **Neste ciclo:** tela **Premium por código** (Configurações → Dulang Premium com cupom, sem paywall); correção do **loop/travamento** na paywall (`DulangPremiumWidget` só redireciona a Gerenciar com entitlement de **loja**); **`in_app_review`** + **`share_plus`**; avaliação na loja só na **aba Ajustes** (`ParentReviewPrompt`), **5 dias** em release e **5 minutos** em `kDebugMode` (não insistir: loja pode não mostrar o diálogo). **`AppInstallMarkers`** na primeira **`NavBarPage`**. Próximo passo: build pela **Play** + **`CHECKLIST_TESTE_SANDBOX_PLAY.md`** antes de promover/revisão.
 
-**EN:** **`1.0.47+47`** with **`app_build_metadata`** aligned. **`master` push** runs **`deploy_android.yml`** (AAB → **Internal testing**). **Next:** install the **Play-delivered** build, run **`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`**, coupon + subscription + schedules flows, then **promote / submit for review** in Play Console — automated checks here are **not** a substitute for on-device QA or Play policy sign-off.
+**EN:** **`1.0.48+48`**, metadata aligned. **CI** on **`master`**. **This cycle:** **coupon Premium info** screen (no paywall loop); **paywall redirect** fix (manage only with **store** entitlement); **`in_app_review`** + **`share_plus`**; **in-app review** only from **Settings** tab, **5d** prod / **5m** debug (`kDebugMode`); stores may **suppress** prompts if tested too often. **`AppInstallMarkers`** on first **NavBar**. Next: **Play-installed** QA + checklist before review.
 
 ## Checkpoint / Onde paramos (2026-05-08)
 

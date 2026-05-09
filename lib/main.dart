@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import '/features/parental/parental_service.dart';
+import '/features/review/app_install_markers.dart';
 import '/features/parental/pin_dialog.dart';
 import '/pages/configuracoes/alterar_pin_widget.dart';
 import '/features/profiles/child_profile_service.dart';
@@ -212,6 +213,7 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     _currentPageName = widget.initialPage ?? _currentPageName;
     _currentPage = widget.page;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      unawaited(AppInstallMarkers.recordFirstOpenIfNeeded());
       _enforceNonPremiumTheme();
       _startForegroundUsageAccounting();
       await _checkParentalLimits();

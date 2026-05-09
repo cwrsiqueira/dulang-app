@@ -10,6 +10,8 @@ export '/pages/dulang_premium/dulang_premium_widget.dart'
     show DulangPremiumWidget;
 export '/pages/dulang_premium/dulang_subscription_manage_widget.dart'
     show DulangSubscriptionManageWidget;
+export '/pages/dulang_premium/dulang_premium_codigo_info_widget.dart'
+    show DulangPremiumCodigoInfoWidget;
 export '/pages/favoritos/favoritos_widget.dart' show FavoritosWidget;
 export '/pages/historico/historico_widget.dart' show HistoricoWidget;
 export '/pages/configuracoes/configuracoes_widget.dart'

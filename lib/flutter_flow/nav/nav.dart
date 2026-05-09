@@ -124,6 +124,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) {
         builder: (context, params) => const DulangSubscriptionManageWidget(),
       ),
       FFRoute(
+        name: DulangPremiumCodigoInfoWidget.routeName,
+        path: DulangPremiumCodigoInfoWidget.routePath,
+        builder: (context, params) => const DulangPremiumCodigoInfoWidget(),
+      ),
+      FFRoute(
         name: CanalVideosWidget.routeName,
         path: CanalVideosWidget.routePath,
         builder: (context, params) {

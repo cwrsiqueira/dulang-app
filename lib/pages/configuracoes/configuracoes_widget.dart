@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
+import '/features/review/parent_review_prompt.dart';
 import '/features/subscription/access_code_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/pages/aparencia/aparencia_widget.dart';
 import '/pages/contato/contato_widget.dart';
+import '/pages/dulang_premium/dulang_premium_codigo_info_widget.dart';
 import '/pages/dulang_premium/dulang_premium_widget.dart';
 import '/pages/dulang_premium/dulang_subscription_manage_widget.dart';
 import '/pages/sobre_o_dulang/sobre_o_dulang_widget.dart';
@@ -16,11 +20,24 @@ import '/pages/selecionar_perfil/selecionar_perfil_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ConfiguracoesWidget extends StatelessWidget {
+class ConfiguracoesWidget extends StatefulWidget {
   const ConfiguracoesWidget({super.key});
 
   static String routeName = 'Configuracoes';
   static String routePath = '/configuracoes';
+
+  @override
+  State<ConfiguracoesWidget> createState() => _ConfiguracoesWidgetState();
+}
+
+class _ConfiguracoesWidgetState extends State<ConfiguracoesWidget> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(ParentReviewPrompt.maybeRequestOnParentSettingsSurface());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +53,10 @@ class ConfiguracoesWidget extends StatelessWidget {
       ),
       body: Consumer2<SubscriptionService, AccessCodeService>(
         builder: (context, sub, accessCodes, _) {
-          // Reconstrói quando cupom ou assinatura mudam (título Premium vs Gerenciar).
           accessCodes.isGranted;
           final showManageSubscription = sub.hasActiveStorePremiumEntitlement;
+          final premiumPorCupom =
+              accessCodes.isGranted && !showManageSubscription;
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -100,11 +118,16 @@ class ConfiguracoesWidget extends StatelessWidget {
                 title: showManageSubscription
                     ? 'Gerenciar assinatura'
                     : 'Dulang Premium',
-                onTap: () => context.pushNamed(
-                  showManageSubscription
-                      ? DulangSubscriptionManageWidget.routeName
-                      : DulangPremiumWidget.routeName,
-                ),
+                onTap: () {
+                  if (showManageSubscription) {
+                    context.pushNamed(
+                        DulangSubscriptionManageWidget.routeName);
+                  } else if (premiumPorCupom) {
+                    context.pushNamed(DulangPremiumCodigoInfoWidget.routeName);
+                  } else {
+                    context.pushNamed(DulangPremiumWidget.routeName);
+                  }
+                },
               ),
               if (kDebugMode) ...[
                 const SizedBox(height: 32),
