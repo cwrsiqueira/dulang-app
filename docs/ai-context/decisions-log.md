@@ -2,6 +2,12 @@
 
 ## EN
 
+### 2026-05-09 - Android Internal Test build `1.0.47+47` (merge to `master`, CI deploy)
+
+- **Versioning:** `pubspec.yaml` **`1.0.47+47`**; `lib/app_build_metadata.dart` **`marketingVersion` 1.0.47**, **`lastContentUpdate` 09/05/2026** (legal footnote on Sobre / Termos / Contato).
+- **Product delta in this build:** premium **store-only** “Manage subscription” menu + defensive manage screen; **schedule autosave**; **profile name** normalization; access-code stack and related Supabase/docs already on `master` lineage.
+- **Ops:** `deploy_android.yml` on **`master`** push uploads AAB to **Internal testing**; operator runs **Play-installed** QA (`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`) before promoting track or **Play Store review** submission.
+
 ### 2026-05-08 - Premium UX: store-only “Manage subscription”; schedule autosave; profile name normalization; footnote metadata
 
 - **Settings navigation:** `Gerenciar assinatura` is shown only when `hasActiveStorePremiumEntitlement` (RevenueCat entitlement active). **Coupon-only** premium (`hasPremiumAccess` via `AccessCodeService`) opens **Dulang Premium** instead — no store subscription to manage.
@@ -188,6 +194,12 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-09 - Build Android `1.0.47+47` para Internal Test (merge na `master`, CI)
+
+- **Versionamento:** `pubspec.yaml` **`1.0.47+47`**; `lib/app_build_metadata.dart` com **`marketingVersion` 1.0.47** e **`lastContentUpdate` 09/05/2026** (rodapé legal em Sobre / Termos / Contato).
+- **Produto neste build:** menu **Gerenciar assinatura** só com loja + guarda na tela; **autosave** em Horários; **normalização** de nomes de perfil; linhagem já com códigos de acesso Supabase/docs.
+- **Operação:** `push` na **`master`** roda **`deploy_android.yml`** (AAB → **teste interno**); validar build **baixada pela Play** com **`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`** antes de promover trilha ou **enviar para revisão** na Console.
 
 ### 2026-05-08 - UX Premium: “Gerenciar assinatura” só na loja; autosave em horários; perfis; rodapé
 

@@ -1,12 +1,12 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-09 (integração em branch; QA local antes do deploy Play)
+Last updated: 2026-05-09 (build **1.0.47+47** → Internal Test; QA Play antes de revisão)
 
-## Checkpoint / Integração sem deploy na Play (2026-05-09)
+## Checkpoint / Build Android `1.0.47+47` — Internal Test (2026-05-09)
 
-**PT-BR:** O conjunto atual (UX Premium por **loja** vs cupom, **autosave** em Horários, normalização de **perfis**, **`app_build_metadata`**, Supabase/códigos e demais arquivos em working tree) foi enviado ao remoto em **branch de feature** para você **testar no `flutter run` / build local** antes de subir AAB. **`push` na `master` dispara** o workflow **`deploy_android.yml`** (upload para teste interno) — **não** fazer merge na `master` até decidir publicar; na release, incrementar **`pubspec.yaml`** conforme `.cursor/rules/versionamento-publicacao.mdc` e alinhar **`lib/app_build_metadata.dart`**.
+**PT-BR:** **`pubspec.yaml`** em **`1.0.47+47`** e **`lib/app_build_metadata.dart`** alinhados (`marketingVersion` **1.0.47**, `lastContentUpdate` **09/05/2026**). Merge na **`master`** dispara **`deploy_android.yml`** (AAB para **teste interno**). **Próximo passo operacional:** instalar a build **pela Play Store** (trilha de teste), percorrer **`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`**, fluxos **cupom + assinatura + horários** e só então **promover** / **enviar para revisão** na Play Console — o assistente **não** substitui esse QA em aparelho nem aprovação de políticas da loja.
 
-**EN:** Current changes are pushed on a **feature branch** for **local QA** before any Play artifact. **`push` to `master` triggers** **`deploy_android.yml`** — avoid merging to `master` until release is intended; for release, bump **`pubspec.yaml`** per versioning rules and align **`lib/app_build_metadata.dart`**.
+**EN:** **`1.0.47+47`** with **`app_build_metadata`** aligned. **`master` push** runs **`deploy_android.yml`** (AAB → **Internal testing**). **Next:** install the **Play-delivered** build, run **`docs/CHECKLIST_TESTE_SANDBOX_PLAY.md`**, coupon + subscription + schedules flows, then **promote / submit for review** in Play Console — automated checks here are **not** a substitute for on-device QA or Play policy sign-off.
 
 ## Checkpoint / Onde paramos (2026-05-08)
 
@@ -14,11 +14,11 @@ Last updated: 2026-05-09 (integração em branch; QA local antes do deploy Play)
 
 **EN:** Settings shows **Manage subscription** only for an **active store entitlement**; **coupon-only** premium uses **Dulang Premium**. Manage screen **defensively redirects** without active store entitlement. **Schedules screen:** **autosave** (slider debounce, hint copy, flush on dispose). **Profiles:** word capitalization + normalized save. **Releases:** bump `pubspec.yaml` **and** `app_build_metadata.dart` for the legal footnote.
 
-## Checkpoint / Onde paramos (2026-05-09)
+## Checkpoint / Códigos de acesso — UX (2026-05-09)
 
-**PT-BR:** Fluxo de **código de acesso Premium** validado em aparelho após ajustes de UX/estabilidade: botão `Confirmar` com loading + desabilitado durante envio, prevenção de clique duplo, remoção do erro de `TextEditingController` descartado e tratamento de timeout/`FunctionException` no `redeem`. Texto final para revisor atualizado para **“No login / No payment”** com passos numerados. Próximo passo: push na `master` para gerar AAB de revisão com **`1.0.46+46`**.
+**PT-BR:** Fluxo de **código de acesso Premium** com endurecimento de UX (loading no confirmar, anti-clique duplo, `TextEditingController`, timeout/`FunctionException` no `redeem`). Instruções ao revisor: **“No login / No payment”** com passos numerados. Incluso no release agregado **`1.0.47+47`** (Internal Test).
 
-**EN:** Premium access-code flow validated on device after UX/stability fixes (submit loading state, double-click prevention, disposed controller fix, timeout/`FunctionException` handling). Reviewer instructions finalized (“No login / No payment”, numbered steps). Next action: push to `master` to generate review build with **`1.0.46+46`**.
+**EN:** Access-code flow UX hardening (submit loading, double-click prevention, controller disposal fix, timeout/`FunctionException`). Reviewer copy: “No login / No payment”, numbered steps. Shipped in aggregated release **`1.0.47+47`** (Internal Test).
 
 ## Phase 1 closure / Encerramento da Fase 1
 
