@@ -34,9 +34,11 @@ class ConfiguracoesWidget extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Consumer<SubscriptionService>(
-        builder: (context, sub, _) {
-          final premium = sub.hasPremiumAccess;
+      body: Consumer2<SubscriptionService, AccessCodeService>(
+        builder: (context, sub, accessCodes, _) {
+          // Reconstrói quando cupom ou assinatura mudam (título Premium vs Gerenciar).
+          accessCodes.isGranted;
+          final showManageSubscription = sub.hasActiveStorePremiumEntitlement;
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -95,9 +97,11 @@ class ConfiguracoesWidget extends StatelessWidget {
               _tile(
                 context,
                 icon: Icons.workspace_premium_outlined,
-                title: premium ? 'Gerenciar assinatura' : 'Dulang Premium',
+                title: showManageSubscription
+                    ? 'Gerenciar assinatura'
+                    : 'Dulang Premium',
                 onTap: () => context.pushNamed(
-                  premium
+                  showManageSubscription
                       ? DulangSubscriptionManageWidget.routeName
                       : DulangPremiumWidget.routeName,
                 ),

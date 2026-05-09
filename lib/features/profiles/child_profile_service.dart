@@ -39,6 +39,18 @@ class ChildProfileService {
   ChildProfileService._();
   static final ChildProfileService instance = ChildProfileService._();
 
+  /// Trim, colapsa espaços e capitaliza cada palavra (ex.: "maria clara" → "Maria Clara").
+  static String normalizeProfileDisplayName(String raw) {
+    final collapsed = raw.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (collapsed.isEmpty) return '';
+    return collapsed.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      final first = word[0].toUpperCase();
+      final rest = word.length > 1 ? word.substring(1).toLowerCase() : '';
+      return '$first$rest';
+    }).join(' ');
+  }
+
   static const _profilesKey = 'child_profiles_v1';
   static const _activeIdKey = 'child_profile_active_id_v1';
 
@@ -132,9 +144,10 @@ class ChildProfileService {
   Future<String> addProfile(String name, int colorValue) async {
     final list = await loadProfiles();
     final id = const Uuid().v4();
+    final display = normalizeProfileDisplayName(name);
     list.add(ChildProfile(
       id: id,
-      name: name.trim().isEmpty ? 'Novo perfil' : name.trim(),
+      name: display.isEmpty ? 'Novo perfil' : display,
       colorValue: colorValue,
     ));
     await saveProfiles(list);
@@ -165,9 +178,10 @@ class ChildProfileService {
     final list = await loadProfiles();
     final i = list.indexWhere((p) => p.id == id);
     if (i < 0) return;
+    final display = normalizeProfileDisplayName(name);
     list[i] = ChildProfile(
       id: list[i].id,
-      name: name.trim().isEmpty ? list[i].name : name.trim(),
+      name: display.isEmpty ? list[i].name : display,
       colorValue: list[i].colorValue,
     );
     await saveProfiles(list);

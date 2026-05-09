@@ -1,6 +1,18 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-09 (access codes validados; release candidate 1.0.46+46)
+Last updated: 2026-05-09 (integração em branch; QA local antes do deploy Play)
+
+## Checkpoint / Integração sem deploy na Play (2026-05-09)
+
+**PT-BR:** O conjunto atual (UX Premium por **loja** vs cupom, **autosave** em Horários, normalização de **perfis**, **`app_build_metadata`**, Supabase/códigos e demais arquivos em working tree) foi enviado ao remoto em **branch de feature** para você **testar no `flutter run` / build local** antes de subir AAB. **`push` na `master` dispara** o workflow **`deploy_android.yml`** (upload para teste interno) — **não** fazer merge na `master` até decidir publicar; na release, incrementar **`pubspec.yaml`** conforme `.cursor/rules/versionamento-publicacao.mdc` e alinhar **`lib/app_build_metadata.dart`**.
+
+**EN:** Current changes are pushed on a **feature branch** for **local QA** before any Play artifact. **`push` to `master` triggers** **`deploy_android.yml`** — avoid merging to `master` until release is intended; for release, bump **`pubspec.yaml`** per versioning rules and align **`lib/app_build_metadata.dart`**.
+
+## Checkpoint / Onde paramos (2026-05-08)
+
+**PT-BR:** Ajustes finais de UX/regras: **Configurações** mostra **Gerenciar assinatura** só com entitlement de **loja** ativo (`SubscriptionService.hasActiveStorePremiumEntitlement`); acesso **só por cupom** permanece em **Dulang Premium**. Tela **Gerenciar assinatura** redireciona para o paywall se não houver assinatura de loja ativa (evita cards inconsistentes). **Horários e tempo:** salvamento **automático** (debounce no slider, texto de ajuda, flush ao sair). **Perfis:** teclado com capitalização por palavra + normalização ao salvar. **Release:** além do bump do `pubspec.yaml`, atualizar `lib/app_build_metadata.dart` (`marketingVersion` + `lastContentUpdate`) — ver `engineering-rules.md`.
+
+**EN:** Settings shows **Manage subscription** only for an **active store entitlement**; **coupon-only** premium uses **Dulang Premium**. Manage screen **defensively redirects** without active store entitlement. **Schedules screen:** **autosave** (slider debounce, hint copy, flush on dispose). **Profiles:** word capitalization + normalized save. **Releases:** bump `pubspec.yaml` **and** `app_build_metadata.dart` for the legal footnote.
 
 ## Checkpoint / Onde paramos (2026-05-09)
 

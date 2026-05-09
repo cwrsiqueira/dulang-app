@@ -26,6 +26,11 @@ No projeto Supabase, configure:
 2. `supabase functions deploy validate-access-code --no-verify-jwt`
 3. Insira códigos na tabela `access_codes` (ver [`docs/ACCESS_CODES_SUPABASE.md`](../../docs/ACCESS_CODES_SUPABASE.md)).
 
+### Segurança adicional aplicada
+
+- validação estrita de formato (`A-Z0-9`, 8 a 32 caracteres);
+- limitação de tentativas por cliente/IP (janela curta) para reduzir brute force.
+
 ## Deploy (exemplo via CLI)
 
 ```bash

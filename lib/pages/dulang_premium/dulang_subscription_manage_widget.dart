@@ -173,10 +173,15 @@ class _DulangSubscriptionManageWidgetState
       }
       await SubscriptionService.instance.refreshCustomerInfo();
       if (!mounted) return;
+      if (!SubscriptionService.instance.hasActiveStorePremiumEntitlement) {
+        context.safePop();
+        context.pushNamed(DulangPremiumWidget.routeName);
+        return;
+      }
       final info = SubscriptionService.instance.customerInfo;
       final entitlement =
           info?.entitlements.all[SubscriptionConstants.premiumEntitlementId];
-      if (entitlement != null) {
+      if (entitlement != null && entitlement.isActive) {
         await _loadCurrentPlanInfo(entitlement.productIdentifier);
       }
       if (mounted) {
@@ -195,8 +200,10 @@ class _DulangSubscriptionManageWidgetState
     final id = SubscriptionConstants.premiumEntitlementId;
     final ent = info?.entitlements.all[id];
     final hasAccess = SubscriptionService.instance.hasPremiumAccess;
-    final accessViaCode =
-        hasAccess && AccessCodeService.instance.isGranted && ent == null;
+    final storeEntActive =
+        SubscriptionService.instance.hasActiveStorePremiumEntitlement &&
+        ent != null &&
+        ent.isActive;
     final planName = ent == null
         ? null
         : _friendlyPlanName(ent.productIdentifier, _activePackage?.packageType);
@@ -245,32 +252,7 @@ class _DulangSubscriptionManageWidgetState
                 ),
               ),
             )
-          else if (accessViaCode) ...[
-            Text(
-              'Premium por código de acesso',
-              style: theme.titleMedium.override(color: theme.primaryText),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Seu Premium está ativo por um código. Não há cobrança na loja para gerenciar ou cancelar por aqui — o acesso não renova sozinho pela Google Play.',
-              style: theme.bodyMedium,
-            ),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: () =>
-                  context.pushNamed(DulangPremiumWidget.routeName),
-              style: FilledButton.styleFrom(
-                backgroundColor: theme.tertiary,
-                foregroundColor: Colors.black,
-                minimumSize: const Size(double.infinity, 48),
-              ),
-              child: Text(
-                'Ver planos e assinatura',
-                style: theme.titleSmall.override(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ]
-          else if (ent != null) ...[
+          else if (storeEntActive) ...[
             Text(
               'Plano atual',
               style: theme.titleMedium.override(color: theme.primaryText),
@@ -360,7 +342,7 @@ class _DulangSubscriptionManageWidgetState
               ),
             ),
           ]
-          else if (hasAccess && ent == null)
+          else if (hasAccess && !storeEntActive)
             Padding(
               padding: const EdgeInsets.only(top: 24),
               child: Text(

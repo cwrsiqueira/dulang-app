@@ -6,6 +6,11 @@ const CORS = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const CODE_RE = /^[A-Z0-9]{8,32}$/;
+const ATTEMPT_WINDOW_MS = 60_000;
+const MAX_ATTEMPTS_PER_WINDOW = 12;
+const attemptsByClient = new Map<string, { count: number; windowStart: number }>();
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -17,6 +22,24 @@ function normalizeCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "");
 }
 
+function clientKey(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for") ?? "";
+  const firstIp = fwd.split(",")[0]?.trim();
+  return firstIp || req.headers.get("x-real-ip") || "unknown";
+}
+
+function rateLimited(client: string): boolean {
+  const now = Date.now();
+  const current = attemptsByClient.get(client);
+  if (!current || now - current.windowStart > ATTEMPT_WINDOW_MS) {
+    attemptsByClient.set(client, { count: 1, windowStart: now });
+    return false;
+  }
+  current.count += 1;
+  attemptsByClient.set(client, current);
+  return current.count > MAX_ATTEMPTS_PER_WINDOW;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS });
@@ -24,6 +47,11 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
+  }
+
+  const client = clientKey(req);
+  if (rateLimited(client)) {
+    return json({ error: "Muitas tentativas. Aguarde 1 minuto." }, 429);
   }
 
   let body: { code?: string };
@@ -34,7 +62,7 @@ Deno.serve(async (req) => {
   }
 
   const normalized = normalizeCode(body?.code ?? "");
-  if (!normalized || normalized.length < 4) {
+  if (!normalized || !CODE_RE.test(normalized)) {
     return json({ error: "Código inválido." }, 400);
   }
 

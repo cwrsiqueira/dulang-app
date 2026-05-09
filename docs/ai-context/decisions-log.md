@@ -2,6 +2,14 @@
 
 ## EN
 
+### 2026-05-08 - Premium UX: store-only “Manage subscription”; schedule autosave; profile name normalization; footnote metadata
+
+- **Settings navigation:** `Gerenciar assinatura` is shown only when `hasActiveStorePremiumEntitlement` (RevenueCat entitlement active). **Coupon-only** premium (`hasPremiumAccess` via `AccessCodeService`) opens **Dulang Premium** instead — no store subscription to manage.
+- **`DulangSubscriptionManageWidget`:** after `refreshCustomerInfo`, redirects to `DulangPremiumWidget` if there is no active **store** entitlement; UI cards require `ent.isActive`. Removes the old “Premium por código” block on this route (coupon users should not land here).
+- **Schedules (`HorariosAcessoWidget`):** persistence on every control change; **450ms debounce** on the daily-limit slider; optional success snack after debounced save; **silent** immediate saves for switches/dropdowns; **flush on dispose** when data was loaded; hint line explains autosave.
+- **Profiles:** `TextCapitalization.words` on add/rename dialogs; `ChildProfileService.normalizeProfileDisplayName` applied in `addProfile` / `renameProfile`.
+- **Release discipline:** `lib/app_build_metadata.dart` (`marketingVersion`, `lastContentUpdate`) must be updated alongside `pubspec.yaml` for releases that change visible version or legal footnote text; documented in `engineering-rules.md`.
+
 ### 2026-05-09 - Access-code UX hardening validated; ready for release build `1.0.46+46`
 
 - **UX:** Access-code dialog now disables submit while processing, shows loading spinner, and blocks repeated taps.
@@ -180,6 +188,14 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-08 - UX Premium: “Gerenciar assinatura” só na loja; autosave em horários; perfis; rodapé
+
+- **Menu Configurações:** **Gerenciar assinatura** só com entitlement de **loja** ativo (`hasActiveStorePremiumEntitlement`). Premium **só por cupom** continua em **Dulang Premium** (não há assinatura da Play/App Store para gerenciar nessa rota).
+- **`DulangSubscriptionManageWidget`:** após `refreshCustomerInfo`, se não houver entitlement de loja ativo, **redireciona** para `DulangPremiumWidget`; cards exigem `ent.isActive`. Removido o bloco “Premium por código” nesta tela (deep link defensivo).
+- **Horários e tempo:** gravação **automática** nas mudanças; **debounce ~450 ms** no slider do limite diário; snack de sucesso só após o debounce; switches/dropdowns salvam em silêncio com `_load` para atualizar “Hoje: …”; **flush** ao `dispose` se já carregou.
+- **Perfis:** `TextCapitalization.words` nos diálogos; `ChildProfileService.normalizeProfileDisplayName` em `addProfile` / `renameProfile`.
+- **Release:** além do `pubspec.yaml`, atualizar **`lib/app_build_metadata.dart`** (`marketingVersion`, `lastContentUpdate`) quando mudar versão visível ou texto do rodapé — ver `engineering-rules.md`.
 
 ### 2026-05-09 - Endurecimento de UX dos codigos validado; pronto para build `1.0.46+46`
 

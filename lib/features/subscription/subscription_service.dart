@@ -49,6 +49,14 @@ class SubscriptionService extends ChangeNotifier {
     return e?.isActive == true;
   }
 
+  /// Premium via loja (RevenueCat) com entitlement ativo — **não** inclui cupom local.
+  /// Use para “Gerenciar assinatura” e link `managementURL` da loja.
+  bool get hasActiveStorePremiumEntitlement {
+    if (kDebugMode && debugBypassPremium) return false;
+    final id = SubscriptionConstants.premiumEntitlementId;
+    return _customerInfo?.entitlements.all[id]?.isActive == true;
+  }
+
   CustomerInfo? get customerInfo => _customerInfo;
 
   bool get _supportsNativeStore {

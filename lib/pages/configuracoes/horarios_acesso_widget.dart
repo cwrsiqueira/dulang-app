@@ -1,3 +1,5 @@
+import 'dart:async' show Timer, unawaited;
+
 import '/features/parental/parental_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -22,6 +24,7 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
   int _limitMin = 120;
   int _used = 0;
   bool _loading = true;
+  Timer? _debounceSave;
 
   @override
   void initState() {
@@ -32,7 +35,11 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
 
   @override
   void dispose() {
+    _debounceSave?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    if (!_loading) {
+      unawaited(_persistCore(showSnack: false, reloadAfter: false));
+    }
     super.dispose();
   }
 
@@ -62,17 +69,53 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
     });
   }
 
-  Future<void> _persist() async {
-    await ParentalService.setAccessWindowEnabled(_windowOn);
-    await ParentalService.setDailyLimitEnabled(_limitOn);
-    await ParentalService.setAccessWindowHours(_start, _end);
-    await ParentalService.setDailyLimitMinutes(_limitMin);
-    if (!mounted) return;
-    await _load();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Preferências salvas.')),
-    );
+  /// Salva preferências atuais. Com [debounce]: snack só ao parar de arrastar o slider.
+  void _scheduleAutosave({bool debounce = false}) {
+    if (_loading) return;
+    if (debounce) {
+      _debounceSave?.cancel();
+      _debounceSave = Timer(const Duration(milliseconds: 450), () {
+        _debounceSave = null;
+        unawaited(_persistCore(showSnack: true, reloadAfter: true));
+      });
+    } else {
+      _debounceSave?.cancel();
+      _debounceSave = null;
+      unawaited(_persistCore(showSnack: false, reloadAfter: true));
+    }
+  }
+
+  Future<void> _persistCore({
+    required bool showSnack,
+    required bool reloadAfter,
+  }) async {
+    try {
+      await ParentalService.setAccessWindowEnabled(_windowOn);
+      await ParentalService.setDailyLimitEnabled(_limitOn);
+      await ParentalService.setAccessWindowHours(_start, _end);
+      await ParentalService.setDailyLimitMinutes(_limitMin);
+      if (!mounted) return;
+      if (showSnack) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Preferências salvas.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      if (reloadAfter && mounted) await _load();
+    } catch (e, st) {
+      debugPrint('HorariosAcessoWidget persist: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Não foi possível salvar. Tente de novo. (${e.toString()})',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -106,7 +149,10 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
               'Fora da janela o app orienta a criança a parar (tela principal).',
             ),
             value: _windowOn,
-            onChanged: (v) => setState(() => _windowOn = v),
+            onChanged: (v) {
+              setState(() => _windowOn = v);
+              _scheduleAutosave();
+            },
           ),
           if (_windowOn) ...[
             Row(
@@ -124,7 +170,10 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
                           (h) =>
                               DropdownMenuItem(value: h, child: Text('$h h')),
                         ),
-                        onChanged: (v) => setState(() => _start = v ?? 8),
+                        onChanged: (v) {
+                          setState(() => _start = v ?? 8);
+                          _scheduleAutosave();
+                        },
                       ),
                     ),
                   ),
@@ -142,7 +191,10 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
                           (h) =>
                               DropdownMenuItem(value: h, child: Text('$h h')),
                         ),
-                        onChanged: (v) => setState(() => _end = v ?? 22),
+                        onChanged: (v) {
+                          setState(() => _end = v ?? 22);
+                          _scheduleAutosave();
+                        },
                       ),
                     ),
                   ),
@@ -155,7 +207,10 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
             title: const Text('Limite diário de tempo na tela'),
             subtitle: Text('Hoje: $_used min de $_limitMin min permitidos'),
             value: _limitOn,
-            onChanged: (v) => setState(() => _limitOn = v),
+            onChanged: (v) {
+              setState(() => _limitOn = v);
+              _scheduleAutosave();
+            },
           ),
           if (_limitOn)
             Slider(
@@ -164,17 +219,18 @@ class _HorariosAcessoWidgetState extends State<HorariosAcessoWidget>
               max: 300,
               divisions: 19,
               label: '$_limitMin min',
-              onChanged: (v) => setState(() => _limitMin = v.round()),
+              onChanged: (v) {
+                setState(() => _limitMin = v.round());
+                _scheduleAutosave(debounce: true);
+              },
             ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _persist,
-            style: FilledButton.styleFrom(
-              backgroundColor: FlutterFlowTheme.of(context).tertiary,
-              foregroundColor: Colors.black,
-              minimumSize: const Size(double.infinity, 48),
-            ),
-            child: const Text('Salvar'),
+          const SizedBox(height: 8),
+          Text(
+            'As alterações são salvas automaticamente.',
+            style: FlutterFlowTheme.of(context).bodySmall.copyWith(
+                  color: FlutterFlowTheme.of(context).secondaryText,
+                ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

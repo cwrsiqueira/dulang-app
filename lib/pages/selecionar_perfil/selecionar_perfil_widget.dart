@@ -74,6 +74,7 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
           content: TextField(
             controller: controller,
             style: GoogleFonts.inter(color: Colors.white),
+            textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(
               labelText: 'Nome da criança',
               labelStyle: TextStyle(color: Colors.white70),
@@ -148,6 +149,7 @@ class _SelecionarPerfilWidgetState extends State<SelecionarPerfilWidget> {
           title: const Text('Novo perfil'),
           content: TextField(
             controller: name,
+            textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(
               labelText: 'Nome da criança',
               border: OutlineInputBorder(),
