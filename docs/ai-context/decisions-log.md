@@ -2,6 +2,12 @@
 
 ## EN
 
+### 2026-05-11 - Release `1.0.49+49`: iOS bundle `com.carlosdev.dulang`; Android + iOS CI ops
+
+- **Versioning:** `pubspec.yaml` **`1.0.49+49`**; `app_build_metadata` **1.0.49** / **11/05/2026**.
+- **iOS:** `PRODUCT_BUNDLE_IDENTIFIER` and `ios/ExportOptions.plist` **`com.carlosdev.dulang`** (was `com.carlosdev.dulangfree`); matches **Dulang App Store Distribution** profile in Apple Developer. Signing for GitHub Actions: **CSR + private key on Windows (OpenSSL)** → `.p12` + repository secrets; **`deploy_ios.yml`** remains **`workflow_dispatch`** only (manual **Run workflow**).
+- **Ops:** **`master` push** triggers **Android** deploy workflow; **iOS** TestFlight upload is independent — **parallel runs are fine**; ensure provisioning profile includes the active **iOS Distribution** certificate after any cert rotation.
+
 ### 2026-05-10 - Android Internal Test build `1.0.48+48` (coupon info screen, in-app review, paywall fix)
 
 - **Versioning:** `pubspec.yaml` **`1.0.48+48`**; `app_build_metadata` **1.0.48** / **10/05/2026**.
@@ -67,8 +73,8 @@
 
 ### 2026-05-01 - iOS CI/CD workflow; freemium QA completed on Android
 
-- Decision: create `.github/workflows/deploy_ios.yml` (`workflow_dispatch` only; `macos-latest`; Flutter 3.41.7; manual code signing via certificate + provisioning profile installed in ephemeral keychain; `flutter build ipa --release --obfuscate`; TestFlight upload via `xcrun altool` with App Store Connect API key). `ios/ExportOptions.plist` added with bundle ID `com.carlosdev.dulangfree` and `signingStyle: manual`. Team ID injected at build time via `sed` (plist does not expand env vars natively).
-- iOS app already exists in App Store Connect (bundle ID `com.carlosdev.dulangfree`); provisioning profile name in `ExportOptions.plist` must match the portal name — update if renamed.
+- Decision: create `.github/workflows/deploy_ios.yml` (`workflow_dispatch` only; `macos-latest`; Flutter 3.41.7; manual code signing via certificate + provisioning profile installed in ephemeral keychain; `flutter build ipa --release --obfuscate`; TestFlight upload via `xcrun altool` with App Store Connect API key). `ios/ExportOptions.plist` uses bundle ID **`com.carlosdev.dulang`** and `signingStyle: manual`. Team ID injected at build time via `sed` (plist does not expand env vars natively).
+- iOS app in App Store Connect uses bundle ID **`com.carlosdev.dulang`**; provisioning profile name in `ExportOptions.plist` must match the portal name — update if renamed.
 - `workflow_dispatch` only (no auto-trigger on push) because iOS builds are less frequent and TestFlight uploads require deliberate version bumps; Android keeps auto-trigger on `master` push.
 - Freemium + premium QA approved on physical Android device (2026-05-01); all flows validated including debug panel, daily limit overlay, Brevo email registration, content gates, and theme enforcement.
 - Impact: `.github/workflows/deploy_ios.yml` (new), `ios/ExportOptions.plist` (new); `current-status.md` and `roadmap-priorities.md` updated. Version bump to `1.0.41+41` for Internal Test upload.
@@ -201,6 +207,12 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-11 - Release `1.0.49+49`: bundle iOS `com.carlosdev.dulang`; CI Android + iOS
+
+- **Versionamento:** `pubspec.yaml` **`1.0.49+49`**; `app_build_metadata` **1.0.49** / **11/05/2026**.
+- **iOS:** `PRODUCT_BUNDLE_IDENTIFIER` e `ios/ExportOptions.plist` com **`com.carlosdev.dulang`** (antes `dulangfree`); alinhado ao perfil **Dulang App Store Distribution** no Developer. Assinatura para GitHub: **CSR + chave no Windows (OpenSSL)** → `.p12` + secrets; **`deploy_ios.yml`** só com **Run workflow** manual (não dispara no `push`).
+- **Operação:** `push` na **`master`** → **Android** no CI; **iOS** independente — **pode rodar os dois ao mesmo tempo** no Actions; após trocar certificado, conferir perfil com o certificado **iOS Distribution** ativo.
 
 ### 2026-05-10 - Build Android `1.0.48+48` para Internal Test (tela cupom, review, fix paywall)
 

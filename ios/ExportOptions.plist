@@ -12,7 +12,7 @@
 	<string>TEAM_ID_PLACEHOLDER</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>com.carlosdev.dulangfree</key>
+		<key>com.carlosdev.dulang</key>
 		<string>dulang_appstore</string>
 	</dict>
 	<key>uploadBitcode</key>

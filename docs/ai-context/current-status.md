@@ -1,6 +1,12 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-10 (build **1.0.48+48** → Internal Test final; QA Play antes de revisão)
+Last updated: 2026-05-11 (build **1.0.49+49**; Android CI + iOS pronto p/ TestFlight)
+
+## Checkpoint / Release `1.0.49+49` — Android + iOS (2026-05-11)
+
+**PT-BR:** **`pubspec.yaml`** **`1.0.49+49`**; **`app_build_metadata`** **1.0.49** / **11/05/2026**. **`master` push** dispara **`deploy_android.yml`** (AAB). **iOS:** bundle e export alinhados a **`com.carlosdev.dulang`** (`ExportOptions.plist`, `PRODUCT_BUNDLE_IDENTIFIER` no Xcodeproj); certificado **CSR/OpenSSL no Windows** → **`.p12`** + secrets no GitHub; **`deploy_ios.yml`** só por **Run workflow** (não dispara no push). Android e iOS **podem rodar em paralelo** nos Actions. Próximo: workflow iOS manual após secrets; TestFlight + perfil **Dulang App Store Distribution** com o certificado ativo.
+
+**EN:** **`1.0.49+49`**, metadata bumped. **Android:** auto on **`master`**. **iOS:** bundle **`com.carlosdev.dulang`**; signing secrets on GitHub; **TestFlight** via **`workflow_dispatch`** only. **Parallel runs OK.** Next: run **Deploy iOS to TestFlight** when ready.
 
 ## Checkpoint / Build Android `1.0.48+48` — Internal Test (2026-05-10)
 
@@ -91,11 +97,11 @@ Instruções ao revisor submetidas no Play Console: título "Free Plan Access �
 
 ## iOS CI/CD — criado, pendente de credenciais (2026-05-01)
 
-**PT-BR:** Workflow `.github/workflows/deploy_ios.yml` criado (`workflow_dispatch` only, `macos-latest`, Flutter 3.41.7, signing manual, upload TestFlight via `xcrun altool` com App Store Connect API key). `ios/ExportOptions.plist` criado com `com.carlosdev.dulangfree` (bundle ID real do Xcode). Para rodar pela primeira vez, faltam:
+**PT-BR:** Workflow `.github/workflows/deploy_ios.yml` criado (`workflow_dispatch` only, `macos-latest`, Flutter 3.41.7, signing manual, upload TestFlight via `xcrun altool` com App Store Connect API key). `ios/ExportOptions.plist` e `PRODUCT_BUNDLE_IDENTIFIER` alinhados a **`com.carlosdev.dulang`**. Para rodar pela primeira vez, faltam:
 
 1. **Certificado**: exportar "Apple Distribution" do Keychain como `.p12` → `base64` → secret `APPLE_CERTIFICATE_P12_BASE64` + `APPLE_CERTIFICATE_PASSWORD`.
-2. **App Store já criado** — bundle ID `com.carlosdev.dulangfree` e nome já configurados no App Store Connect. Confirmar nome atual ao setar o provisioning profile.
-3. **Provisioning profile**: criar App Store Distribution profile para `com.carlosdev.dulangfree` no Developer Portal → baixar → `base64` → secret `APPLE_PROVISIONING_PROFILE_BASE64`. Nomear como `dulang_appstore` no portal (ou atualizar `ExportOptions.plist`).
+2. **App Store já criado** — bundle ID **`com.carlosdev.dulang`** e nome já configurados no App Store Connect. Confirmar nome atual ao setar o provisioning profile.
+3. **Provisioning profile**: criar App Store Distribution profile para **`com.carlosdev.dulang`** no Developer Portal → baixar → `base64` → secret `APPLE_PROVISIONING_PROFILE_BASE64`. Nomear como `dulang_appstore` no portal (ou atualizar `ExportOptions.plist`).
 4. **Secrets restantes**: `KEYCHAIN_PASSWORD` (qualquer string), `APPLE_TEAM_ID`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_API_PRIVATE_KEY` (conteúdo do `.p8`), `REVENUECAT_IOS_KEY`.
 
 ## Snapshot Matrix / Matriz de Snapshot
