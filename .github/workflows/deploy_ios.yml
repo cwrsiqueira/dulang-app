@@ -103,11 +103,35 @@ jobs:
             ls -la build/ios/ipa
             exit 1
           fi
-          P8_PATH="$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
-          printf '%s\n' "$API_KEY_CONTENT" | tr -d '\r' > "$P8_PATH"
+          # Bearer inválido = trio API ASC (Key ID + Issuer + .p8), não P12/perfil.
+          trim() { printf '%s' "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
+          KID=$(trim "$API_KEY_ID")
+          ISS=$(trim "$API_ISSUER_ID")
+          if [ -z "$KID" ] || [ -z "$ISS" ]; then
+            echo "::error::APPLE_API_KEY_ID ou APPLE_API_ISSUER_ID vazio no secret."
+            exit 1
+          fi
+          P8_PATH="$RUNNER_TEMP/AuthKey_${KID}.p8"
+          CLEAN=$(printf '%s' "$API_KEY_CONTENT" | tr -d '\r')
+          case "$CLEAN" in
+            *"BEGIN PRIVATE KEY"*|*"BEGIN EC PRIVATE KEY"*)
+              printf '%s\n' "$CLEAN" > "$P8_PATH"
+              ;;
+            *)
+              printf '%s' "$CLEAN" | tr -d ' \n\t' | base64 -d > "$P8_PATH" 2>/dev/null || {
+                echo "::error::APPLE_API_PRIVATE_KEY: não é PEM (BEGIN…KEY) nem base64 válido do .p8."
+                exit 1
+              }
+              ;;
+          esac
           chmod 600 "$P8_PATH"
+          if ! openssl pkey -in "$P8_PATH" -noout 2>/tmp/asc_pkey.err; then
+            echo "::error::APPLE_API_PRIVATE_KEY ilegível para openssl. Use o texto completo do AuthKey_XXX.p8 (PEM) no secret, ou o arquivo .p8 codificado em base64 (uma linha). Key ID e Issuer têm que ser do MESMO par de chaves na ASC."
+            cat /tmp/asc_pkey.err >&2 || true
+            exit 1
+          fi
           API_JSON="$RUNNER_TEMP/asc_api_key.json"
-          jq -n --arg kid "$API_KEY_ID" --arg iss "$API_ISSUER_ID" --rawfile key "$P8_PATH" \
+          jq -n --arg kid "$KID" --arg iss "$ISS" --rawfile key "$P8_PATH" \
             '{key_id: $kid, issuer_id: $iss, key: $key, in_house: false}' > "$API_JSON"
           echo "Uploading via fastlane pilot: $IPA_PATH"
           fastlane pilot upload \
