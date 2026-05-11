@@ -1,12 +1,12 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-09 (build **1.0.50+50**; CI Play + assinatura iOS)
+Last updated: 2026-05-11 (build **1.0.50+50**; CI iOS — `destination: export`, JWT `.p8` em `$RUNNER_TEMP`; ver **`engineering-rules.md`** para **`[skip ci]`** em `push` na `master` sem deploy Android)
 
 ## Checkpoint / Release `1.0.50+50` — CI Android + iOS (2026-05-09)
 
-**PT-BR:** **`pubspec.yaml`** **`1.0.50+50`**; **`app_build_metadata`** **1.0.50** (rodapé legal **11/05/2026** — sem mudança de texto). **`deploy_android.yml`:** removido **`changesNotSentForReview`** — a API da Play passou a rejeitar esse parâmetro (“Changes are sent for review automatically”); upload continua na trilha **internal** apenas (**não** promove a produção sozinho). **`deploy_ios.yml`:** perfil copiado como **`{UUID}.mobileprovision`**. **iOS Xcode:** Release do **Runner** com assinatura **manual**, **`iPhone Distribution`**, **`DEVELOPMENT_TEAM`**, **`PROVISIONING_PROFILE_SPECIFIER`** = nome do perfil (**Dulang App Store Distribution**); **`ExportOptions.plist`** com o mesmo nome em **`provisioningProfiles`**. **`master` push** → Android Internal Test; iOS → **Run workflow**.
+**PT-BR:** **`pubspec.yaml`** **`1.0.50+50`**; **`app_build_metadata`** **1.0.50** (rodapé legal **11/05/2026** — sem mudança de texto). **`deploy_android.yml`:** removido **`changesNotSentForReview`** — a API da Play passou a rejeitar esse parâmetro (“Changes are sent for review automatically”); upload continua na trilha **internal** apenas (**não** promove a produção sozinho). **`deploy_ios.yml`:** perfil **`{UUID}.mobileprovision`**; **`ExportOptions.plist`** com **`destination: export`** (gera **`build/ios/ipa/*.ipa`**; **`upload`** não deixava IPA no caminho esperado); **`.p8`** em **`$RUNNER_TEMP`** + **`API_PRIVATE_KEYS_DIR`** para o **altool** (evita **-26000** com cwd do Transporter). **iOS Xcode:** Release **Runner** **manual**, **`iPhone Distribution`**, **`DEVELOPMENT_TEAM`**, perfil **Dulang App Store Distribution**. **`master` push** → Android Internal Test; iOS → **Run workflow**.
 
-**EN:** **`1.0.50+50`**. **Android CI:** dropped **`changesNotSentForReview`** (Play API rejects it now); still **internal** track only. **iOS CI:** provision profile installed by **UUID** filename; **Manual** Release signing + **Distribution** + profile name aligned to **Dulang App Store Distribution**.
+**EN:** **`1.0.50+50`**. **Android CI:** dropped **`changesNotSentForReview`**; **internal** only. **iOS CI:** **`destination: export`**, **API_PRIVATE_KEYS_DIR** under **`$RUNNER_TEMP`** + **altool** JWT; profile by **UUID**; **Manual** Release + **Distribution**.
 
 ## Checkpoint / Release `1.0.49+49` — Android + iOS (2026-05-11)
 

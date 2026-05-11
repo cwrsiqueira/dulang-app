@@ -2,6 +2,13 @@
 
 ## EN
 
+### 2026-05-11 - iOS CI: IPA local + altool JWT (Xcode 16)
+
+- **Ops:** `push` to **`master`** with **`[skip ci]`** (or **`[ci skip]`**) in the commit message skips **push-triggered** GitHub Actions (e.g. **Android** Internal Test) when syncing these changes only — see **`engineering-rules.md`**.
+- **`ios/ExportOptions.plist`:** **`destination`** = **`export`** (was **`upload`**). With **`upload`**, the export step does not leave **`build/ios/ipa/*.ipa`**, so the Actions step that runs **`find build/ios/ipa`** had nothing to upload (`The file '' cannot be found`).
+- **`deploy_ios.yml`:** write **`AuthKey_<id>.p8`** under **`$RUNNER_TEMP/appstoreconnect_private_keys`** and set **`API_PRIVATE_KEYS_DIR`** via **`GITHUB_ENV`**. The Transporter used by **`altool`** changes working directory; keys only under **`~/.appstoreconnect/private_keys`** often yield **`-26000` / `Failure to authenticate`**.
+- **`xcrun altool`:** keep **`--upload-app -f`** + **`--type ios`** + **`--apiKey`** / **`--apiIssuer`** (flags still exposed on runners). If JWT still fails after the IPA path fix, confirm an **App Manager** (or higher) key; some accounts require **Team** API keys per Apple forums.
+
 ### 2026-05-09 - Release `1.0.50+50`: Play upload API + iOS archive signing in CI
 
 - **Versioning:** `pubspec.yaml` **`1.0.50+50`**; `app_build_metadata` **1.0.50** (legal footnote date unchanged: **11/05/2026**).
@@ -214,6 +221,13 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-11 - CI iOS: IPA no disco + JWT do altool (Xcode 16)
+
+- **Operação:** `push` na **`master`** com **`[skip ci]`** (ou **`[ci skip]`**) na mensagem do commit pula Actions disparadas por **`push`** (ex.: deploy **Android** em teste interno) quando for só sincronizar estas mudanças — ver **`engineering-rules.md`**.
+- **`ios/ExportOptions.plist`:** **`destination`** = **`export`** (antes **`upload`**). Com **`upload`**, não fica **`build/ios/ipa/*.ipa`** e o passo do Actions que faz upload falha com arquivo vazio.
+- **`deploy_ios.yml`:** grava o **`.p8`** em **`$RUNNER_TEMP/appstoreconnect_private_keys`** e define **`API_PRIVATE_KEYS_DIR`** no **`GITHUB_ENV`**, porque o Transporter muda o **cwd** e a chave só em **`~/.appstoreconnect/private_keys`** costuma gerar **`-26000` / falha de autenticação**.
+- **`xcrun altool`:** **`--upload-app -f`**, **`--type ios`**, **`--apiKey`** / **`--apiIssuer`**. Se ainda falhar JWT: papel **App Manager**+; em algumas contas, chave de **equipe** (Team) na ASC.
 
 ### 2026-05-09 - Release `1.0.50+50`: API da Play no upload + assinatura iOS no archive (CI)
 

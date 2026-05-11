@@ -78,22 +78,39 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
             --export-options-plist=ios/ExportOptions.plist
 
+      # Chave .p8 em diretório absoluto + API_PRIVATE_KEYS_DIR: o Transporter usado pelo altool
+      # muda o cwd; ~/.appstoreconnect/private_keys costuma falhar com JWT (-26000).
       - name: Setup App Store Connect API key
         env:
           API_KEY_CONTENT: ${{ secrets.APPLE_API_PRIVATE_KEY }}
           API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "$API_KEY_CONTENT" > ~/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8
+          ASC_KEYS="$RUNNER_TEMP/appstoreconnect_private_keys"
+          mkdir -p "$ASC_KEYS"
+          printf '%s\n' "$API_KEY_CONTENT" | tr -d '\r' > "$ASC_KEYS/AuthKey_${API_KEY_ID}.p8"
+          chmod 600 "$ASC_KEYS/AuthKey_${API_KEY_ID}.p8"
+          echo "API_PRIVATE_KEYS_DIR=$ASC_KEYS" >> "$GITHUB_ENV"
 
       - name: Upload to TestFlight
         env:
           API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
         run: |
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$(find build/ios/ipa -name '*.ipa' | head -1)" \
+          set -euo pipefail
+          if [ ! -d build/ios/ipa ]; then
+            echo "::error::Pasta build/ios/ipa inexistente. Confira o log do passo 'Build IPA' (export com falha ou ExportOptions)."
+            ls -la build/ios 2>/dev/null || ls -la build 2>/dev/null || true
+            exit 1
+          fi
+          IPA_PATH=$(find build/ios/ipa -maxdepth 1 -name "*.ipa" 2>/dev/null | head -n 1)
+          if [ -z "${IPA_PATH:-}" ] || [ ! -f "$IPA_PATH" ]; then
+            echo "::error::Nenhum arquivo .ipa em build/ios/ipa."
+            ls -la build/ios/ipa
+            exit 1
+          fi
+          echo "Uploading: $IPA_PATH"
+          # Sintaxe altool legado (Xcode ainda expõe --type / --apiKey); API_PRIVATE_KEYS_DIR evita -26000 (cwd do Transporter).
+          xcrun altool --upload-app -f "$IPA_PATH" --type ios \
             --apiKey "$API_KEY_ID" \
             --apiIssuer "$API_ISSUER_ID"
 
