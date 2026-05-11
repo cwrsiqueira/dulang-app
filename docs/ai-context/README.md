@@ -18,8 +18,9 @@ For any Portuguese aimed at humans or assistant replies in Portuguese, use **Bra
 8. Read `../CHECKLIST_TESTE_SANDBOX_PLAY.md` for Android Play sandbox/internal testing QA.
 9. Read `../play-store-listing-dulang.md` for Play Store listing copy aligned to policy constraints.
 10. Read `../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` for non-technical store + subscription ops.
-11. Read `security-checklist.md`, `security-strategy.md`, and `security-incidents.md`.
-12. Read `.cursor/rules/portugues-brasil.mdc` for assistant language enforcement (pt-BR only).
+11. Read `../CREDENCIAIS_CI_GITHUB.md` for GitHub Actions secrets (ENVIRONMENT_JSON, Apple, YouTube, RevenueCat iOS).
+12. Read `security-checklist.md`, `security-strategy.md`, and `security-incidents.md`.
+13. Read `.cursor/rules/portugues-brasil.mdc` for assistant language enforcement (pt-BR only).
 
 ## Como usar (PT-BR)
 
@@ -37,8 +38,9 @@ Texto em português para pessoas e respostas de assistente: use **somente pt-BR*
 8. Leia `../CHECKLIST_TESTE_SANDBOX_PLAY.md` para QA de sandbox/teste interno no Android (Play).
 9. Leia `../play-store-listing-dulang.md` para textos da ficha na Play Store alinhados a políticas.
 10. Leia `../PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md` para operação de lojas + assinatura em linguagem simples.
-11. Leia `security-checklist.md`, `security-strategy.md` e `security-incidents.md`.
-12. Leia `.cursor/rules/portugues-brasil.mdc` para reforço de idioma do assistente (somente pt-BR).
+11. Leia `../CREDENCIAIS_CI_GITHUB.md` para secrets do GitHub Actions (ENVIRONMENT_JSON, Apple, YouTube, RevenueCat iOS).
+12. Leia `security-checklist.md`, `security-strategy.md` e `security-incidents.md`.
+13. Leia `.cursor/rules/portugues-brasil.mdc` para reforço de idioma do assistente (somente pt-BR).
 
 ## Session Aliases / Aliases de Sessao
 
@@ -87,6 +89,7 @@ These files can add useful operational context, but they do **not** replace the 
 - `.claude/settings.local.json`: local tool configuration; treat as environment-specific, not canonical project context.
 - `docs/ai-context/channel-sync-operational.md`: operational spec for daily channel-to-video sync.
 - `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`: step-by-step for non-developers (stores, subscription service, account) to finish Phase 2 outside code.
+- `docs/CREDENCIAIS_CI_GITHUB.md`: how to obtain/configure GitHub Actions secrets (CI builds and TestFlight).
 
 ## Checklist de manutenção (PT-BR)
 
@@ -107,3 +110,4 @@ Estes arquivos podem acrescentar contexto operacional, mas **não** substituem a
 - `.claude/settings.local.json`: configuração local de ferramenta; trate como algo de ambiente, não como contexto canônico do projeto.
 - `docs/ai-context/channel-sync-operational.md`: especificação operacional do sync diário de canais para vídeos.
 - `docs/PASSO_A_PASSO_FASE2_ASSINATURA_LEIGO.md`: passo a passo para leigos (lojas, assinatura, conta) para fechar a Fase 2 fora do código.
+- `docs/CREDENCIAIS_CI_GITHUB.md`: como obter e cadastrar secrets do GitHub Actions (CI e TestFlight).

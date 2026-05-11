@@ -85,6 +85,8 @@ No repositório existe o workflow **Deploy Android to Internal Test** (arquivo `
 | `YOUTUBE_API_KEY` | Passada no build; o `environment.json` versionado deixa essa chave vazia no repo. |
 | `PLAY_STORE_JSON_KEY` | JSON da **conta de serviço** com permissão na Play Console para **publicar** na trilha (API Google Play Android Developer). Pode ser o mesmo projeto/conta usada no RevenueCat **se** essa conta tiver também os papéis de upload — ou um JSON separado, conforme a organização. |
 
+Roteiro detalhado (inclui **`ENVIRONMENT_JSON`**, chaves Apple e API da App Store Connect para **TestFlight iOS**): [`docs/CREDENCIAIS_CI_GITHUB.md`](CREDENCIAIS_CI_GITHUB.md).
+
 Depois que o upload concluir, abra a **Play Console** → app Dulang → **Teste interno** (ou equivalente) e confira a nova versão. Com o app já publicado em uma trilha, a criação de **assinaturas** e IDs de produto costuma ficar estável (alinhado ao passo 4 da Parte 2b).
 
 ### Opt-in do teste interno e erro “Item not found” na Play Store
