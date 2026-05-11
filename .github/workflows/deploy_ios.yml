@@ -78,27 +78,22 @@ jobs:
             --dart-define=REVENUECAT_IOS_KEY=${{ secrets.REVENUECAT_IOS_KEY }} \
             --export-options-plist=ios/ExportOptions.plist
 
-      # Chave .p8 em diretório absoluto + API_PRIVATE_KEYS_DIR: o Transporter usado pelo altool
-      # muda o cwd; ~/.appstoreconnect/private_keys costuma falhar com JWT (-26000).
-      - name: Setup App Store Connect API key
-        env:
-          API_KEY_CONTENT: ${{ secrets.APPLE_API_PRIVATE_KEY }}
-          API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-        run: |
-          ASC_KEYS="$RUNNER_TEMP/appstoreconnect_private_keys"
-          mkdir -p "$ASC_KEYS"
-          printf '%s\n' "$API_KEY_CONTENT" | tr -d '\r' > "$ASC_KEYS/AuthKey_${API_KEY_ID}.p8"
-          chmod 600 "$ASC_KEYS/AuthKey_${API_KEY_ID}.p8"
-          echo "API_PRIVATE_KEYS_DIR=$ASC_KEYS" >> "$GITHUB_ENV"
+      # altool (Xcode 16) costuma falhar com JWT -26000 para chaves API *individuais*; a Apple
+      # recomenda fluxos via App Store Connect API. fastlane pilot usa Spaceship e aceita a mesma .p8.
+      - name: Install fastlane
+        run: sudo gem install fastlane -N
 
       - name: Upload to TestFlight
         env:
           API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          API_KEY_CONTENT: ${{ secrets.APPLE_API_PRIVATE_KEY }}
         run: |
           set -euo pipefail
+          export LANG=en_US.UTF-8
+          export LC_ALL=en_US.UTF-8
           if [ ! -d build/ios/ipa ]; then
-            echo "::error::Pasta build/ios/ipa inexistente. Confira o log do passo 'Build IPA' (export com falha ou ExportOptions)."
+            echo "::error::Pasta build/ios/ipa inexistente. Confira o log do passo 'Build IPA'."
             ls -la build/ios 2>/dev/null || ls -la build 2>/dev/null || true
             exit 1
           fi
@@ -108,11 +103,17 @@ jobs:
             ls -la build/ios/ipa
             exit 1
           fi
-          echo "Uploading: $IPA_PATH"
-          # Sintaxe altool legado (Xcode ainda expõe --type / --apiKey); API_PRIVATE_KEYS_DIR evita -26000 (cwd do Transporter).
-          xcrun altool --upload-app -f "$IPA_PATH" --type ios \
-            --apiKey "$API_KEY_ID" \
-            --apiIssuer "$API_ISSUER_ID"
+          P8_PATH="$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
+          printf '%s\n' "$API_KEY_CONTENT" | tr -d '\r' > "$P8_PATH"
+          chmod 600 "$P8_PATH"
+          API_JSON="$RUNNER_TEMP/asc_api_key.json"
+          jq -n --arg kid "$API_KEY_ID" --arg iss "$API_ISSUER_ID" --rawfile key "$P8_PATH" \
+            '{key_id: $kid, issuer_id: $iss, key: $key, in_house: false}' > "$API_JSON"
+          echo "Uploading via fastlane pilot: $IPA_PATH"
+          fastlane pilot upload \
+            --ipa "$IPA_PATH" \
+            --api_key_path "$API_JSON" \
+            --skip_waiting_for_build_processing true
 
       - name: Clean up keychain
         if: always()

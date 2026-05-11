@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-11 (build **1.0.50+50**; CI iOS — `destination: export`, JWT `.p8` em `$RUNNER_TEMP`; ver **`engineering-rules.md`** para **`[skip ci]`** em `push` na `master` sem deploy Android)
+Last updated: 2026-05-11 (build **1.0.50+50**; CI iOS — `destination: export`; upload TestFlight via **fastlane pilot** + JSON da API ASC — **`altool`** com JWT **-26000** em chave individual; **`[skip ci]`** na `master` → **`engineering-rules.md`**)
 
 ## Checkpoint / Release `1.0.50+50` — CI Android + iOS (2026-05-09)
 
