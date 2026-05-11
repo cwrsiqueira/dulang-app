@@ -59,7 +59,9 @@ jobs:
           PP_PATH=$RUNNER_TEMP/dulang_appstore.mobileprovision
           echo "$PP_BASE64" | base64 --decode -o "$PP_PATH"
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/dulang_appstore.mobileprovision
+          security cms -D -i "$PP_PATH" > "$RUNNER_TEMP/embedded.plist"
+          UUID=$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/embedded.plist")
+          cp "$PP_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/${UUID}.mobileprovision"
 
       - name: Patch ExportOptions team ID
         env:

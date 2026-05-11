@@ -1,6 +1,12 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-11 (build **1.0.49+49**; Android CI + iOS pronto p/ TestFlight)
+Last updated: 2026-05-09 (build **1.0.50+50**; CI Play + assinatura iOS)
+
+## Checkpoint / Release `1.0.50+50` — CI Android + iOS (2026-05-09)
+
+**PT-BR:** **`pubspec.yaml`** **`1.0.50+50`**; **`app_build_metadata`** **1.0.50** (rodapé legal **11/05/2026** — sem mudança de texto). **`deploy_android.yml`:** removido **`changesNotSentForReview`** — a API da Play passou a rejeitar esse parâmetro (“Changes are sent for review automatically”); upload continua na trilha **internal** apenas (**não** promove a produção sozinho). **`deploy_ios.yml`:** perfil copiado como **`{UUID}.mobileprovision`**. **iOS Xcode:** Release do **Runner** com assinatura **manual**, **`iPhone Distribution`**, **`DEVELOPMENT_TEAM`**, **`PROVISIONING_PROFILE_SPECIFIER`** = nome do perfil (**Dulang App Store Distribution**); **`ExportOptions.plist`** com o mesmo nome em **`provisioningProfiles`**. **`master` push** → Android Internal Test; iOS → **Run workflow**.
+
+**EN:** **`1.0.50+50`**. **Android CI:** dropped **`changesNotSentForReview`** (Play API rejects it now); still **internal** track only. **iOS CI:** provision profile installed by **UUID** filename; **Manual** Release signing + **Distribution** + profile name aligned to **Dulang App Store Distribution**.
 
 ## Checkpoint / Release `1.0.49+49` — Android + iOS (2026-05-11)
 

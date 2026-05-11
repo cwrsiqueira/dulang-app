@@ -67,5 +67,3 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/*.aab
           tracks: internal
           status: completed
-          # Play exige quando o app não pode ir direto à revisão; envio manual pela Console depois.
-          changesNotSentForReview: true

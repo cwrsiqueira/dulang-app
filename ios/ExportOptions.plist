@@ -13,7 +13,7 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.carlosdev.dulang</key>
-		<string>dulang_appstore</string>
+		<string>Dulang App Store Distribution</string>
 	</dict>
 	<key>uploadBitcode</key>
 	<false/>

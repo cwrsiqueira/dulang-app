@@ -5,7 +5,7 @@ import '/flutter_flow/flutter_flow_theme.dart';
 /// Alinhar `marketingVersion` com releases; `lastContentUpdate` = data do texto legal/informativo.
 abstract final class AppBuildMetadata {
   /// Versão “de marketing” exibida em termos/sobre/contato (alinhar ao release).
-  static const String marketingVersion = '1.0.49';
+  static const String marketingVersion = '1.0.50';
   /// Data do texto legal/informativo exibido no rodapé.
   static const String lastContentUpdate = '11/05/2026';
 }

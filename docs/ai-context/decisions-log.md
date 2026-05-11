@@ -2,6 +2,13 @@
 
 ## EN
 
+### 2026-05-09 - Release `1.0.50+50`: Play upload API + iOS archive signing in CI
+
+- **Versioning:** `pubspec.yaml` **`1.0.50+50`**; `app_build_metadata` **1.0.50** (legal footnote date unchanged: **11/05/2026**).
+- **Android (`deploy_android.yml`):** removed **`changesNotSentForReview: true`** from `r0adkll/upload-google-play@v1` — Google Play Developer API returns *“Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set.”* The workflow still uploads to **`internal`** only; this does **not** auto-promote to production.
+- **iOS (`deploy_ios.yml`):** provisioning profile is decoded and installed as **`${UUID}.mobileprovision`** under `~/Library/MobileDevice/Provisioning Profiles/` (more reliable than a fixed filename).
+- **iOS project:** `Runner` **Release** uses **Manual** signing, **`iPhone Distribution`**, **`DEVELOPMENT_TEAM`**, **`PROVISIONING_PROFILE_SPECIFIER`** matching the portal profile name; project-level **Release** uses **`iPhone Distribution`** for `iphoneos` (avoids “No development certificates” when CI only has a **distribution** `.p12`). `ExportOptions.plist` **`provisioningProfiles`** string aligned to **`Dulang App Store Distribution`**. If Apple shows **Apple Distribution** instead of **iPhone Distribution**, switch identities accordingly.
+
 ### 2026-05-11 - Release `1.0.49+49`: iOS bundle `com.carlosdev.dulang`; Android + iOS CI ops
 
 - **Versioning:** `pubspec.yaml` **`1.0.49+49`**; `app_build_metadata` **1.0.49** / **11/05/2026**.
@@ -207,6 +214,13 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-09 - Release `1.0.50+50`: API da Play no upload + assinatura iOS no archive (CI)
+
+- **Versionamento:** `pubspec.yaml` **`1.0.50+50`**; `app_build_metadata` **1.0.50** (data do rodapé legal **11/05/2026** — sem alteração de texto).
+- **Android (`deploy_android.yml`):** removido **`changesNotSentForReview: true`** do `r0adkll/upload-google-play@v1` — a API da Play devolve *“Changes are sent for review automatically…”* e **não aceita** esse parâmetro. O fluxo segue só na trilha **`internal`** (**não** promove a produção sozinho).
+- **iOS (`deploy_ios.yml`):** perfil decodificado e instalado como **`${UUID}.mobileprovision`** em `~/Library/MobileDevice/Provisioning Profiles/`.
+- **Projeto iOS:** Release do **Runner** com assinatura **manual**, **`iPhone Distribution`**, **`DEVELOPMENT_TEAM`**, **`PROVISIONING_PROFILE_SPECIFIER`** = nome do perfil; Release no nível do **projeto** com **`iPhone Distribution`** para `iphoneos` (evita “No development certificates” quando o CI só tem `.p12` de **distribuição**). `ExportOptions.plist` com **`provisioningProfiles`** = **`Dulang App Store Distribution`**. Se a Apple mostrar **Apple Distribution** em vez de **iPhone Distribution**, trocar a identidade nos dois lugares.
 
 ### 2026-05-11 - Release `1.0.49+49`: bundle iOS `com.carlosdev.dulang`; CI Android + iOS
 
