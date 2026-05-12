@@ -2,6 +2,10 @@
 
 ## EN
 
+### 2026-05-12 - TestFlight iOS QA (operator): annual IAP OK; monthly purchase CTA disabled; crash on resume; coupon + manage states OK
+
+- **Context:** Build installed from **TestFlight**; manual smoke tests done. **Working:** **annual** subscription purchase flow; **premium coupon** redemption and access; **Manage subscription** UX for no-premium (paywall), coupon-only (info, store links still placeholders as designed), annual store plan (renewal dates may show same calendar day in sandbox); other menus; premium gates; **parental schedule** — off-hours block observed (more schedule scenarios TBD). **Blockers / P0:** (1) **Crash** when app goes to **background** and is **reopened** (sometimes while foreground); TestFlight prompt to **report to developer** — **no stack captured yet** (see `current-status.md` crash research bullets). (2) **Monthly plan:** after selecting monthly, **purchase button stays disabled** (annual does not). **Likely code areas:** app lifecycle / resume; `DulangPremiumWidget` + `SubscriptionService` monthly `Package` resolution / RC offering.
+
 ### 2026-05-11 - iOS CI: IPA local + upload TestFlight (fastlane pilot)
 
 - **Ops:** `push` to **`master`** with **`[skip ci]`** (or **`[ci skip]`**) in the commit message skips **push-triggered** GitHub Actions (e.g. **Android** Internal Test) when syncing these changes only — see **`engineering-rules.md`**.
@@ -220,6 +224,10 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-12 - QA TestFlight iOS (operador): anual OK; mensal com CTA desabilitado; crash ao retomar; cupom + gerenciar OK
+
+- **Contexto:** app instalado pelo **TestFlight**; testes manuais iniciais. **OK:** compra **anual**; **cupom** premium; **Gerenciar assinatura** por estado; menus; bloqueios premium; **horário** fora da janela. **P0:** (1) **crash** ao voltar do **segundo plano** (às vezes em primeiro plano); diálogo do TestFlight para reportar — **causa a identificar** (ver bullets em `current-status.md`). (2) **Mensal:** botão **comprar** fica **desabilitado** após selecionar o plano. **Código provável:** lifecycle / resume; paywall `SubscriptionService` + pacote mensal no `DulangPremiumWidget`.
 
 ### 2026-05-11 - CI iOS: IPA no disco + upload TestFlight (fastlane pilot)
 

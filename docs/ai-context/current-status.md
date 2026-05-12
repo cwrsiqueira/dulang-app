@@ -1,6 +1,20 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-11 (build **1.0.50+50**; CI iOS — `destination: export`; upload TestFlight via **fastlane pilot** + JSON da API ASC — **`altool`** com JWT **-26000** em chave individual; **`[skip ci]`** na `master` → **`engineering-rules.md`**)
+Last updated: 2026-05-12 (QA **TestFlight** iOS; crash ao retomar + **mensal** CTA desabilitado — ver checkpoint abaixo)
+
+## Checkpoint / QA iOS TestFlight — operador (2026-05-12)
+
+**PT-BR:** Build **subiu** e o app foi **instalado pelo TestFlight**; testes manuais iniciais concluídos. **Funcionando:** compra do **plano anual** (fluxo e sheet da loja conforme esperado); **cupom premium** (fluxo de inserção do código e liberação de acesso); **Gerenciar assinatura** nos estados testados — sem premium mostra **paywall**; premium **só cupom** mostra informações e botões **ainda sem links** de loja (esperado); premium **plano anual** mostra dados do plano (em **sandbox** as renovações podem aparecer no **mesmo dia**); demais **menus**; telas **bloqueadas sem premium** e **liberadas** com premium (cupom ou plano); **controle de horário** — bloqueio **fora do horário** já observado (**outros cenários** de horário ainda a validar). **Problemas prioritários:** (1) **Crash** ao colocar o app em **segundo plano** e **reabrir** (e às vezes com o app em primeiro plano); aparece diálogo do **TestFlight** oferecendo **reportar ao desenvolvedor** — **stack trace ainda não identificado** (ver subseção **Como pesquisar o crash** abaixo). (2) **Plano mensal:** ao selecionar, o botão de **comprar** permanece **desabilitado** (o **anual** não apresenta isso). **Hipótese de código:** lifecycle / `WidgetsBindingObserver` / estado ao `resume`; paywall — `SubscriptionService` + resolução do pacote **mensal** no `DulangPremiumWidget` (pacote RC / `PackageType` / oferta).
+
+**EN:** TestFlight install validated. **Working:** annual IAP, coupon code path, manage-subscription per state, gated screens, schedule gate off-hours. **Open issues:** crash on **background → foreground** (sometimes foreground); TestFlight “send to developer” — **root cause TBD** (see crash research bullets). **Monthly plan:** purchase CTA **stays disabled** after selection (annual OK). Next engineering focus: resume lifecycle stability + monthly package mapping on paywall.
+
+### Como pesquisar o crash (TestFlight / iOS) — rascunho para investigação
+
+- **App Store Connect:** **TestFlight** → build → seção **Crashes** / feedback (quando a Apple tiver processado símbolos).
+- **Xcode (Mac):** **Window → Organizer** → selecionar o app → **Crashes** (exige **dSYM** do **mesmo** `version`/`build` que o IPA; o CI usa `--obfuscate` + `split-debug-info=build/symbols` — arquivar o artefato do workflow ou subir símbolos conforme processo da equipe).
+- **No iPhone:** **Ajustes → Privacidade e segurança → Análise e melhorias → Dados de análise** — procurar entradas com o nome do app na hora do crash (útil sem Mac).
+- **Console + USB:** **Console.app** no Mac, filtrar pelo processo, reproduzir o crash com o aparelho conectado.
+- **Se precisar de stack contínuo em campo:** avaliar **Crashlytics** ou **Sentry** (não obrigatório hoje; registrar como opção).
 
 ## Checkpoint / Release `1.0.50+50` — CI Android + iOS (2026-05-09)
 
