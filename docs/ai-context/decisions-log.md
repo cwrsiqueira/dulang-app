@@ -2,9 +2,9 @@
 
 ## EN
 
-### 2026-05-12 - TestFlight iOS QA (operator): annual IAP OK; monthly purchase CTA disabled; crash on resume; coupon + manage states OK
+### 2026-05-12 - TestFlight iOS QA (operator): annual IAP OK; crash on resume (P0); coupon + manage states OK
 
-- **Context:** Build installed from **TestFlight**; manual smoke tests done. **Working:** **annual** subscription purchase flow; **premium coupon** redemption and access; **Manage subscription** UX for no-premium (paywall), coupon-only (info, store links still placeholders as designed), annual store plan (renewal dates may show same calendar day in sandbox); other menus; premium gates; **parental schedule** — off-hours block observed (more schedule scenarios TBD). **Blockers / P0:** (1) **Crash** when app goes to **background** and is **reopened** (sometimes while foreground); TestFlight prompt to **report to developer** — **no stack captured yet** (see `current-status.md` crash research bullets). (2) **Monthly plan:** after selecting monthly, **purchase button stays disabled** (annual does not). **Likely code areas:** app lifecycle / resume; `DulangPremiumWidget` + `SubscriptionService` monthly `Package` resolution / RC offering.
+- **Context:** Build installed from **TestFlight**; manual smoke tests done. **Working:** **annual** subscription purchase flow; **premium coupon** redemption and access; **Manage subscription** UX for no-premium (paywall), coupon-only (info, store links still placeholders as designed), annual store plan (renewal dates may show same calendar day in sandbox); other menus; premium gates; **parental schedule** — off-hours block observed (more schedule scenarios TBD). **Monthly row on paywall (clarification 2026-05-13):** **Not an app bug** — operator created **annual-only** subscription in App Store Connect for the first build, following Apple-style guidance to ship **one** subscription first and add more plans **after** approval; **monthly** product not created in ASC yet, so disabled purchase aligns with store configuration. **P0:** frequent **crash** on **background → resume** (sometimes foreground); TestFlight “report to developer”; **not observed on Android** in the same repro so far — **no stack captured yet** (see numbered crash investigation steps in `current-status.md`). **Next engineering:** lifecycle / resume, native plugins (e.g. player), iOS-specific paths — confirm with logs/dSYM or add Crashlytics/Sentry if ASC/Organizer is too slow.
 
 ### 2026-05-11 - iOS CI: IPA local + upload TestFlight (fastlane pilot)
 
@@ -225,9 +225,9 @@
 
 ## PT-BR
 
-### 2026-05-12 - QA TestFlight iOS (operador): anual OK; mensal com CTA desabilitado; crash ao retomar; cupom + gerenciar OK
+### 2026-05-12 - QA TestFlight iOS (operador): anual OK; crash ao retomar (P0); cupom + gerenciar OK
 
-- **Contexto:** app instalado pelo **TestFlight**; testes manuais iniciais. **OK:** compra **anual**; **cupom** premium; **Gerenciar assinatura** por estado; menus; bloqueios premium; **horário** fora da janela. **P0:** (1) **crash** ao voltar do **segundo plano** (às vezes em primeiro plano); diálogo do TestFlight para reportar — **causa a identificar** (ver bullets em `current-status.md`). (2) **Mensal:** botão **comprar** fica **desabilitado** após selecionar o plano. **Código provável:** lifecycle / resume; paywall `SubscriptionService` + pacote mensal no `DulangPremiumWidget`.
+- **Contexto:** app pelo **TestFlight**; smoke tests. **OK:** anual, cupom, gerenciar, bloqueios, horário fora da janela. **Mensal na paywall (esclarecimento 2026-05-13):** **não é bug** — na **App Store** só existe (por ora) assinatura **anual**, por decisão do operador alinhada à orientação de enviar **uma** assinatura no **primeiro build** e só depois da aprovação incluir **mais planos**; produto mensal **ainda não criado** na ASC, então CTA desabilitado é **coerente** com a loja. **P0:** **crash** frequente ao voltar do segundo plano (às vezes em primeiro plano); **não percebido no Android** na mesma repro; stack a identificar — ver passos numerados em `current-status.md`. **Próximo:** logs / dSYM / Crashlytics ou Sentry se precisar.
 
 ### 2026-05-11 - CI iOS: IPA no disco + upload TestFlight (fastlane pilot)
 
