@@ -15,6 +15,10 @@ class AccessCodeService extends ChangeNotifier {
 
   bool _granted = false;
 
+  /// Evita duas chamadas HTTP em paralelo (ex.: duplo toque em Confirmar): a segunda
+  /// veria o código já consumido e mostraria erro mesmo com a primeira tendo liberado.
+  Future<String?>? _ongoingRedeem;
+
   bool get isGranted => _granted;
 
   Future<void> init() async {
@@ -39,6 +43,17 @@ class AccessCodeService extends ChangeNotifier {
   /// Valida o código no servidor e grava acesso local em caso de sucesso.
   /// Retorna `null` se ok, ou mensagem de erro em pt-BR.
   Future<String?> redeem(String rawCode) async {
+    if (_ongoingRedeem != null) {
+      return await _ongoingRedeem!;
+    }
+    final fut = _redeemOnce(rawCode);
+    _ongoingRedeem = fut.whenComplete(() {
+      _ongoingRedeem = null;
+    });
+    return await fut;
+  }
+
+  Future<String?> _redeemOnce(String rawCode) async {
     final normalized = rawCode.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '');
     if (normalized.length < 4) {
       return 'Digite um código válido.';
@@ -52,8 +67,10 @@ class AccessCodeService extends ChangeNotifier {
           )
           .timeout(const Duration(seconds: 15));
 
-      if (res.status != 200) {
-        final d = res.data;
+      final d = res.data;
+      final success = d is Map && d['success'] == true;
+
+      if (res.status != 200 && !success) {
         if (d is Map && d['error'] != null) {
           return d['error'].toString();
         }

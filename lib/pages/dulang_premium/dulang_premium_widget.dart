@@ -265,6 +265,8 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   Future<void> _onAccessCode() async {
     var redeemSucceeded = false;
     var codeInput = '';
+    // Trava síncrona: evita dois onPressed antes do rebuild com submitting=true.
+    var submitLocked = false;
     await showDialog<void>(
       context: context,
       builder: (ctx) {
@@ -296,12 +298,15 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
                 FilledButton(
                   onPressed: canSubmit
                       ? () async {
+                          if (submitLocked) return;
+                          submitLocked = true;
                           FocusScope.of(ctx).unfocus();
                           setDialogState(() => submitting = true);
                           final msg = await AccessCodeService.instance
                               .redeem(codeInput);
                           if (!ctx.mounted) return;
                           if (msg != null) {
+                            submitLocked = false;
                             setDialogState(() => submitting = false);
                             ScaffoldMessenger.of(ctx).showSnackBar(
                               SnackBar(content: Text(msg)),

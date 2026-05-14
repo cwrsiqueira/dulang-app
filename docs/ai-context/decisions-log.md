@@ -2,6 +2,13 @@
 
 ## EN
 
+### 2026-05-14 - Release `1.0.51+51`: access-code double-submit + iOS NavBar resume guard
+
+- **Versioning:** `pubspec.yaml` **`1.0.51+51`**; `app_build_metadata` **1.0.51** / **14/05/2026** (legal footnote).
+- **Access code (Android + iOS):** `AccessCodeService.redeem` coalesces concurrent calls via **`_ongoingRedeem`** (single in-flight future). Paywall dialog uses synchronous **`submitLocked`** before `await redeem` so a double tap cannot start two HTTP validations — the second request was marking “already used” and showing the wrong snackbar while the first succeeded.
+- **iOS crash hypothesis (P0):** `NavBarPage` stays mounted under pushed routes (`/contato`, etc.). On **`resumed`**, the shell used to call **`Purchases.showInAppMessages()`**, **`_checkParentalLimits()`** (may `showDialog`), and **`_openProfileSelectionIfNeeded()`** with shell **context** while another route was visible — plausible native crash on iOS when returning from Mail or background. **Mitigation:** run those three only **`addPostFrameCallback`** when **`ModalRoute.of(context)?.isCurrent == true`**; foreground usage ticker unchanged on resume.
+- **Ops:** `master` **push** without **`[skip ci]`** triggers **`deploy_android.yml`** (Internal Test AAB).
+
 ### 2026-05-12 - TestFlight iOS QA (operator): annual IAP OK; crash on resume (P0); coupon + manage states OK
 
 - **Context:** Build installed from **TestFlight**; manual smoke tests done. **Working:** **annual** subscription purchase flow; **premium coupon** redemption and access; **Manage subscription** UX for no-premium (paywall), coupon-only (info, store links still placeholders as designed), annual store plan (renewal dates may show same calendar day in sandbox); other menus; premium gates; **parental schedule** — off-hours block observed (more schedule scenarios TBD). **Monthly row on paywall (clarification 2026-05-13):** **Not an app bug** — operator created **annual-only** subscription in App Store Connect for the first build, following Apple-style guidance to ship **one** subscription first and add more plans **after** approval; **monthly** product not created in ASC yet, so disabled purchase aligns with store configuration. **P0:** frequent **crash** on **background → resume** (sometimes foreground); TestFlight “report to developer”; **not observed on Android** in the same repro so far — **no stack captured yet** (see numbered crash investigation steps in `current-status.md`). **Next engineering:** lifecycle / resume, native plugins (e.g. player), iOS-specific paths — confirm with logs/dSYM or add Crashlytics/Sentry if ASC/Organizer is too slow.
@@ -224,6 +231,13 @@
 - Keep app safe for children, with strict parental and policy constraints.
 
 ## PT-BR
+
+### 2026-05-14 - Release `1.0.51+51`: duplo envio do cupom + guarda de `resumed` na NavBar (iOS)
+
+- **Versionamento:** `pubspec.yaml` **`1.0.51+51`**; `app_build_metadata` **1.0.51** / **14/05/2026** (rodapé legal).
+- **Cupom (Android + iOS):** `redeem` com **`_ongoingRedeem`** (uma requisição em voo por vez); diálogo da paywall com **`submitLocked`** síncrono antes do `await` — evita dois POSTs e a mensagem errada *“Código inválido ou já utilizado”* quando o primeiro já liberou.
+- **iOS P0 (mitigação):** `NavBarPage` fica montada sob rotas como **`/contato`**. No **`resumed`**, não chamar mais **`showInAppMessages`**, **`_checkParentalLimits`** e **`_openProfileSelectionIfNeeded`** até **pós-frame** e só se **`ModalRoute.isCurrent`** (rota da shell é a visível).
+- **Operação:** `push` na **`master`** **sem** `[skip ci]` dispara **`deploy_android.yml`** (AAB teste interno).
 
 ### 2026-05-12 - QA TestFlight iOS (operador): anual OK; crash ao retomar (P0); cupom + gerenciar OK
 

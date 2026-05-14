@@ -295,9 +295,17 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startForegroundUsageAccounting();
-      unawaited(_checkParentalLimits());
-      unawaited(_openProfileSelectionIfNeeded());
-      unawaited(_showInAppMessagesIfNeeded());
+      // NavBarPage permanece montado sob rotas empilhadas (/contato, Mail externo…).
+      // No iOS, disparar RevenueCat/diálogo/push com o contexto da shell antes da rota
+      // visível estabilizar costuma correlacionar com crash ao voltar do segundo plano.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final shellRouteVisible = ModalRoute.of(context)?.isCurrent ?? false;
+        if (!shellRouteVisible) return;
+        unawaited(_checkParentalLimits());
+        unawaited(_openProfileSelectionIfNeeded());
+        unawaited(_showInAppMessagesIfNeeded());
+      });
     } else if (state == AppLifecycleState.paused) {
       _stopForegroundUsageAccounting();
       unawaited(_flushPartialForegroundUsage());
