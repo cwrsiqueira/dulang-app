@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-16 — fix P0 iOS crash DEFINITIVO (Purchases.showInAppMessages causa crash nativo) + 1.0.54+54
+Last updated: 2026-05-16 — paywall desconto dinâmico (Economize XX%) + fix iOS crash P0 (1.0.55+55)
 
 ## Checkpoint / QA iOS TestFlight — operador (2026-05-12, atualizado 2026-05-16)
 
@@ -42,6 +42,12 @@ Last updated: 2026-05-16 — fix P0 iOS crash DEFINITIVO (Purchases.showInAppMes
 **PT-BR:** **`pubspec.yaml`** **`1.0.51+51`**; **`app_build_metadata`** **1.0.51** / **14/05/2026**. **Cupom (Android + iOS):** `AccessCodeService.redeem` com **single-flight** (`_ongoingRedeem`) para não disparar dois POSTs; paywall com **`submitLocked`** antes do `await` — evita mensagem falsa *"Código inválido ou já utilizado"* com sucesso. **iOS P0 (band-aid parcial):** guard `ModalRoute.isCurrent` em `didChangeAppLifecycleState(resumed)` **acidentalmente** evitava crash nas sub-telas por não executar `showInAppMessages`. Crash nas tabs do NavBar persistia. Fix definitivo em `1.0.54+54`.
 
 **EN:** **`1.0.51+51`**, metadata **1.0.51** / **14/05/2026**. **Coupon:** single-flight redeem + dialog submit lock. **iOS:** `ModalRoute.isCurrent` guard accidentally protected sub-screens by skipping `showInAppMessages`. NavBar tabs crash persisted; see definitive fix in `1.0.54+54`.
+
+## Checkpoint / Release `1.0.55+55` — paywall desconto dinâmico (2026-05-16)
+
+**PT-BR:** "2 meses grátis" hardcoded substituído por cálculo dinâmico real: getter `_annualDiscountLabel` calcula `((mensal × 12 − anual) / (mensal × 12) × 100).round()` usando `storeProduct.price` do RevenueCat. Com US$9,99/mês + US$69,99/ano → exibe **"Economize 42%"**; funciona automaticamente para qualquer moeda/região. Label omitido se não houver desconto. Subtítulo do plano anual atualizado para "Anual recomendado — maior desconto". Versão `1.0.55+55`.
+
+**EN:** Hardcoded "2 meses grátis" replaced with dynamic discount calculation. Getter `_annualDiscountLabel` computes `round((monthly×12 − annual) / monthly×12 × 100)` from live RevenueCat `storeProduct.price`. US$9.99/mo + US$69.99/yr → **"Economize 42%"**; works for any currency/region. Label hidden if no discount. Version `1.0.55+55`.
 
 ## Fix definitivo — iOS crash NavBar tabs CAUSA RAIZ REAL (2026-05-16, `1.0.54+54`)
 

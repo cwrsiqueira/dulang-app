@@ -184,6 +184,22 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
   String get _displayAnnualPrice =>
       _annual?.storeProduct.priceString ?? _fmtBrl(_placeholderAnnualBrl);
 
+  /// Desconto percentual do plano anual vs. pagar mensalmente por 12 meses.
+  /// Calculado dos preços reais da loja (RevenueCat) para funcionar em qualquer
+  /// região/moeda. Retorna null se não houver dados suficientes ou desconto ≤ 0.
+  String? get _annualDiscountLabel {
+    final monthlyPrice =
+        _monthly?.storeProduct.price ?? _placeholderMonthlyBrl;
+    final annualPrice = _annual?.storeProduct.price ?? _placeholderAnnualBrl;
+    if (monthlyPrice <= 0) return null;
+    final annualIfMonthly = monthlyPrice * 12;
+    if (annualPrice >= annualIfMonthly) return null;
+    final discount =
+        ((annualIfMonthly - annualPrice) / annualIfMonthly * 100).round();
+    if (discount <= 0) return null;
+    return 'Economize $discount%';
+  }
+
   Future<void> _onPurchase() async {
     final pkg = _selectedPackage;
     if (pkg == null) {
@@ -441,7 +457,7 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Anual recomendado para economizar',
+                  'Anual recomendado — maior desconto',
                   style: GoogleFonts.inter(
                     color: onMuted,
                     fontSize: 13,
@@ -610,14 +626,15 @@ class _DulangPremiumWidgetState extends State<DulangPremiumWidget> {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                '2 meses grátis',
-                style: GoogleFonts.inter(
-                  color: tertiary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
+              if (_annualDiscountLabel != null)
+                Text(
+                  _annualDiscountLabel!,
+                  style: GoogleFonts.inter(
+                    color: tertiary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
               const SizedBox(height: 8),
               Text(
                 'Menor custo mensal e mais economia',
