@@ -13,8 +13,6 @@ import '/features/review/app_install_markers.dart';
 import '/features/parental/pin_dialog.dart';
 import '/pages/configuracoes/alterar_pin_widget.dart';
 import '/features/profiles/child_profile_service.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
-
 import '/features/subscription/access_code_service.dart';
 import '/features/subscription/subscription_service.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -228,15 +226,6 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _showInAppMessagesIfNeeded() async {
-    if (!SubscriptionService.instance.isConfigured) return;
-    try {
-      await Purchases.showInAppMessages();
-    } catch (_) {
-      // Silencioso — o dialog do sistema é opcional.
-    }
-  }
-
   /// Abre a seleção de perfil se não houver criança definida (ou pós-onboarding) e
   /// se a rota ainda não estiver aberta.
   Future<void> _openProfileSelectionIfNeeded() async {
@@ -295,16 +284,14 @@ class _NavBarPageState extends State<NavBarPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startForegroundUsageAccounting();
-      // iOS: addPostFrameCallback sozinho não é suficiente — o primeiro frame pode
-      // ser desenhado antes de UIWindow.isKeyWindow ficar true, fazendo
-      // Purchases.showInAppMessages() e showDialog() crasharem na 1ª retomada.
-      // Um delay garante que a janela está ativa antes de qualquer chamada nativa.
-      Future.delayed(const Duration(milliseconds: 800), () {
+      // Adiar checagens de limite parental e seleção de perfil para o próximo
+      // frame — garante que a árvore de widgets está estável antes de showDialog
+      // ou pushNamed. Não usar Future.delayed arbitrário: o UIWindow já está
+      // ativo ao receber AppLifecycleState.resumed; o delay era diagnóstico errado.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
         unawaited(_checkParentalLimits());
         unawaited(_openProfileSelectionIfNeeded());
-        unawaited(_showInAppMessagesIfNeeded());
       });
     } else if (state == AppLifecycleState.paused) {
       _stopForegroundUsageAccounting();
