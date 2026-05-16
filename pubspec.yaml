@@ -131,12 +131,6 @@ flutter:
   assets:
     - assets/fonts/
     - assets/images/
-    - assets/videos/
-    - assets/audios/
-    - assets/rive_animations/
-    - assets/pdfs/
-    - assets/jsons/
-
     - assets/environment_values/
     - assets/sqlite_db_files/
 
