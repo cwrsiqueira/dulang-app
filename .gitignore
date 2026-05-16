@@ -41,3 +41,8 @@ assets/environment_values/environment.json
 
 # Supabase CLI (cache local; não versionar)
 supabase/.temp/
+
+# Arquivos de mídia grandes (marketing; usar armazenamento externo)
+*.mp4
+*.mov
+*.avi

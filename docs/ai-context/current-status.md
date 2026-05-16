@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-16 — fix P0 iOS crash causa raiz (SubscriptionService.premiumStatusNotifier) + 1.0.53+53
+Last updated: 2026-05-16 — fix P0 iOS crash causa raiz (SubscriptionService.premiumStatusNotifier) + 1.0.53+53; limpeza de assets legados do FlutterFlow; prompt landing page (Lovable)
 
 ## Checkpoint / QA iOS TestFlight — operador (2026-05-12, atualizado 2026-05-16)
 
@@ -164,6 +164,7 @@ Instruções ao revisor submetidas no Play Console: título "Free Plan Access �
 |---|---|---|
 | Supabase in feed/player | Stable | Catalog/reads; **no mandatory Auth** in app shell (2026-04-29); operator sign-off for Phase 1 |
 | SQLite legacy removal | Partial | No SQLite bootstrap on startup; legacy `lib/backend/sqlite` and references remain — cleanup backlog |
+|| FlutterFlow asset legacy cleanup | Done (2026-05-16) | Removidas de `pubspec.yaml`: `assets/videos/`, `audios/`, `jsons/`, `pdfs/`, `rive_animations/` (só tinham placeholder; sem referência em Dart). Vídeo de marketing movido para `docs/marketing/`. |
 | Parental PIN + onboarding | Implemented (basic) | Works; advanced controls remain Phase 3 |
 | Player hardening | Stable for Phase 1 | Restrictions in place; periodic policy re-check on store updates; **Families/WebViews policy rejection (2026-03-02)** must stay mitigated via curation story + no open web + evidence pack |
 | Video navigation from list | Fixed | Player state keyed by video id; device QA as needed per release |
