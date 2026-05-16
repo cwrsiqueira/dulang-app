@@ -61,7 +61,11 @@ Widget _resolveInitialWidget(AppStateNotifier appStateNotifier) {
 GoRouter createRouter(AppStateNotifier appStateNotifier) {
   final refresh = Listenable.merge([
     appStateNotifier,
-    SubscriptionService.instance,
+    // premiumStatusNotifier em vez de SubscriptionService.instance diretamente:
+    // o SDK do RevenueCat dispara notifyListeners() em toda retomada (refresh automático),
+    // o que causava GoRouter.go(currentUri) durante a transição iOS → crash.
+    // premiumStatusNotifier só notifica quando hasPremiumAccess muda de valor.
+    SubscriptionService.instance.premiumStatusNotifier,
     AccessCodeService.instance,
   ]);
 

@@ -17,6 +17,25 @@ class SubscriptionService extends ChangeNotifier {
   CustomerInfo? _customerInfo;
   bool _configured = false;
 
+  /// Usado como [refreshListenable] no GoRouter **em vez de** [SubscriptionService] diretamente.
+  ///
+  /// O SDK do RevenueCat atualiza [CustomerInfo] em toda retomada do app
+  /// (applicationDidBecomeActive). Se [SubscriptionService] fosse o refreshListenable,
+  /// cada retomada dispararia [GoRouter.go(currentUri)] durante a transição do iOS
+  /// → rebuild de NavBarPage no meio do frame de retomada → crash nativo.
+  ///
+  /// Este notifier só muda quando [hasPremiumAccess] realmente altera de valor,
+  /// garantindo que o GoRouter só re-avalia rotas em eventos semanticamente relevantes
+  /// (compra, restauração, cupom, expiração) — nunca em refreshes de rotina.
+  final ValueNotifier<bool> premiumStatusNotifier = ValueNotifier(false);
+
+  void _syncPremiumNotifier() {
+    final current = hasPremiumAccess;
+    if (premiumStatusNotifier.value != current) {
+      premiumStatusNotifier.value = current;
+    }
+  }
+
   bool get isConfigured => _configured;
 
   /// Só em debug: força [hasPremiumAccess] a retornar `false` (simula sem premium).
@@ -96,6 +115,8 @@ class SubscriptionService extends ChangeNotifier {
     Purchases.addCustomerInfoUpdateListener((info) {
       _customerInfo = info;
       notifyListeners();
+      // Só dispara o GoRouter quando o status premium muda de fato.
+      _syncPremiumNotifier();
     });
 
     await refreshCustomerInfo();
@@ -106,6 +127,7 @@ class SubscriptionService extends ChangeNotifier {
     try {
       _customerInfo = await Purchases.getCustomerInfo();
       notifyListeners();
+      _syncPremiumNotifier();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('SubscriptionService.refreshCustomerInfo: $e');
@@ -204,6 +226,7 @@ class SubscriptionService extends ChangeNotifier {
     final info = await Purchases.purchasePackage(pkg).timeout(_purchaseTimeout);
     _customerInfo = info;
     notifyListeners();
+    _syncPremiumNotifier();
   }
 
   /// Texto para exibir ao usuário (SnackBar) a partir de [PlatformException] da loja/RC.
@@ -247,5 +270,6 @@ class SubscriptionService extends ChangeNotifier {
     final info = await Purchases.restorePurchases();
     _customerInfo = info;
     notifyListeners();
+    _syncPremiumNotifier();
   }
 }
