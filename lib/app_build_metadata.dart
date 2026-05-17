@@ -7,7 +7,7 @@ abstract final class AppBuildMetadata {
   /// Versão “de marketing” exibida em termos/sobre/contato (alinhar ao release).
   static const String marketingVersion = '1.0.55';
   /// Data do texto legal/informativo exibido no rodapé.
-  static const String lastContentUpdate = '16/05/2026';
+  static const String lastContentUpdate = '30/04/2026';
 }
 
 /// Rodapé comum em termos, sobre e contato.
