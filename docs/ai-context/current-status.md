@@ -1,6 +1,6 @@
 # Current Status / Status Atual
 
-Last updated: 2026-05-16 — paywall desconto dinâmico (Economize XX%) + fix iOS crash P0 (1.0.55+55)
+Last updated: 2026-05-16 — paywall desconto dinâmico + fix iOS crash P0 + submissão App Store e Play Store (1.0.55+55)
 
 ## Checkpoint / QA iOS TestFlight — operador (2026-05-12, atualizado 2026-05-16)
 
@@ -42,6 +42,29 @@ Last updated: 2026-05-16 — paywall desconto dinâmico (Economize XX%) + fix iO
 **PT-BR:** **`pubspec.yaml`** **`1.0.51+51`**; **`app_build_metadata`** **1.0.51** / **14/05/2026**. **Cupom (Android + iOS):** `AccessCodeService.redeem` com **single-flight** (`_ongoingRedeem`) para não disparar dois POSTs; paywall com **`submitLocked`** antes do `await` — evita mensagem falsa *"Código inválido ou já utilizado"* com sucesso. **iOS P0 (band-aid parcial):** guard `ModalRoute.isCurrent` em `didChangeAppLifecycleState(resumed)` **acidentalmente** evitava crash nas sub-telas por não executar `showInAppMessages`. Crash nas tabs do NavBar persistia. Fix definitivo em `1.0.54+54`.
 
 **EN:** **`1.0.51+51`**, metadata **1.0.51** / **14/05/2026**. **Coupon:** single-flight redeem + dialog submit lock. **iOS:** `ModalRoute.isCurrent` guard accidentally protected sub-screens by skipping `showInAppMessages`. NavBar tabs crash persisted; see definitive fix in `1.0.54+54`.
+
+## Status de submissão às lojas (2026-05-16)
+
+**App Store (iOS):**
+- Build `1.0.55+55` submetido para revisão
+- Coleta de dados preenchida: ID de usuário, ID do dispositivo, Histórico de compras (todos via RevenueCat, Funcionalidade do app, não vinculados a identidade, sem rastreamento)
+- Direitos de conteúdo: Sim (YouTube IFrame API — direitos via ToS da API)
+- Screenshots iPhone e iPad (mockup iPhone em canvas 2048×2732) carregadas
+- Notas para revisor preenchidas com cupons `DULANGIOS202601–05`
+- SQL dos cupons iOS a rodar no Supabase antes da revisão
+- Aguardando aprovação Apple
+
+**Google Play (Android):**
+- Build `1.0.55+55` em análise (submetido anteriormente)
+- Rejeição por Families Policy / WebViews recebida (version code 51)
+- Contestação enviada em 2026-05-16 via "Enviar uma contestação" → "Essa informação está incorreta"
+- Prazo de resposta: até 7 dias úteis
+- Versão anterior `1.0.51` ainda disponível na Play enquanto análise pende
+
+**Pendências após resposta das lojas:**
+- Corrigir `lastContentUpdate` para `30/04/2026` no próximo build (já no repo, aguardando build)
+- Adicionar suporte nativo iPad (layout otimizado) quando tiver acesso a Mac com Xcode
+- Se Play rejeitar novamente: avaliar adicionar funcionalidades extras ou escalar para suporte Google
 
 ## Checkpoint / Release `1.0.55+55` — paywall desconto dinâmico (2026-05-16)
 
